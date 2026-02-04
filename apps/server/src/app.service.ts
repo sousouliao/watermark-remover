@@ -5,11 +5,11 @@
  * @output AppService (导出的类，包含 getHello 方法)
  * @pos 根服务 - 占位符，如果不需要可以删除
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common'
 
 @Injectable()
 export class AppService {
   getHello(): string {
-    return 'Hello World!';
+    return 'Hello World!'
   }
 }

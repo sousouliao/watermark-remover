@@ -5,6 +5,7 @@
 ## 架构
 
 本项目遵循**分形架构 (Fractal Architecture)** 原则：
+
 - 所有 `.ts` 文件包含带有 `@file`、`@description`、`@input`、`@output` 和 `@pos` 标签的完整文件头
 - 每个目录包含一个 `_README.md`，描述模块定位、机制和文件清单
 - 代码更改与文档同步
@@ -44,14 +45,16 @@ npm run start:prod
 使用提供的蒙版从图片中移除水印。
 
 **请求体:**
+
 ```json
 {
   "image": "data:image/png;base64,iVBORw0KGgoAAAANS...", // Base64 编码的图片或 URL
-  "mask": "data:image/png;base64,iVBORw0KGgoAAAANS..."  // Base64 编码的蒙版或 URL
+  "mask": "data:image/png;base64,iVBORw0KGgoAAAANS..." // Base64 编码的蒙版或 URL
 }
 ```
 
 **响应:**
+
 ```json
 {
   "success": true,
@@ -90,6 +93,7 @@ EOF
 ## 配置
 
 服务配置如下：
+
 - **CORS**: 为所有来源启用
 - **请求体解析器限制**: 50mb (用于 Base64 图片处理)
 - **全局 API 前缀**: `api`
@@ -98,6 +102,7 @@ EOF
 ## Hugging Face 集成
 
 服务连接到 `diffusers/stable-diffusion-xl-inpainting` Space，使用以下参数：
+
 - **提示词**: "high quality, realistic, clean background"
 - **负面提示词**: "watermark, text, blurry, artifacts, distortion"
 - **宽度**: 1024

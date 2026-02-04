@@ -1,43 +1,55 @@
-# 依赖
-node_modules/
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# 构建输出
-dist/
-build/
-*.tsbuildinfo
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# 测试覆盖率
-coverage/
-.nyc_output/
+# Dependency directories
+node_modules/
+**/node_modules/
 
-# 环境变量
-.env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# 操作系统
+# OS metadata
 .DS_Store
 Thumbs.db
 
-# 日志
-logs/
-*.log
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# 临时文件
-tmp/
-temp/
-*.tmp
+# Build output
+dist/
+**/dist/
+build/
+**/build/
+.next/
+.nuxt/
+.output/
 
-# 其他
-.cache/
-.eslintcache
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Monorepo specific
+.pnpm-debug.log*
+.turbo
+
+# Temporary files
+lint_output.txt
+server_errors.txt
+web_errors.txt

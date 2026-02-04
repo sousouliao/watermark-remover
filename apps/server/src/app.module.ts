@@ -5,10 +5,10 @@
  * @output AppModule (导出的类)
  * @pos 根模块 - 依赖注入的入口点，聚合所有功能模块
  */
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { WatermarkModule } from './watermark/watermark.module';
+import { Module } from '@nestjs/common'
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
+import { WatermarkModule } from './watermark/watermark.module'
 
 @Module({
   imports: [WatermarkModule],

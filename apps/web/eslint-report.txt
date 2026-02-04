@@ -1,0 +1,8 @@
+[0m[0m
+[0m[4mD:\MyProject\watermark-remover\apps\web\src\style.scss[24m[0m
+[0m   [2m1:9[22m   [31merror[39m  Replace `"tailwindcss"` with `'tailwindcss'`                                                                      [2mformat/prettier[22m[0m
+[0m  [2m57:17[22m  [31merror[39m  Replace `·'Inter',·system-ui,·-apple-system,` with `⏎······'Inter',⏎······system-ui,⏎······-apple-system,⏎·····`  [2mformat/prettier[22m[0m
+[0m[0m
+[0m[31m[1m✖ 2 problems (2 errors, 0 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[31m[1m  2 errors and 0 warnings potentially fixable with the `--fix` option.[22m[39m[0m
+[0m[31m[1m[22m[39m[0m

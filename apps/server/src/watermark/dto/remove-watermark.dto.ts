@@ -5,14 +5,14 @@
  * @output RemoveWatermarkDto 类实例
  * @pos DTO 层 - 验证和转换传入的请求数据
  */
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator'
 
 export class RemoveWatermarkDto {
   @IsString()
   @IsNotEmpty()
-  image: string; // Base64 编码的图片或 URL
+  image: string // Base64 编码的图片或 URL
 
   @IsString()
   @IsNotEmpty()
-  mask: string; // Base64 编码的蒙版或 URL
+  mask: string // Base64 编码的蒙版或 URL
 }
