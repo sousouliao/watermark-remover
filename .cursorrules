@@ -1,0 +1,31 @@
+# Fractal Architecture Rules (分形架构法则)
+
+## File Header Rule (文件头法则)
+All `.ts` files MUST include a JSDoc-style comment block at the top with the following tags:
+- `@file`: File name
+- `@description`: What the file does
+- `@input`: Dependencies/inputs (what this file depends on)
+- `@output`: Outputs/exports (what this file exports/provides)
+- `@pos`: System positioning/role (where this file fits in the system)
+
+Example:
+```typescript
+/**
+ * @file app.module.ts
+ * @description Root application module that orchestrates all feature modules
+ * @input AppController, AppService, WatermarkModule
+ * @output AppModule (exported class)
+ * @pos Root module - entry point for dependency injection
+ */
+```
+
+## Folder Rule (文件夹法则)
+Each directory (src, src/xxx, etc.) MUST contain a `_README.md` file that describes:
+- Module positioning (模块定位): What this module/directory does in the system
+- Mechanisms (机制): How it works, key patterns used
+- File inventory (文件清单): List of files and their purposes
+
+## Update Rule (更新法则)
+When modifying code, you MUST synchronously update:
+- The file header comments if the file's purpose changes
+- The `_README.md` in the directory if files are added/removed or functionality changes
