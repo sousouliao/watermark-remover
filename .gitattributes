@@ -1,13 +1,16 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-# Force LF line endings for shell scripts
+# Force LF line endings for shell scripts (critical for cross-platform husky support)
 *.sh text eol=lf
-.husky/* text eol=lf
+
+# Husky hooks must use LF line endings on all platforms
+.husky/** text eol=lf
 
 # Windows specific files
 *.bat text eol=crlf
 *.cmd text eol=crlf
+*.ps1 text eol=crlf
 
 # Keep binary files as-is
 *.png binary
@@ -15,7 +18,13 @@
 *.jpeg binary
 *.gif binary
 *.ico binary
+*.webp binary
+*.svg binary
 *.woff binary
 *.woff2 binary
 *.ttf binary
 *.eot binary
+*.pdf binary
+*.zip binary
+*.tar binary
+*.gz binary
