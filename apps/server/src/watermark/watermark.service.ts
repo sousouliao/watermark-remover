@@ -6,7 +6,7 @@ import { Buffer } from 'node:buffer'
  * @description 通过 Hugging Face Gradio Space 处理水印移除的服务
  * @pos 服务层 - 通过外部 AI 服务进行水印移除的业务逻辑
  */
-import nodeProcess from 'node:process'
+import process from 'node:process'
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
 
 // 水印移除配置接口
@@ -34,7 +34,7 @@ const DEFAULT_CONFIG: WatermarkRemovalConfig = {
 export class WatermarkService implements OnModuleInit {
   private readonly logger = new Logger(WatermarkService.name)
   private readonly spaceUrl
-    = nodeProcess.env.HUGGINGFACE_SPACE_URL ?? 'diffusers/stable-diffusion-xl-inpainting'
+    = process.env.HUGGINGFACE_SPACE_URL ?? 'diffusers/stable-diffusion-xl-inpainting'
 
   async onModuleInit() {
     this.logger.log(`WatermarkService 已初始化，目标 Space: ${this.spaceUrl}`)
@@ -79,7 +79,7 @@ export class WatermarkService implements OnModuleInit {
 
       // 连接到 Gradio Space
       const app = await Client.connect(this.spaceUrl, {
-        token: nodeProcess.env.HUGGINGFACE_ACCESS_TOKEN as `hf_${string}`,
+        token: process.env.HUGGINGFACE_ACCESS_TOKEN as `hf_${string}`,
       })
 
       // 准备图片数据
