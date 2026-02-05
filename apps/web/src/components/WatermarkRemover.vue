@@ -127,6 +127,38 @@ async function removeWatermark() {
     isProcessing.value = false
   }
 }
+
+const isDownloading = ref(false)
+
+async function downloadImage() {
+  if (!processedImage.value) return
+  isDownloading.value = true
+
+  try {
+    // 跨域图片需要通过 fetch + blob 方式下载
+    const response = await fetch(processedImage.value)
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `watermark-removed-${Date.now()}.webp`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    // 释放 URL 对象
+    URL.revokeObjectURL(url)
+  }
+  catch (err) {
+    console.error('Download failed:', err)
+    // 如果 fetch 失败，尝试直接打开链接
+    window.open(processedImage.value, '_blank')
+  }
+  finally {
+    isDownloading.value = false
+  }
+}
 </script>
 
 <template>
@@ -134,7 +166,10 @@ async function removeWatermark() {
     <!-- Main Card -->
     <div class="glass-card min-h-[400px] flex flex-col justify-center">
       <!-- Upload Zone -->
-      <div v-if="!imagePreview" class="border-2 border-dashed border-glass-border rounded-2xl transition-all duration-300 hover:border-primary hover:bg-primary/5">
+      <div
+        v-if="!imagePreview"
+        class="border-2 border-dashed border-glass-border rounded-2xl transition-all duration-300 hover:border-primary hover:bg-primary/5"
+      >
         <label for="file-upload" class="flex flex-col items-center gap-4 p-16 cursor-pointer">
           <div class="text-5xl">📸</div>
           <span>Select or Drag Image</span>
@@ -156,7 +191,9 @@ async function removeWatermark() {
             @touchmove="draw"
             @touchend="stopDrawing"
           />
-          <div class="absolute bottom-2.5 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full text-xs pointer-events-none">
+          <div
+            class="absolute bottom-2.5 left-1/2 -translate-x-1/2 bg-black/60 px-3 py-1 rounded-full text-xs pointer-events-none"
+          >
             Draw over the watermark to remove it
           </div>
         </div>
@@ -165,8 +202,15 @@ async function removeWatermark() {
           <button class="btn-secondary" @click="imagePreview = null">
             Reset
           </button>
-          <button :disabled="isProcessing" class="btn-primary flex items-center" @click="removeWatermark">
-            <span v-if="isProcessing" class="inline-block w-4 h-4 border-2 border-white/30 rounded-full border-t-white animate-spin mr-2" />
+          <button
+            :disabled="isProcessing"
+            class="btn-primary flex items-center"
+            @click="removeWatermark"
+          >
+            <span
+              v-if="isProcessing"
+              class="inline-block w-4 h-4 border-2 border-white/30 rounded-full border-t-white animate-spin mr-2"
+            />
             {{ isProcessing ? 'Removing...' : 'Remove Watermark' }}
           </button>
         </div>
@@ -179,7 +223,18 @@ async function removeWatermark() {
         Result
       </h3>
       <img :src="processedImage" alt="Result" class="max-w-full rounded-xl my-6">
-      <a :href="processedImage" download="result.png" class="btn-primary inline-block no-underline">Download</a>
+      <button
+        :disabled="isDownloading"
+        class="btn-primary flex items-center justify-center mx-auto"
+        @click="downloadImage"
+      >
+        <span
+          v-if="isDownloading"
+          class="inline-block w-4 h-4 border-2 border-white/30 rounded-full border-t-white animate-spin mr-2"
+        />
+        <span v-else class="mr-2">⬇️</span>
+        {{ isDownloading ? 'Downloading...' : 'Download Image' }}
+      </button>
     </div>
   </div>
 </template>

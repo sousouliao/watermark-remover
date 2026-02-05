@@ -1,76 +1,159 @@
+import type { OnModuleInit } from '@nestjs/common'
 import type { RemoveWatermarkDto } from './dto/remove-watermark.dto'
-import { Client } from '@gradio/client'
+import { Buffer } from 'node:buffer'
 /**
  * @file watermark.service.ts
- * @description 通过连接 Hugging Face SDXL Inpainting Space 处理水印移除的服务
- * @input RemoveWatermarkDto (图片和蒙版), @gradio/client 用于 API 调用
- * @output 处理后的图片 (已移除水印)
+ * @description 通过 Hugging Face Gradio Space 处理水印移除的服务
  * @pos 服务层 - 通过外部 AI 服务进行水印移除的业务逻辑
  */
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import nodeProcess from 'node:process'
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common'
+
+// 水印移除配置接口
+interface WatermarkRemovalConfig {
+  prompt: string
+  negativePrompt: string
+  guidanceScale: number
+  steps: number
+  strength: number
+  scheduler: string
+}
+
+// 默认配置
+const DEFAULT_CONFIG: WatermarkRemovalConfig = {
+  prompt: 'clean background, high quality, realistic texture, seamless integration',
+  negativePrompt:
+    'watermark, text, logo, blurry, artifacts, distortion, bad quality, lowres, extra digits, human, character',
+  guidanceScale: 7.5,
+  steps: 30,
+  strength: 0.85,
+  scheduler: 'EulerDiscreteScheduler',
+}
 
 @Injectable()
-export class WatermarkService {
-  private client: Client
-  private readonly SPACE_URL = 'diffusers/stable-diffusion-xl-inpainting'
+export class WatermarkService implements OnModuleInit {
+  private readonly logger = new Logger(WatermarkService.name)
+  private readonly spaceUrl
+    = nodeProcess.env.HUGGINGFACE_SPACE_URL ?? 'diffusers/stable-diffusion-xl-inpainting'
 
-  constructor() {
-    this.initializeClient()
+  async onModuleInit() {
+    this.logger.log(`WatermarkService 已初始化，目标 Space: ${this.spaceUrl}`)
   }
 
-  private async initializeClient() {
-    try {
-      this.client = await Client.connect(this.SPACE_URL)
+  /**
+   * 将 Data URI 转换为 Blob
+   */
+  private dataURItoBlob(dataURI: string): Blob {
+    const matches = dataURI.match(/^data:(.+);base64,(.+)$/)
+    if (!matches) {
+      throw new HttpException('无效的图片格式', HttpStatus.BAD_REQUEST)
     }
-    catch (error) {
-      console.error('连接 Hugging Face Space 失败:', error)
-      throw new HttpException('初始化水印移除服务失败', HttpStatus.SERVICE_UNAVAILABLE)
-    }
+    const mimeType = matches[1]
+    const base64Data = matches[2]
+    const binaryData = Buffer.from(base64Data, 'base64')
+    return new Blob([binaryData], { type: mimeType })
   }
 
-  async removeWatermark(dto: RemoveWatermarkDto): Promise<string> {
-    try {
-      // 确保客户端已初始化
-      if (!this.client) {
-        await this.initializeClient()
-      }
-
-      // 按照 SDXL Inpainting Space 要求的顺序准备参数
-      const prompt = 'high quality, realistic, clean background'
-      const negativePrompt = 'watermark, text, blurry, artifacts, distortion'
-      const image = dto.image
-      const mask = dto.mask
-      const width = 1024
-      const height = 1024
-      const guidanceScale = 7.5
-      const steps = 30
-
-      // 按照正确顺序调用 Hugging Face Space
-      const result = await this.client.predict('/predict', [
-        prompt, // 参数 1: 提示词
-        negativePrompt, // 参数 2: 负面提示词
-        image, // 参数 3: 图片
-        mask, // 参数 4: 蒙版
-        width, // 参数 5: 宽度
-        height, // 参数 6: 高度
-        guidanceScale, // 参数 7: 引导比例
-        steps, // 参数 8: 步数
-      ])
-
-      // 从结果中提取处理后的图片
-      // 结果结构可能有所不同，需要根据实际 API 响应进行调整
-      if (result?.data && result.data.length > 0) {
-        return result.data[0] // 返回处理后的图片
-      }
-
-      throw new HttpException('水印移除服务返回无效响应', HttpStatus.INTERNAL_SERVER_ERROR)
+  /**
+   * 移除图片水印
+   */
+  async removeWatermark(
+    dto: RemoveWatermarkDto,
+    config: Partial<WatermarkRemovalConfig> = {},
+  ): Promise<string> {
+    const mergedConfig = { ...DEFAULT_CONFIG, ...config }
+    // 如果 DTO 中提供了 prompt，覆盖配置
+    if (dto.prompt) {
+      mergedConfig.prompt = dto.prompt
     }
-    catch (error) {
-      console.error('移除水印时出错:', error)
+
+    try {
+      this.logger.log('开始处理水印移除请求')
+
+      // 动态导入 @gradio/client，因为它可能是 ESM 模块
+      // 使用 eval('import(...)') 绕过 TypeScript 的 CommonJS 转换
+      // eslint-disable-next-line no-eval
+      const { Client, handle_file } = await (eval('import("@gradio/client")') as Promise<
+        typeof import('@gradio/client')
+      >)
+
+      // 连接到 Gradio Space
+      const app = await Client.connect(this.spaceUrl, {
+        token: nodeProcess.env.HUGGINGFACE_ACCESS_TOKEN as `hf_${string}`,
+      })
+
+      // 准备图片数据
+      let imageBlob: Blob
+      let maskBlob: Blob
+
+      // 处理原图
+      if (dto.image.startsWith('http')) {
+        const response = await fetch(dto.image)
+        imageBlob = await response.blob()
+      }
+      else {
+        imageBlob = this.dataURItoBlob(dto.image)
+      }
+
+      // 处理蒙版
+      if (dto.mask.startsWith('http')) {
+        const response = await fetch(dto.mask)
+        maskBlob = await response.blob()
+      }
+      else {
+        maskBlob = this.dataURItoBlob(dto.mask)
+      }
+
+      this.logger.log('正在提交任务到 Gradio...')
+
+      // 调用 predict 接口
+      const result = await app.predict('/predict', {
+        input_image: {
+          background: handle_file(imageBlob),
+          layers: [handle_file(maskBlob)],
+          composite: null,
+        },
+        prompt: mergedConfig.prompt,
+        negative_prompt: mergedConfig.negativePrompt,
+        guidance_scale: mergedConfig.guidanceScale,
+        steps: mergedConfig.steps,
+        strength: mergedConfig.strength,
+        scheduler: mergedConfig.scheduler,
+      })
+
+      this.logger.debug('Gradio 返回结果:', result)
+
+      const data = result.data as any
+
+      if (Array.isArray(data) && data.length > 0) {
+        const outputImage = data[0] // 或者是 data[1]，通常 Slider 返回两张图
+
+        let targetImage = null
+        if (Array.isArray(outputImage)) {
+          // 如果是 [img1, img2]
+          targetImage = outputImage[1] || outputImage[0]
+        }
+        else {
+          targetImage = outputImage
+        }
+
+        if (targetImage?.url) {
+          this.logger.log('水印移除处理完成')
+          return targetImage.url
+        }
+      }
+
+      throw new HttpException('水印移除服务未返回有效图片', HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+    catch (error: any) {
+      this.logger.error('移除水印时出错', error)
       if (error instanceof HttpException) {
         throw error
       }
-      throw new HttpException('移除水印失败', HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException(
+        `移除水印失败: ${error?.message || error}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      )
     }
   }
 }
