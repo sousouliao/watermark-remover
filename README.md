@@ -1,55 +1,135 @@
-# 水印移除 BFF (Watermark Remover BFF)
+# Watermark Remover
 
-一个 NestJS 后端服务 (Backend for Frontend, BFF)，通过利用 Hugging Face 的 SDXL Inpainting Space 从图片中移除水印。该服务设计用于在资源受限的服务器上运行 (例如 2 核 2GB 内存)，为 Web 和 iOS 客户端提供 REST API。
+AI 驱动的图片水印移除工具。上传图片、标记水印区域、一键移除，即刻下载干净图片。
 
-## 架构
+## 项目概览
 
-本项目遵循**分形架构 (Fractal Architecture)** 原则：
+本项目采用 **Monorepo** 架构，包含前端 Web 应用和后端 BFF 服务：
 
-- 所有 `.ts` 文件包含带有 `@file`、`@description`、`@input`、`@output` 和 `@pos` 标签的完整文件头
-- 每个目录包含一个 `_README.md`，描述模块定位、机制和文件清单
-- 代码更改与文档同步
-
-## 技术栈
-
-- **框架**: NestJS (最新版)
-- **语言**: TypeScript
-- **外部客户端**: `@gradio/client` (用于 Hugging Face Space 集成)
-- **环境**: Node.js v18+
+| 应用 | 技术栈 | 说明 |
+|------|--------|------|
+| `apps/web` | Vue 3 + Tailwind CSS v4 + shadcn-vue | 前端交互界面 |
+| `apps/server` | NestJS + TypeScript | 后端 BFF 服务 |
 
 ## 功能特性
 
-- 用于水印移除的 REST API 端点
-- 集成 Hugging Face SDXL Inpainting Space
-- 支持 Base64 编码的图片和蒙版
-- 启用 CORS 以支持跨域请求
-- 大负载支持 (Base64 图片限制为 50mb)
+- **图片上传** — 拖拽或点击上传，支持 PNG、JPG、WEBP 格式（最大 10MB）
+- **蒙版编辑** — 画笔标记水印区域，支持调整画笔大小、撤销、清除
+- **AI 移除** — 调用 AI Inpainting 模型自动移除水印
+- **结果对比** — 滑块对比视图 / 并排视图，直观查看效果
+- **暗黑模式** — 支持亮色/暗色主题切换
+- **响应式布局** — 适配桌面端和移动端
 
-## 项目设置
+## 技术栈
+
+### 前端 (`apps/web`)
+
+- **框架**: Vue 3 (Composition API + `<script setup>`)
+- **构建工具**: Vite 7
+- **样式**: Tailwind CSS v4 + tw-animate-css
+- **UI 组件**: shadcn-vue (radix-vue)
+- **图标**: lucide-vue-next
+- **语言**: TypeScript
+
+### 后端 (`apps/server`)
+
+- **框架**: NestJS
+- **语言**: TypeScript
+- **AI 集成**: `@gradio/client` (Hugging Face Space)
+- **运行环境**: Node.js v20+
+
+### 工程化
+
+- **包管理**: pnpm (Workspace)
+- **代码规范**: ESLint (@antfu/eslint-config)
+- **提交规范**: Commitlint + Husky + lint-staged
+- **类型检查**: vue-tsc
+
+## 快速开始
+
+### 环境要求
+
+- Node.js >= 20
+- pnpm >= 10
+
+### 安装依赖
 
 ```bash
-# 安装依赖
-npm install
-
-# 开发模式
-npm run start:dev
-
-# 生产模式
-npm run start:prod
+pnpm install
 ```
 
-## API 端点
+### 启动开发
+
+```bash
+# 同时启动前端和后端
+pnpm dev
+
+# 或分别启动
+pnpm start:web      # 前端 (http://localhost:5173)
+pnpm start:server   # 后端 (http://localhost:3000)
+```
+
+### 构建
+
+```bash
+pnpm build
+```
+
+## 项目结构
+
+```
+watermark-remover/
+├── apps/
+│   ├── web/                          # 前端 Vue 应用
+│   │   ├── src/
+│   │   │   ├── App.vue               # 根组件（背景渐变 + 布局）
+│   │   │   ├── main.ts               # 应用入口
+│   │   │   ├── style.css             # 全局样式 + CSS 变量
+│   │   │   ├── components/
+│   │   │   │   ├── WatermarkApp.vue  # 主应用容器（步骤管理）
+│   │   │   │   ├── AppHeader.vue     # 头部（Logo + 标题 + 主题切换）
+│   │   │   │   ├── AppFooter.vue     # 底部
+│   │   │   │   ├── ThemeToggle.vue   # 暗黑模式切换
+│   │   │   │   ├── ImageUploader.vue # 图片上传（拖拽 + 点击）
+│   │   │   │   ├── MaskEditor.vue    # 蒙版编辑器（画笔绘制）
+│   │   │   │   ├── ActionBar.vue     # 操作栏（Reset + Remove）
+│   │   │   │   ├── ProcessingOverlay.vue # 处理中动画
+│   │   │   │   ├── ResultViewer.vue  # 结果对比查看器
+│   │   │   │   └── ui/              # shadcn-vue UI 组件
+│   │   │   └── lib/
+│   │   │       └── utils.ts          # 工具函数
+│   │   ├── components.json           # shadcn-vue 配置
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   │
+│   └── server/                       # 后端 NestJS 服务
+│       └── src/
+│           ├── main.ts               # 应用入口
+│           ├── app.module.ts         # 根模块
+│           ├── health/               # 健康检查
+│           ├── watermark/            # 水印移除模块
+│           │   ├── watermark.controller.ts
+│           │   ├── watermark.service.ts
+│           │   └── dto/
+│           └── common/               # 公共定义
+│               └── dto/
+├── package.json                      # Monorepo 根配置
+├── pnpm-workspace.yaml
+└── eslint.config.js
+```
+
+## API 接口
 
 ### POST /api/watermark/remove
 
-使用提供的蒙版从图片中移除水印。
+使用 AI Inpainting 移除图片中的水印。
 
 **请求体:**
 
 ```json
 {
-  "image": "data:image/png;base64,iVBORw0KGgoAAAANS...", // Base64 编码的图片或 URL
-  "mask": "data:image/png;base64,iVBORw0KGgoAAAANS..." // Base64 编码的蒙版或 URL
+  "image": "data:image/png;base64,...",
+  "mask": "data:image/png;base64,..."
 }
 ```
 
@@ -58,75 +138,23 @@ npm run start:prod
 ```json
 {
   "success": true,
-  "image": "data:image/png;base64,iVBORw0KGgoAAAANS..." // 处理后的图片
+  "data": {
+    "image": "data:image/png;base64,..."
+  }
 }
 ```
 
-## 测试
+### GET /api/health
 
-### 使用 curl
-
-```bash
-curl -X POST http://localhost:3000/api/watermark/remove \
-  -H "Content-Type: application/json" \
-  -d '{
-    "image": "data:image/png;base64,YOUR_BASE64_IMAGE_HERE",
-    "mask": "data:image/png;base64,YOUR_BASE64_MASK_HERE"
-  }'
-```
-
-### 使用实际 Base64 数据的示例
-
-将 `YOUR_BASE64_IMAGE_HERE` 和 `YOUR_BASE64_MASK_HERE` 替换为实际的 Base64 编码图片数据：
-
-```bash
-curl -X POST http://localhost:3000/api/watermark/remove \
-  -H "Content-Type: application/json" \
-  -d @- << EOF
-{
-  "image": "data:image/png;base64,iVBORw0KGgoAAAANS...",
-  "mask": "data:image/png;base64,iVBORw0KGgoAAAANS..."
-}
-EOF
-```
+健康检查接口。
 
 ## 配置
 
-服务配置如下：
-
-- **CORS**: 为所有来源启用
-- **请求体解析器限制**: 50mb (用于 Base64 图片处理)
-- **全局 API 前缀**: `api`
-- **端口**: 3000 (可通过 `PORT` 环境变量配置)
-
-## Hugging Face 集成
-
-服务连接到 `diffusers/stable-diffusion-xl-inpainting` Space，使用以下参数：
-
-- **提示词**: "high quality, realistic, clean background"
-- **负面提示词**: "watermark, text, blurry, artifacts, distortion"
-- **宽度**: 1024
-- **高度**: 1024
-- **引导比例**: 7.5
-- **步数**: 30
-
-## 项目结构
-
-```
-src/
-├── _README.md              # 源码目录文档
-├── main.ts                 # 应用入口点
-├── app.module.ts           # 根模块
-├── app.controller.ts      # 根控制器
-├── app.service.ts          # 根服务
-└── watermark/              # 水印移除模块
-    ├── _README.md          # 模块文档
-    ├── watermark.module.ts
-    ├── watermark.controller.ts
-    ├── watermark.service.ts
-    └── dto/
-        └── remove-watermark.dto.ts
-```
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `PORT` | `3000` | 后端服务端口 |
+| CORS | 全部来源 | 跨域配置 |
+| Body 限制 | 50MB | Base64 图片请求体上限 |
 
 ## 许可证
 
