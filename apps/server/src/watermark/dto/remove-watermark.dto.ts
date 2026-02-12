@@ -3,7 +3,7 @@
  * @description 水印移除请求的数据传输对象，验证图片和蒙版输入
  * @pos DTO 层 - 验证和转换传入的请求数据
  */
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { IsNotEmpty, IsString } from 'class-validator'
 
 export class RemoveWatermarkDto {
   /**
@@ -20,12 +20,4 @@ export class RemoveWatermarkDto {
   @IsString()
   @IsNotEmpty()
   mask: string
-
-  /**
-   * (可选) 提示词，用于指导 AI 填补区域的内容
-   * 默认为空，让 AI 根据周围环境自动推断
-   */
-  @IsString()
-  @IsOptional()
-  prompt?: string
 }

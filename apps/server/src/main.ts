@@ -6,25 +6,26 @@
 import process from 'node:process'
 import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import * as express from 'express'
+import express from 'express'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  // 禁用默认 body parser（默认限制 100KB），后面手动注册 50mb 限制
+  const app = await NestFactory.create(AppModule, { bodyParser: false })
 
   // 启用全局验证管道
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // 自动剔除 DTO 中未定义的属性
-      forbidNonWhitelisted: true, // 拒绝包含未知属性的请求
-      transform: true, // 自动类型转换
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   )
 
   // 启用 CORS 以支持跨域请求
   app.enableCors()
 
-  // 配置请求体解析器限制为 50mb，用于处理 Base64 图片
+  // 注册 50mb 限制的 body parser，用于处理 Base64 图片
   const expressApp = app.getHttpAdapter().getInstance() as express.Application
   expressApp.use(express.json({ limit: '50mb' }))
   expressApp.use(express.urlencoded({ limit: '50mb', extended: true }))

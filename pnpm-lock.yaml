@@ -20,12 +20,6 @@ importers:
       '@types/node':
         specifier: ^22.10.10
         version: 22.19.8
-      '@types/react':
-        specifier: ^19.0.8
-        version: 19.2.11
-      '@types/react-dom':
-        specifier: ^19.0.3
-        version: 19.2.3(@types/react@19.2.11)
       eslint:
         specifier: ^9.18.0
         version: 9.39.2
@@ -38,9 +32,6 @@ importers:
       lint-staged:
         specifier: ^15.4.1
         version: 15.5.2
-      prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
       tsx:
         specifier: ^4.19.2
         version: 4.21.0
@@ -50,9 +41,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@gradio/client':
-        specifier: ^2.0.4
-        version: 2.0.4
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.13(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -1278,13 +1266,6 @@ packages:
       '@eslint/core': 0.17.0
       levn: 0.4.1
     dev: true
-
-  /@gradio/client@2.0.4:
-    resolution: {integrity: sha512-pYywxUpamTYQLca01YAlTBwr2eb3H8d9s7geeQdexuPkM7p+EN2LhyzgNRN4yZrpn4swwfwP1fOoadKgd1b6Ww==}
-    engines: {node: '>=18.0.0'}
-    dependencies:
-      fetch-event-stream: 0.1.6
-    dev: false
 
   /@humanfs/core@0.19.1:
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2818,20 +2799,6 @@ packages:
 
   /@types/range-parser@1.2.7:
     resolution: {integrity: sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==}
-    dev: true
-
-  /@types/react-dom@19.2.3(@types/react@19.2.11):
-    resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
-    peerDependencies:
-      '@types/react': ^19.2.0
-    dependencies:
-      '@types/react': 19.2.11
-    dev: true
-
-  /@types/react@19.2.11:
-    resolution: {integrity: sha512-tORuanb01iEzWvMGVGv2ZDhYZVeRMrw453DCSAIn/5yvcSVnMoUMTyf33nQJLahYEnv9xqrTNbgz4qY5EfSh0g==}
-    dependencies:
-      csstype: 3.2.3
     dev: true
 
   /@types/send@1.2.1:
@@ -5128,10 +5095,6 @@ packages:
     dependencies:
       picomatch: 4.0.3
     dev: true
-
-  /fetch-event-stream@0.1.6:
-    resolution: {integrity: sha512-GREtJ5HNikdU2AXtZ6E/5bk+aslMU6ie5mPG6H9nvsdDkkHQ6m5lHwmmmDTOBexok9hApQ7EprsXCdmz9ZC68w==}
-    dev: false
 
   /file-entry-cache@8.0.0:
     resolution: {integrity: sha512-XXTUwCvisa5oacNGRP9SfNtYBNAMi+RPwBFmblZEF7N7swHYQS6/Zfk7SRwx4D5j3CH211YNRco1DEMNVfZCnQ==}

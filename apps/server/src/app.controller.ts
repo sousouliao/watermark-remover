@@ -3,8 +3,8 @@
  * @description 根应用控制器，提供基础端点
  * @pos 根控制器 - 应用根路由处理
  */
-import type { AppService } from './app.service'
 import { Controller, Get } from '@nestjs/common'
+import { AppService } from './app.service'
 
 @Controller()
 export class AppController {

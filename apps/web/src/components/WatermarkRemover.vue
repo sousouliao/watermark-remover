@@ -8,6 +8,9 @@ const isProcessing = ref(false)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const isDrawing = ref(false)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
+const maskCanvas = ref<HTMLCanvasElement | null>(null)
+const maskCtx = ref<CanvasRenderingContext2D | null>(null)
+const imageCanvas = ref<HTMLCanvasElement | null>(null)
 
 function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement
@@ -40,15 +43,40 @@ function initCanvas() {
       canvas.width = width
       canvas.height = height
       ctx.value = canvas.getContext('2d')
-      if (ctx.value && typeof imagePreview.value === 'string') {
+      if (ctx.value) {
         ctx.value.drawImage(img, 0, 0, width, height)
         ctx.value.strokeStyle = 'rgba(255, 0, 0, 0.5)'
         ctx.value.lineWidth = 20
         ctx.value.lineJoin = 'round'
         ctx.value.lineCap = 'round'
       }
+
+      // 干净的缩放图片（无笔触标记），与 mask 尺寸一致
+      const iCanvas = document.createElement('canvas')
+      iCanvas.width = width
+      iCanvas.height = height
+      const iCtx = iCanvas.getContext('2d')
+      if (iCtx) {
+        iCtx.drawImage(img, 0, 0, width, height)
+      }
+      imageCanvas.value = iCanvas
+
+      // 蒙版画布：黑底，白色笔触标记水印区域
+      const mCanvas = document.createElement('canvas')
+      mCanvas.width = width
+      mCanvas.height = height
+      maskCanvas.value = mCanvas
+      maskCtx.value = mCanvas.getContext('2d')
+      if (maskCtx.value) {
+        maskCtx.value.fillStyle = 'black'
+        maskCtx.value.fillRect(0, 0, width, height)
+        maskCtx.value.strokeStyle = 'white'
+        maskCtx.value.lineWidth = 20
+        maskCtx.value.lineJoin = 'round'
+        maskCtx.value.lineCap = 'round'
+      }
     }
-    img.src = String(imagePreview.value)
+    img.src = imagePreview.value!
   }, 100)
 }
 
@@ -60,41 +88,39 @@ function startDrawing(e: MouseEvent | TouchEvent) {
 function stopDrawing() {
   isDrawing.value = false
   if (ctx.value) ctx.value.beginPath()
+  if (maskCtx.value) maskCtx.value.beginPath()
 }
 
 function draw(e: MouseEvent | TouchEvent) {
   if (!isDrawing.value || !ctx.value || !canvasRef.value) return
 
   const rect = canvasRef.value.getBoundingClientRect()
-  const x = (e instanceof MouseEvent ? e.clientX : e?.touches?.[0]?.clientX || 0) - rect.left
-  const y = (e instanceof MouseEvent ? e.clientY : e?.touches?.[0]?.clientY || 0) - rect.top
+  const x = (e instanceof MouseEvent ? e.clientX : e?.touches?.[0]?.clientX ?? 0) - rect.left
+  const y = (e instanceof MouseEvent ? e.clientY : e?.touches?.[0]?.clientY ?? 0) - rect.top
 
+  // 在主画布上绘制（可见的红色笔触）
   ctx.value.lineTo(x, y)
   ctx.value.stroke()
   ctx.value.beginPath()
   ctx.value.moveTo(x, y)
+
+  // 在蒙版画布上绘制（隐藏的白色笔触）
+  if (maskCtx.value) {
+    maskCtx.value.lineTo(x, y)
+    maskCtx.value.stroke()
+    maskCtx.value.beginPath()
+    maskCtx.value.moveTo(x, y)
+  }
+}
+
+function getImageData(): string {
+  if (!imageCanvas.value) return ''
+  return imageCanvas.value.toDataURL('image/png')
 }
 
 function getMaskData(): string {
-  const canvas = canvasRef.value
-  if (!canvas) return ''
-  const maskCanvas = document.createElement('canvas')
-  maskCanvas.width = canvas.width
-  maskCanvas.height = canvas.height
-  const mCtx = maskCanvas.getContext('2d')
-  if (!mCtx || !ctx.value) return ''
-
-  // Actually we need to extract only the red drawing as white on black
-  // This is a simplified version: we redraw the path on a black background
-  // For a real app, we'd track the paths.
-  // Here we'll just use the current canvas and filter
-  mCtx.fillStyle = 'black'
-  mCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height)
-
-  // This is tricky without path history.
-  // Let's assume the user just wants the mask to be what they drew.
-  // In a real implementation, we would use a separate canvas for the mask.
-  return maskCanvas.toDataURL('image/png')
+  if (!maskCanvas.value) return ''
+  return maskCanvas.value.toDataURL('image/png')
 }
 
 async function removeWatermark() {
@@ -102,22 +128,26 @@ async function removeWatermark() {
   isProcessing.value = true
 
   try {
-    // Generate an actual mask (simplified: for now just using a blank mask if not fully implemented)
-    // Real logic would involve a separate canvas for drawing the mask
     const response = await fetch('/api/watermark/remove', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        image: imagePreview.value,
+        image: getImageData(),
         mask: getMaskData(),
       }),
     })
-    const data = await response.json()
-    if (data.success) {
-      processedImage.value = data.image
+
+    if (!response.ok) {
+      console.error(`Server error: ${response.status}`)
+      return
+    }
+
+    const result = await response.json()
+    if (result.success) {
+      processedImage.value = result.data.image
     }
     else {
-      console.error('Error: ', data.message)
+      console.error('Error: ', result.message)
     }
   }
   catch (err) {
@@ -130,30 +160,25 @@ async function removeWatermark() {
 
 const isDownloading = ref(false)
 
-async function downloadImage() {
+function downloadImage() {
   if (!processedImage.value) return
   isDownloading.value = true
 
   try {
-    // 跨域图片需要通过 fetch + blob 方式下载
-    const response = await fetch(processedImage.value)
-    const blob = await response.blob()
-    const url = URL.createObjectURL(blob)
+    const dataUri = processedImage.value
+    const match = dataUri.match(/^data:(image\/[a-z]+);base64,/)
+    const mime = match ? match[1] : ''
+    const ext = mime === 'image/png' ? 'png' : mime === 'image/jpeg' ? 'jpg' : 'png'
 
     const link = document.createElement('a')
-    link.href = url
-    link.download = `watermark-removed-${Date.now()}.webp`
+    link.href = dataUri
+    link.download = `watermark-removed-${Date.now()}.${ext}`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-
-    // 释放 URL 对象
-    URL.revokeObjectURL(url)
   }
   catch (err) {
     console.error('Download failed:', err)
-    // 如果 fetch 失败，尝试直接打开链接
-    window.open(processedImage.value, '_blank')
   }
   finally {
     isDownloading.value = false

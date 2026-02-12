@@ -28,4 +28,10 @@ export default antfu(
       }],
     },
   },
+  {
+    files: ['apps/server/**/*.ts'],
+    rules: {
+      'ts/consistent-type-imports': 'off',
+    },
+  },
 )

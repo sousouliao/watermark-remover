@@ -1,5 +1,3 @@
-import type { RemoveWatermarkDto } from './dto/remove-watermark.dto'
-import type { WatermarkService } from './watermark.service'
 /**
  * @file watermark.controller.ts
  * @description REST API 控制器，暴露水印移除端点
@@ -7,6 +5,8 @@ import type { WatermarkService } from './watermark.service'
  */
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
 import { ApiResponse } from '../common/dto/api-response.dto'
+import { RemoveWatermarkDto } from './dto/remove-watermark.dto'
+import { WatermarkService } from './watermark.service'
 
 @Controller('watermark')
 export class WatermarkController {

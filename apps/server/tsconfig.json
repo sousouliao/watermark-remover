@@ -2,14 +2,14 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "incremental": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "baseUrl": "./",
-    "outDir": "./dist",
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "noEmit": false,
+    "outDir": "./dist",
     "esModuleInterop": true
   },
   "include": ["src/**/*"],

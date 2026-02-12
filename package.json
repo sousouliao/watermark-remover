@@ -9,8 +9,8 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "eslint . --fix",
-    "format": "prettier --write \"**/*.{css,html,md,json}\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "start:server": "pnpm -F @watermark-remover/server start:dev",
     "start:web": "pnpm -F @watermark-remover/web dev",
     "prepare": "husky"
@@ -20,22 +20,14 @@
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "@types/node": "^22.10.10",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3",
     "eslint": "^9.18.0",
     "eslint-plugin-format": "^1.3.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.1",
-    "prettier": "^3.8.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },
   "lint-staged": {
-    "*.{js,ts,vue,jsx,tsx}": [
-      "eslint --fix"
-    ],
-    "*.{css,html,md,json}": [
-      "prettier --write"
-    ]
+    "*": "eslint --fix"
   }
 }
