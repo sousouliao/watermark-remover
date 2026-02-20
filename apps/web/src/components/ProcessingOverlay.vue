@@ -10,33 +10,23 @@ const STEPS = [
 ]
 
 const currentStep = ref(0)
-const progress = ref(0)
-
 let stepInterval: ReturnType<typeof setInterval> | null = null
-let progressInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   stepInterval = setInterval(() => {
     if (currentStep.value < STEPS.length - 1) {
       currentStep.value++
     }
-  }, 800)
-
-  progressInterval = setInterval(() => {
-    if (progress.value < 95) {
-      progress.value += Math.random() * 8 + 2
-    }
-  }, 200)
+  }, 3000)
 })
 
 onUnmounted(() => {
   if (stepInterval) clearInterval(stepInterval)
-  if (progressInterval) clearInterval(progressInterval)
 })
 </script>
 
 <template>
-  <div class="animate-fade-in glass-card flex flex-col items-center gap-6 rounded-2xl p-8 md:p-12">
+  <div class="animate-fade-in glass-card flex w-72 flex-col items-center gap-6 rounded-2xl p-8 md:w-80 md:p-12">
     <!-- Animated spinner -->
     <div class="relative h-16 w-16">
       <svg class="h-16 w-16 animate-spin" viewBox="0 0 64 64" fill="none">
@@ -56,22 +46,14 @@ onUnmounted(() => {
       </svg>
     </div>
 
-    <!-- Progress bar -->
-    <div class="w-full max-w-xs">
-      <div class="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-secondary">
-        <div
-          class="h-full rounded-full bg-linear-to-r from-primary to-accent transition-all duration-500 ease-out"
-          :style="{ width: `${Math.min(progress, 100)}%` }"
-        />
-      </div>
-      <p class="text-center text-xs tabular-nums text-muted-foreground">
-        {{ Math.round(Math.min(progress, 99)) }}%
-      </p>
+    <!-- Indeterminate progress bar -->
+    <div class="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+      <div class="animate-indeterminate h-full w-2/5 rounded-full bg-primary" />
     </div>
 
     <!-- Step indicator -->
     <div class="flex flex-col items-center gap-2">
-      <p class="text-sm font-medium text-foreground">
+      <p class="min-h-5 text-center text-sm font-medium text-foreground">
         {{ STEPS[currentStep] }}
       </p>
       <div class="flex gap-1">

@@ -136,7 +136,7 @@ const containerWidth = computed(() => containerRef.value?.clientWidth || 0)
     <template v-if="viewMode === 'slider'">
       <div
         ref="containerRef"
-        class="glass-card relative cursor-col-resize select-none overflow-hidden rounded-2xl"
+        class="glass-card relative max-h-[70vh] cursor-col-resize select-none overflow-hidden rounded-2xl"
         :style="{ aspectRatio }"
         role="slider"
         aria-label="Before and after comparison slider"
