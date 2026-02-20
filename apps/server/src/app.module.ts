@@ -20,7 +20,7 @@ import { WatermarkModule } from './watermark/watermark.module'
     // 生产环境：前端构建产物在 dist/web，根路径 / 返回 SPA，/api 走接口
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'web'),
-      exclude: ['/api/(.*)'],
+      exclude: ['/api/{*splat}'],
     }),
     WatermarkModule,
   ],
