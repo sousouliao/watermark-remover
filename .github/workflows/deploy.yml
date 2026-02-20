@@ -12,31 +12,33 @@ jobs:
     steps:
       # 1. 拉取最新代码
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2. 配置 Node.js + pnpm（pnpm 版本由 package.json 的 packageManager 决定）
+      # 2. 配置 pnpm（不写 version，从 package.json 的 packageManager 读取，避免重复指定报错）
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      # 3. 配置 Node.js（cache 需在 pnpm 已安装后使用）
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: pnpm
-      - name: Enable corepack
-        run: corepack enable
 
-      # 3. 安装依赖并打包（monorepo：构建 web + server）
+      # 4. 安装依赖并打包（monorepo：构建 web + server）
       - name: Install and Build
         run: |
           pnpm install --frozen-lockfile
           pnpm build
 
-      # 4. 准备部署目录（仅 server 的 dist 和 package.json）
+      # 5. 准备部署目录（仅 server 的 dist 和 package.json）
       - name: Prepare deploy artifacts
         run: |
           mkdir -p deploy
           cp -r apps/server/dist deploy/
           cp apps/server/package.json deploy/
 
-      # 5. 将构建产物传到服务器项目目录
+      # 6. 将构建产物传到服务器项目目录
       - name: SCP Files to Server
         uses: appleboy/scp-action@master
         with:
@@ -47,7 +49,7 @@ jobs:
           target: /home/projects/watermark-remover
           strip_components: 0
 
-      # 6. 远程登录服务器，安装生产依赖
+      # 7. 远程登录服务器，安装生产依赖
       - name: SSH and Install Dependencies
         uses: appleboy/ssh-action@master
         with:
