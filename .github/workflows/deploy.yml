@@ -57,6 +57,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
+            [ -f ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh
+            [ -f ~/.bashrc ] && . ~/.bashrc
+            [ -f ~/.profile ] && . ~/.profile
             cd /home/projects/watermark-remover
-            corepack enable
             pnpm install --prod
