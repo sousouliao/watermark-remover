@@ -1,9 +1,9 @@
 name: Deploy to Tencent Cloud
 
-# 触发条件：当 master 分支有代码 push 时触发
+# 触发条件：当 main 分支有代码 push 时触发
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build-and-deploy:
