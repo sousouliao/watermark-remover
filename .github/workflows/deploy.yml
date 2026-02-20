@@ -31,14 +31,26 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
 
-      # 5. 准备部署目录（仅 server 的 dist 和 package.json）
+      # 5. 准备部署目录（server dist + package.json，前端构建产物放入 dist/web 供 Nest 静态托管）
       - name: Prepare deploy artifacts
         run: |
-          mkdir -p deploy
-          cp -r apps/server/dist deploy/
+          mkdir -p deploy/dist
+          cp -r apps/server/dist/* deploy/dist/
+          cp -r apps/web/dist deploy/dist/web
           cp apps/server/package.json deploy/
 
-      # 6. 将构建产物传到服务器项目目录
+      # 6. 部署前清理服务器上的旧构建（SCP 只覆盖不删除，避免残留旧文件导致冲突）
+      - name: Clean server dist before deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            rm -rf /home/projects/watermark-remover/dist
+            rm -f /home/projects/watermark-remover/package.json
+
+      # 7. 将构建产物传到服务器项目目录
       - name: SCP Files to Server
         uses: appleboy/scp-action@master
         with:
@@ -49,7 +61,7 @@ jobs:
           target: /home/projects/watermark-remover
           strip_components: 1
 
-      # 7. 远程登录服务器，安装生产依赖
+      # 8. 远程登录服务器，安装生产依赖
       - name: SSH and Install Dependencies
         uses: appleboy/ssh-action@master
         with:
