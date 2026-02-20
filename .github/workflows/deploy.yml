@@ -1,0 +1,63 @@
+name: Deploy to Tencent Cloud (1Panel)
+
+# 触发条件：当 master 分支有代码 push 时触发
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # 使用 GitHub 提供的免费服务器进行打包
+
+    steps:
+      # 1. 拉取最新代码
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. 配置 Node.js + pnpm（与项目一致）
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      # 3. 安装依赖并打包（monorepo：构建 web + server）
+      - name: Install and Build
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+
+      # 4. 准备部署目录（仅 server 的 dist 和 package.json）
+      - name: Prepare deploy artifacts
+        run: |
+          mkdir -p deploy
+          cp -r apps/server/dist deploy/
+          cp apps/server/package.json deploy/
+
+      # 5. 将构建产物传到服务器项目目录
+      - name: SCP Files to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: 'deploy/dist,deploy/package.json'
+          target: /home/projects/watermark-remover
+          strip_components: 0
+
+      # 6. 远程登录服务器，安装生产依赖
+      - name: SSH and Install Dependencies
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /home/projects/watermark-remover
+            corepack enable
+            pnpm install --prod
