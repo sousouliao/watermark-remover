@@ -47,7 +47,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: 'deploy/dist,deploy/package.json'
           target: /home/projects/watermark-remover
-          strip_components: 0
+          strip_components: 1
 
       # 7. 远程登录服务器，安装生产依赖
       - name: SSH and Install Dependencies
