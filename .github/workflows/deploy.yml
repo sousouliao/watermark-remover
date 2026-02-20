@@ -1,4 +1,4 @@
-name: Deploy to Tencent Cloud (1Panel)
+name: Deploy to Tencent Cloud
 
 # 触发条件：当 master 分支有代码 push 时触发
 on:
