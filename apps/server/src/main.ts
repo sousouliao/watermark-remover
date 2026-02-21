@@ -7,6 +7,7 @@ import process from 'node:process'
 import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import express from 'express'
+import morgan from 'morgan'
 import { AppModule } from './app.module'
 
 async function bootstrap() {
@@ -25,8 +26,8 @@ async function bootstrap() {
   // 启用 CORS 以支持跨域请求
   app.enableCors()
 
-  // 注册 50mb 限制的 body parser，用于处理 Base64 图片
   const expressApp = app.getHttpAdapter().getInstance() as express.Application
+  expressApp.use(morgan('combined'))
   expressApp.use(express.json({ limit: '50mb' }))
   expressApp.use(express.urlencoded({ limit: '50mb', extended: true }))
 
