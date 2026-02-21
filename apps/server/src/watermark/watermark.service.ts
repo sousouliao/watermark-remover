@@ -36,7 +36,7 @@ export class WatermarkService implements OnModuleInit {
    * 可以通过环境变量 IOPAINT_LAMA_URL 覆盖
    */
   private readonly iopaintUrl
-    = process.env.IOPAINT_LAMA_URL ?? 'https://nomark.xiaoqw-liao.workers.dev'
+    = process.env.IOPAINT_LAMA_URL ?? 'https://cf.nomark.lol/'
 
   async onModuleInit() {
     this.logger.log(`WatermarkService 已初始化，目标 IOPaint 实例: ${this.iopaintUrl}`)
