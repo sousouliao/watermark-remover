@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Columns2, Download, GripVertical, RotateCcw } from 'lucide-vue-next'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -19,6 +19,10 @@ const isDragging = ref(false)
 const containerRef = ref<HTMLDivElement | null>(null)
 const imageSize = ref({ width: 0, height: 0 })
 
+let rafId = 0
+let pendingClientX: number | null = null
+let lastPct = 50
+
 // Load image size for proper aspect ratio
 onMounted(() => {
   const img = new Image()
@@ -36,38 +40,61 @@ const aspectRatio = computed(() => {
   return 16 / 9
 })
 
-function updateSlider(clientX: number) {
+function updateSliderFromClientX(clientX: number) {
   if (!containerRef.value) return
   const rect = containerRef.value.getBoundingClientRect()
   const x = clientX - rect.left
   const pct = Math.max(0, Math.min(100, (x / rect.width) * 100))
-  sliderPosition.value = pct
+  lastPct = pct
+  containerRef.value.style.setProperty('--slider-pct', String(pct))
+}
+
+function tick() {
+  rafId = 0
+  if (pendingClientX === null) return
+  const x = pendingClientX
+  pendingClientX = null
+  updateSliderFromClientX(x)
+}
+
+function syncSliderPositionToRef() {
+  sliderPosition.value = lastPct
+}
+
+function setSliderPctFromRef() {
+  if (containerRef.value) {
+    lastPct = sliderPosition.value
+    containerRef.value.style.setProperty('--slider-pct', String(sliderPosition.value))
+  }
 }
 
 function handleMouseDown(e: MouseEvent) {
   e.preventDefault()
   isDragging.value = true
-  updateSlider(e.clientX)
+  updateSliderFromClientX(e.clientX)
 }
 
 function handleTouchStart(e: TouchEvent) {
   isDragging.value = true
-  updateSlider(e.touches[0].clientX)
+  updateSliderFromClientX(e.touches[0].clientX)
 }
 
 function handleMove(e: MouseEvent | TouchEvent) {
   if (!isDragging.value) return
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-  updateSlider(clientX)
+  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+  pendingClientX = clientX
+  if (rafId === 0) rafId = requestAnimationFrame(tick)
 }
 
 function handleUp() {
   isDragging.value = false
+  syncSliderPositionToRef()
 }
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'ArrowLeft') sliderPosition.value = Math.max(0, sliderPosition.value - 2)
   if (e.key === 'ArrowRight') sliderPosition.value = Math.min(100, sliderPosition.value + 2)
+  setSliderPctFromRef()
 }
 
 onMounted(() => {
@@ -82,6 +109,7 @@ onUnmounted(() => {
   window.removeEventListener('mouseup', handleUp)
   window.removeEventListener('touchmove', handleMove)
   window.removeEventListener('touchend', handleUp)
+  if (rafId !== 0) cancelAnimationFrame(rafId)
 })
 
 function handleDownload() {
@@ -93,7 +121,38 @@ function handleDownload() {
   document.body.removeChild(a)
 }
 
-const containerWidth = computed(() => containerRef.value?.clientWidth || 0)
+// ResizeObserver: set --container-width-px and initial --slider-pct, avoid reading layout during drag
+let resizeObserver: ResizeObserver | null = null
+watch(
+  () => viewMode.value === 'slider' && containerRef.value,
+  (shouldObserve) => {
+    const el = containerRef.value
+    if (!shouldObserve || !el) {
+      resizeObserver?.disconnect()
+      resizeObserver = null
+      return
+    }
+    if (!resizeObserver) {
+      resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0]
+        if (!entry || !containerRef.value) return
+        const width = (entry.target as HTMLElement).clientWidth
+        containerRef.value.style.setProperty('--container-width-px', `${width}px`)
+        containerRef.value.style.setProperty('--slider-pct', String(sliderPosition.value))
+        lastPct = sliderPosition.value
+      })
+    }
+    resizeObserver.observe(el)
+    const width = el.clientWidth
+    el.style.setProperty('--container-width-px', `${width}px`)
+    el.style.setProperty('--slider-pct', String(sliderPosition.value))
+    lastPct = sliderPosition.value
+  },
+  { immediate: true },
+)
+onUnmounted(() => {
+  resizeObserver?.disconnect()
+})
 </script>
 
 <template>
@@ -136,7 +195,8 @@ const containerWidth = computed(() => containerRef.value?.clientWidth || 0)
     <template v-if="viewMode === 'slider'">
       <div
         ref="containerRef"
-        class="glass-card relative max-h-[70vh] cursor-col-resize select-none overflow-hidden rounded-2xl"
+        class="glass-card comparison-slider-container relative max-h-[70vh] cursor-col-resize select-none overflow-hidden rounded-2xl"
+        :class="{ 'is-dragging': isDragging }"
         :style="{ aspectRatio }"
         role="slider"
         aria-label="Before and after comparison slider"
@@ -156,27 +216,19 @@ const containerWidth = computed(() => containerRef.value?.clientWidth || 0)
           draggable="false"
         >
 
-        <!-- Original (clipped) -->
-        <div
-          class="absolute inset-0 overflow-hidden"
-          :style="{ width: `${sliderPosition}%` }"
+        <!-- Original (clipped via clip-path, GPU-friendly) -->
+        <img
+          :src="originalUrl"
+          alt="Original image"
+          class="comparison-slider-original absolute inset-0 h-full w-full object-contain"
+          style="width: var(--container-width-px, 100vw); max-width: none; clip-path: inset(0 0 0 calc(var(--slider-pct, 50) * 1%));"
+          draggable="false"
         >
-          <img
-            :src="originalUrl"
-            alt="Original image"
-            class="absolute inset-0 h-full w-full object-contain"
-            :style="{
-              width: containerWidth ? `${containerWidth}px` : '100vw',
-              maxWidth: 'none',
-            }"
-            draggable="false"
-          >
-        </div>
 
-        <!-- Slider handle -->
+        <!-- Slider handle (position via CSS var to avoid re-renders during drag) -->
         <div
-          class="absolute top-0 bottom-0 z-10 flex w-0.5 items-center justify-center"
-          :style="{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }"
+          class="comparison-slider-handle absolute top-0 bottom-0 z-10 flex w-0.5 items-center justify-center"
+          style="left: calc(var(--slider-pct, 50) * 1%); transform: translateX(-50%);"
         >
           <div class="h-full w-0.5 bg-background/90 shadow-lg" />
           <div class="absolute flex h-10 w-6 items-center justify-center rounded-full bg-background shadow-lg ring-1 ring-border">
