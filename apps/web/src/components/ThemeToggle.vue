@@ -1,22 +1,51 @@
 <script setup lang="ts">
 import { Moon, Sun } from 'lucide-vue-next'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 
-const isDark = ref(false)
+type ThemeMode = 'light' | 'dark' | 'system'
 
-function toggleTheme() {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+const isDark = ref(false)
+const mode = ref<ThemeMode>('system')
+
+function getSystemDark(): boolean {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
+function applyTheme(dark: boolean) {
+  isDark.value = dark
+  document.documentElement.classList.toggle('dark', dark)
+}
+
+function applyFromSystem() {
+  applyTheme(getSystemDark())
+}
+
+function toggleTheme() {
+  const nextDark = !isDark.value
+  mode.value = nextDark ? 'dark' : 'light'
+  localStorage.setItem('theme', mode.value)
+  applyTheme(nextDark)
+}
+
+let mediaQuery: MediaQueryList | null = null
+
 onMounted(() => {
-  const stored = localStorage.getItem('theme')
-  if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    isDark.value = true
-    document.documentElement.classList.add('dark')
+  const stored = localStorage.getItem('theme') as ThemeMode | null
+  if (stored === 'dark' || stored === 'light') {
+    mode.value = stored
+    applyTheme(stored === 'dark')
   }
+  else {
+    mode.value = 'system'
+    applyFromSystem()
+    mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', applyFromSystem)
+  }
+})
+
+onUnmounted(() => {
+  mediaQuery?.removeEventListener('change', applyFromSystem)
 })
 </script>
 
