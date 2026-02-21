@@ -376,16 +376,6 @@ const hasMaskStrokes = computed(() => strokes.value.length > 0)
           @touchend.prevent="handlePointerUp"
         />
       </div>
-
-      <!-- Hint overlay when no strokes -->
-      <div
-        v-if="strokes.length === 0 && !isDrawing"
-        class="pointer-events-none absolute inset-0 flex items-end justify-center pb-4"
-      >
-        <div class="rounded-full bg-foreground/70 px-3 py-1.5 text-xs font-medium text-background backdrop-blur-sm">
-          Paint over the watermark you want to remove
-        </div>
-      </div>
     </div>
   </div>
 </template>
