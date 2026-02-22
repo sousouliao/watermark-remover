@@ -10,6 +10,7 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { HealthController } from './health/health.controller'
+import { UpscaleModule } from './upscale/upscale.module'
 import { WatermarkModule } from './watermark/watermark.module'
 
 @Module({
@@ -23,6 +24,7 @@ import { WatermarkModule } from './watermark/watermark.module'
       exclude: ['/api/{*splat}'],
     }),
     WatermarkModule,
+    UpscaleModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

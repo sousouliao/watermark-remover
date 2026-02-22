@@ -5,11 +5,19 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 export function useResultViewer(
   props: { originalUrl: string, resultUrl: string },
   containerRef: Ref<HTMLDivElement | null>,
+  emit: (event: 'update:resultUrl', url: string) => void,
 ) {
   const viewMode = ref<ViewMode>('slider')
   const sliderPosition = ref(50)
   const isDragging = ref(false)
   const imageSize = ref({ width: 0, height: 0 })
+
+  // Upscale 状态
+  const isUpscaling = ref(false)
+  const isUpscaled = ref(false)
+  const upscaleError = ref<string | null>(null)
+  const preUpscaleUrl = ref<string | null>(null)
+  const upscaledUrl = ref<string | null>(null)
 
   let rafId = 0
   let pendingClientX: number | null = null
@@ -106,10 +114,69 @@ export function useResultViewer(
   function handleDownload() {
     const a = document.createElement('a')
     a.href = props.resultUrl
-    a.download = `watermark-removed-${Date.now()}.png`
+    const prefix = isUpscaled.value ? 'upscaled' : 'watermark-removed'
+    a.download = `${prefix}-${Date.now()}.png`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+  }
+
+  async function handleUpscale() {
+    if (isUpscaling.value || isUpscaled.value) return
+
+    // 缓存命中：直接使用之前增强过的结果，秒切换
+    if (upscaledUrl.value) {
+      preUpscaleUrl.value = props.resultUrl
+      emit('update:resultUrl', upscaledUrl.value)
+      isUpscaled.value = true
+      return
+    }
+
+    isUpscaling.value = true
+    upscaleError.value = null
+
+    // 保存增强前的图片，以便回退
+    preUpscaleUrl.value = props.resultUrl
+
+    try {
+      const response = await fetch('/api/upscale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: props.resultUrl,
+          scale: 2,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`)
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        upscaledUrl.value = result.data.image // 缓存增强结果
+        emit('update:resultUrl', result.data.image)
+        isUpscaled.value = true
+      }
+      else {
+        throw new Error(result.message || 'Unknown server error')
+      }
+    }
+    catch (err) {
+      console.error('Upscale failed:', err)
+      upscaleError.value = 'Enhancement failed. Please try again.'
+      preUpscaleUrl.value = null
+    }
+    finally {
+      isUpscaling.value = false
+    }
+  }
+
+  function handleRevertUpscale() {
+    if (!preUpscaleUrl.value) return
+    emit('update:resultUrl', preUpscaleUrl.value)
+    isUpscaled.value = false
+    // 不清空 upscaledUrl，保留缓存以便再次切换
   }
 
   let resizeObserver: ResizeObserver | null = null
@@ -149,9 +216,14 @@ export function useResultViewer(
     sliderPosition,
     isDragging,
     aspectRatio,
+    isUpscaling,
+    isUpscaled,
+    upscaleError,
     handleMouseDown,
     handleTouchStart,
     handleKeyDown,
     handleDownload,
+    handleUpscale,
+    handleRevertUpscale,
   }
 }

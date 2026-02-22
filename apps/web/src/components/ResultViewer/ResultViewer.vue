@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Columns2, Download, GripVertical, RotateCcw } from 'lucide-vue-next'
+import { Columns2, Download, GripVertical, Loader2, RotateCcw, Sparkles, Undo2 } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -12,6 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'reset'): void
+  (e: 'update:resultUrl', url: string): void
 }>()
 
 const containerRef = ref<HTMLDivElement | null>(null)
@@ -21,11 +22,16 @@ const {
   sliderPosition,
   isDragging,
   aspectRatio,
+  isUpscaling,
+  isUpscaled,
+  upscaleError,
   handleMouseDown,
   handleTouchStart,
   handleKeyDown,
   handleDownload,
-} = useResultViewer(props, containerRef)
+  handleUpscale,
+  handleRevertUpscale,
+} = useResultViewer(props, containerRef, emit)
 </script>
 
 <template>
@@ -147,18 +153,51 @@ const {
       </div>
     </template>
 
+    <!-- Upscale error message -->
+    <div
+      v-if="upscaleError"
+      class="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-sm text-destructive"
+    >
+      <span>{{ upscaleError }}</span>
+    </div>
+
     <!-- Action buttons -->
     <div class="flex flex-col gap-2 sm:flex-row sm:justify-center">
       <Button
         class="gradient-btn h-11 gap-2 rounded-xl text-sm font-medium text-primary-foreground shadow-md shadow-primary/15 transition-all hover:shadow-lg hover:shadow-primary/20"
+        :disabled="isUpscaling"
         @click="handleDownload"
       >
         <Download class="h-4 w-4" />
         Download Result
       </Button>
       <Button
+        v-if="isUpscaled"
+        variant="outline"
+        class="h-11 gap-2 rounded-xl text-sm font-medium border-amber-500/30 text-amber-600 hover:bg-amber-500/10 dark:text-amber-400 transition-all"
+        @click="handleRevertUpscale"
+      >
+        <Undo2 class="h-4 w-4" />
+        Undo Enhance
+      </Button>
+      <Button
+        v-else
+        :disabled="isUpscaling"
+        :class="cn(
+          'h-11 gap-2 rounded-xl text-sm font-medium transition-all',
+          'bg-linear-to-r from-violet-500/10 to-fuchsia-500/10 border-violet-500/30 text-violet-600 hover:from-violet-500/20 hover:to-fuchsia-500/20 dark:text-violet-400',
+        )"
+        variant="outline"
+        @click="handleUpscale"
+      >
+        <Loader2 v-if="isUpscaling" class="h-4 w-4 animate-spin" />
+        <Sparkles v-else class="h-4 w-4" />
+        {{ isUpscaling ? 'Enhancing...' : 'HD Enhance' }}
+      </Button>
+      <Button
         variant="outline"
         class="h-11 gap-2 rounded-xl text-sm"
+        :disabled="isUpscaling"
         @click="emit('reset')"
       >
         <RotateCcw class="h-4 w-4" />

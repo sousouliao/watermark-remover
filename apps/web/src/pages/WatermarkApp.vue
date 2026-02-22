@@ -99,6 +99,7 @@ function handleProcess() {
           :original-url="imageDataUrl"
           :result-url="resultUrl"
           @reset="handleReset"
+          @update:result-url="(url: string) => resultUrl = url"
         />
       </div>
     </main>
