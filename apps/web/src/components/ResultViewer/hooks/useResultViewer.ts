@@ -1,11 +1,14 @@
+import type { Ref } from 'vue'
 import type { ViewMode } from '@/types/app'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-export function useResultViewer(props: { originalUrl: string, resultUrl: string }) {
+export function useResultViewer(
+  props: { originalUrl: string, resultUrl: string },
+  containerRef: Ref<HTMLDivElement | null>,
+) {
   const viewMode = ref<ViewMode>('slider')
   const sliderPosition = ref(50)
   const isDragging = ref(false)
-  const containerRef = ref<HTMLDivElement | null>(null)
   const imageSize = ref({ width: 0, height: 0 })
 
   let rafId = 0
@@ -145,12 +148,9 @@ export function useResultViewer(props: { originalUrl: string, resultUrl: string 
     viewMode,
     sliderPosition,
     isDragging,
-    containerRef,
     aspectRatio,
     handleMouseDown,
     handleTouchStart,
-    handleMove,
-    handleUp,
     handleKeyDown,
     handleDownload,
   }

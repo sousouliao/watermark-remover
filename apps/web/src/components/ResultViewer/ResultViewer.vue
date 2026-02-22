@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Columns2, Download, GripVertical, RotateCcw } from 'lucide-vue-next'
+import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useResultViewer } from './hooks/useResultViewer'
@@ -13,17 +14,18 @@ const emit = defineEmits<{
   (e: 'reset'): void
 }>()
 
+const containerRef = ref<HTMLDivElement | null>(null)
+
 const {
   viewMode,
   sliderPosition,
   isDragging,
-  containerRef,
   aspectRatio,
   handleMouseDown,
   handleTouchStart,
   handleKeyDown,
   handleDownload,
-} = useResultViewer(props)
+} = useResultViewer(props, containerRef)
 </script>
 
 <template>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Minus, Paintbrush, Plus, Trash2, Undo2 } from 'lucide-vue-next'
+import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
@@ -9,10 +10,11 @@ const props = defineProps<{
   imageDataUrl: string
 }>()
 
+const containerRef = ref<HTMLDivElement | null>(null)
+const imageCanvasRef = ref<HTMLCanvasElement | null>(null)
+const maskCanvasRef = ref<HTMLCanvasElement | null>(null)
+
 const {
-  containerRef,
-  imageCanvasRef,
-  maskCanvasRef,
   brushSize,
   isDrawing,
   canvasSize,
@@ -30,7 +32,7 @@ const {
   handleClear,
   getMaskDataUrl,
   hasMask,
-} = useMaskEditor(props)
+} = useMaskEditor(props, { containerRef, imageCanvasRef, maskCanvasRef })
 
 defineExpose({ getMaskDataUrl, hasMask })
 </script>

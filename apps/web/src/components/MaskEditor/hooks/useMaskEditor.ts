@@ -1,11 +1,19 @@
+import type { Ref } from 'vue'
 import type { Stroke } from '@/types/mask'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { getCanvasPoint } from '@/utils/canvas'
 
-export function useMaskEditor(props: { imageDataUrl: string }) {
-  const containerRef = ref<HTMLDivElement | null>(null)
-  const imageCanvasRef = ref<HTMLCanvasElement | null>(null)
-  const maskCanvasRef = ref<HTMLCanvasElement | null>(null)
+interface MaskEditorRefs {
+  containerRef: Ref<HTMLDivElement | null>
+  imageCanvasRef: Ref<HTMLCanvasElement | null>
+  maskCanvasRef: Ref<HTMLCanvasElement | null>
+}
+
+export function useMaskEditor(
+  props: { imageDataUrl: string },
+  refs: MaskEditorRefs,
+) {
+  const { containerRef, imageCanvasRef, maskCanvasRef } = refs
 
   const brushSize = ref([24])
   const isDrawing = ref(false)
@@ -207,9 +215,6 @@ export function useMaskEditor(props: { imageDataUrl: string }) {
   const hasMaskStrokes = computed(() => strokes.value.length > 0)
 
   return {
-    containerRef,
-    imageCanvasRef,
-    maskCanvasRef,
     brushSize,
     isDrawing,
     canvasSize,
