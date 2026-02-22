@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { Image as ImageIcon, Upload, X } from 'lucide-vue-next'
 import { ref } from 'vue'
+import { ACCEPTED_TYPES, MAX_SIZE_BYTES, MAX_SIZE_MB } from '@/constants/upload'
 import { cn } from '@/lib/utils'
 
 const emit = defineEmits<{
   (e: 'imageSelect', file: File, dataUrl: string): void
 }>()
-
-const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp']
-const MAX_SIZE_MB = 10
-const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024
 
 const isDragOver = ref(false)
 const error = ref<string | null>(null)

@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-
-const STEPS = [
-  'Analyzing image...',
-  'Detecting watermark region...',
-  'Running AI inpainting model...',
-  'Reconstructing pixels...',
-  'Finalizing result...',
-]
+import { PROCESSING_STEPS } from '@/constants/processing'
 
 const currentStep = ref(0)
 let stepInterval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   stepInterval = setInterval(() => {
-    if (currentStep.value < STEPS.length - 1) {
+    if (currentStep.value < PROCESSING_STEPS.length - 1) {
       currentStep.value++
     }
   }, 3000)
@@ -54,11 +47,11 @@ onUnmounted(() => {
     <!-- Step indicator -->
     <div class="flex flex-col items-center gap-2">
       <p class="min-h-5 text-center text-sm font-medium text-foreground">
-        {{ STEPS[currentStep] }}
+        {{ PROCESSING_STEPS[currentStep] }}
       </p>
       <div class="flex gap-1">
         <div
-          v-for="(_, i) in STEPS"
+          v-for="(_, i) in PROCESSING_STEPS"
           :key="i"
           class="h-1 rounded-full transition-all duration-300"
           :class="[

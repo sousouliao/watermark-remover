@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Eraser } from 'lucide-vue-next'
-import ThemeToggle from './ThemeToggle.vue'
+import ThemeToggle from '../ThemeToggle/ThemeToggle.vue'
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import WatermarkApp from './components/WatermarkApp.vue'
+import WatermarkApp from './pages/WatermarkApp.vue'
 </script>
 
 <template>
