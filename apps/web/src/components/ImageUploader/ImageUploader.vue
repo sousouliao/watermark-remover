@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { Image as ImageIcon, Upload, X } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { ACCEPTED_TYPES, MAX_SIZE_BYTES, MAX_SIZE_MB } from '@/constants/upload'
 import { cn } from '@/lib/utils'
+import { useGlobalStore } from '@/stores/global'
 
 const emit = defineEmits<{
   (e: 'imageSelect', file: File, dataUrl: string): void
 }>()
+
+const { isMobile } = storeToRefs(useGlobalStore())
 
 const isDragOver = ref(false)
 const error = ref<string | null>(null)
@@ -70,7 +74,7 @@ function handleInputChange(e: Event) {
     <div
       role="button"
       tabindex="0"
-      aria-label="Upload image area. Drop your image here or click to browse."
+      :aria-label="isMobile ? 'Upload image area. Tap to select an image.' : 'Upload image area. Drop your image here or click to browse.'"
       :class="cn(
         'glass-card group relative flex min-h-[280px] cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-8 transition-all duration-300 md:min-h-[320px]',
         isDragOver
@@ -108,7 +112,7 @@ function handleInputChange(e: Event) {
 
       <div class="text-center">
         <p class="text-sm font-medium text-foreground md:text-base">
-          {{ isDragOver ? "Drop your image here" : "Drop your image here or click to browse" }}
+          {{ isDragOver ? 'Drop your image here' : isMobile ? 'Tap to select an image' : 'Drop your image here or click to browse' }}
         </p>
         <p class="mt-1.5 text-xs text-muted-foreground">
           PNG, JPG, WEBP &middot; Max {{ MAX_SIZE_MB }}MB
