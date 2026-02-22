@@ -46,7 +46,7 @@ const emit = defineEmits<{
     </div>
 
     <!-- Mobile fixed bottom bar -->
-    <div class="fixed inset-x-0 bottom-0 z-50 flex items-center gap-2.5 border-t border-border bg-background/80 px-4 py-3 backdrop-blur-xl md:hidden">
+    <div class="fixed inset-x-0 bottom-0 z-50 flex items-center gap-2.5 border-t border-border bg-background/80 px-4 py-3 backdrop-blur-xl md:hidden" style="padding-bottom: calc(0.75rem + var(--safe-bottom))">
       <Button
         variant="outline"
         :disabled="isProcessing"
