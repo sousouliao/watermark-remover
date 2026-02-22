@@ -4,7 +4,7 @@ import ThemeToggle from '../ThemeToggle/ThemeToggle.vue'
 </script>
 
 <template>
-  <header class="flex items-center justify-between px-6 py-4 md:px-6 lg:px-8">
+  <header class="flex items-center justify-between px-6 py-4 md:px-6 lg:px-8" style="padding-top: calc(1rem + var(--safe-top))">
     <div class="flex items-center gap-3">
       <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
         <Eraser class="h-5 w-5 text-primary" />
