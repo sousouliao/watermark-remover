@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Loader2, RotateCcw, Wand2 } from 'lucide-vue-next'
+import { ImagePlus, Loader2, Wand2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
 defineProps<{
@@ -22,11 +22,11 @@ const emit = defineEmits<{
         variant="outline"
         :disabled="isProcessing"
         class="h-11 gap-2 rounded-xl border-border bg-secondary/50 text-sm text-foreground hover:bg-secondary hover:text-foreground"
-        aria-label="Reset and start over"
+        aria-label="Upload new image"
         @click="emit('reset')"
       >
-        <RotateCcw class="h-4 w-4" />
-        Reset
+        <ImagePlus class="h-4 w-4" />
+        New Image
       </Button>
       <Button
         :disabled="!canProcess || isProcessing"
@@ -52,10 +52,10 @@ const emit = defineEmits<{
         :disabled="isProcessing"
         size="icon"
         class="h-11 w-11 shrink-0 rounded-xl border-border bg-secondary/50 text-foreground hover:bg-secondary hover:text-foreground"
-        aria-label="Reset and start over"
+        aria-label="Upload new image"
         @click="emit('reset')"
       >
-        <RotateCcw class="h-4 w-4" />
+        <ImagePlus class="h-4 w-4" />
       </Button>
       <Button
         :disabled="!canProcess || isProcessing"

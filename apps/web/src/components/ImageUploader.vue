@@ -78,7 +78,7 @@ function handleInputChange(e: Event) {
         'glass-card group relative flex min-h-[280px] cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-8 transition-all duration-300 md:min-h-[320px]',
         isDragOver
           ? 'border-primary bg-primary/5 scale-[1.02]'
-          : 'border-border hover:border-primary/50 hover:bg-primary/2',
+          : 'border-border hover:border-primary/50 hover:bg-primary/5',
         error && 'border-destructive/50',
       )"
       @click="handleClick"

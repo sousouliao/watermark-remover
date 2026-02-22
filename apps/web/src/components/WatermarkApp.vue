@@ -94,14 +94,14 @@ function handleReset() {
   <div class="flex min-h-svh flex-col">
     <AppHeader />
 
-    <main class="flex flex-1 flex-col items-center px-4 pb-24 md:pb-8">
+    <main class="flex flex-1 flex-col items-center px-6 pb-24 md:pb-8">
       <div class="w-full max-w-[1000px]">
         <!-- Step indicators -->
         <div class="mb-6 flex items-center justify-center gap-2 md:mb-8">
           <div v-for="(label, i) in steps" :key="label" class="flex items-center gap-2">
             <div
               v-if="i > 0"
-              class="h-px w-6 transition-colors md:w-10"
+              class="h-0.5 w-6 transition-colors md:w-10"
               :class="[i <= currentStepIndex ? 'bg-primary' : 'bg-border']"
             />
             <div class="flex items-center gap-1.5">

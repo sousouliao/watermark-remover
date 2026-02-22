@@ -28,6 +28,10 @@ const showToolbar = ref(true)
 const imageEl = ref<HTMLImageElement | null>(null)
 const scaleValue = ref(1)
 
+const cursorX = ref(0)
+const cursorY = ref(0)
+const isHovering = ref(false)
+
 // Load image
 function loadImage() {
   const img = new Image()
@@ -95,7 +99,7 @@ function redrawMask() {
   for (const stroke of allStrokes) {
     if (stroke.points.length < 2) continue
     ctx.beginPath()
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)'
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.6)'
     ctx.lineWidth = stroke.brushSize
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -140,11 +144,25 @@ function handlePointerDown(e: MouseEvent | TouchEvent) {
   currentStroke.value = { points: [point], brushSize: brushSize.value[0] }
 }
 
+function handlePointerEnter() {
+  isHovering.value = true
+}
+
+function handlePointerLeave() {
+  isHovering.value = false
+  handlePointerUp()
+}
+
 function handlePointerMove(e: MouseEvent | TouchEvent) {
-  if (!isDrawing.value || !currentStroke.value) return
-  e.preventDefault()
   const point = getCanvasPoint(e)
   if (!point) return
+
+  // Update cursor position for preview
+  cursorX.value = point.x
+  cursorY.value = point.y
+
+  if (!isDrawing.value || !currentStroke.value) return
+  e.preventDefault()
   currentStroke.value = {
     ...currentStroke.value,
     points: [...currentStroke.value.points, point],
@@ -263,7 +281,7 @@ const hasMaskStrokes = computed(() => strokes.value.length > 0)
             tabindex="-1"
           >
             <span
-              class="rounded-full bg-red-500/50 transition-all duration-150"
+              class="rounded-full bg-cyan-400/60 transition-all duration-150"
               :style="{
                 width: `${Math.max(6, Math.min(brushSize[0] * 0.6, 28))}px`,
                 height: `${Math.max(6, Math.min(brushSize[0] * 0.6, 28))}px`,
@@ -275,7 +293,7 @@ const hasMaskStrokes = computed(() => strokes.value.length > 0)
           <div class="flex flex-1 items-center gap-2 min-w-0">
             <button
               type="button"
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               aria-label="Decrease brush size"
               @click="brushSize = [Math.max(4, brushSize[0] - 4)]"
             >
@@ -295,7 +313,7 @@ const hasMaskStrokes = computed(() => strokes.value.length > 0)
 
             <button
               type="button"
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-border bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               aria-label="Increase brush size"
               @click="brushSize = [Math.min(60, brushSize[0] + 4)]"
             >
@@ -318,7 +336,7 @@ const hasMaskStrokes = computed(() => strokes.value.length > 0)
             size="sm"
             :disabled="!hasMaskStrokes"
             aria-label="Undo last stroke"
-            class="h-8 gap-1.5 rounded-lg border-border bg-secondary/50 px-2.5 text-xs text-foreground hover:bg-secondary hover:text-foreground"
+            class="h-8 gap-1.5 rounded-xl border-border bg-secondary/50 px-2.5 text-xs text-foreground hover:bg-secondary hover:text-foreground"
             @click="handleUndo"
           >
             <Undo2 class="h-3.5 w-3.5" />
@@ -329,7 +347,7 @@ const hasMaskStrokes = computed(() => strokes.value.length > 0)
             size="sm"
             :disabled="!hasMaskStrokes"
             aria-label="Clear all masks"
-            class="h-8 gap-1.5 rounded-lg border-destructive/40 bg-destructive/10 px-2.5 text-xs text-destructive hover:border-destructive/60 hover:bg-destructive/20 hover:text-destructive"
+            class="h-8 gap-1.5 rounded-xl border-destructive/40 bg-destructive/10 px-2.5 text-xs text-destructive hover:border-destructive/60 hover:bg-destructive/20 hover:text-destructive"
             @click="handleClear"
           >
             <Trash2 class="h-3.5 w-3.5" />
@@ -363,17 +381,28 @@ const hasMaskStrokes = computed(() => strokes.value.length > 0)
         />
         <canvas
           ref="maskCanvasRef"
-          class="absolute inset-0 cursor-crosshair touch-none"
+          class="absolute inset-0 cursor-none touch-none"
           :style="{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }"
           aria-label="Mask drawing canvas. Use your mouse or finger to paint over the watermark."
           role="img"
           @mousedown="handlePointerDown"
+          @mouseenter="handlePointerEnter"
           @mousemove="handlePointerMove"
           @mouseup="handlePointerUp"
-          @mouseleave="handlePointerUp"
+          @mouseleave="handlePointerLeave"
           @touchstart.prevent="handlePointerDown"
           @touchmove.prevent="handlePointerMove"
           @touchend.prevent="handlePointerUp"
+        />
+        <div
+          v-show="isHovering && !isDrawing"
+          class="pointer-events-none absolute rounded-full border border-cyan-400 bg-cyan-400/30"
+          :style="{
+            width: `${brushSize[0]}px`,
+            height: `${brushSize[0]}px`,
+            left: `${cursorX - brushSize[0] / 2}px`,
+            top: `${cursorY - brushSize[0] / 2}px`,
+          }"
         />
       </div>
     </div>
