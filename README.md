@@ -2,6 +2,8 @@
 
 AI 驱动的图片水印移除工具。上传图片、标记水印区域、一键移除，即刻下载干净图片。
 
+新版重构与 Seedream 5.0 Lite / Flash 双模型接入计划见[路线图](./knowledge/roadmap.md)；开发过程与项目约定从[知识库](./knowledge/README.md)进入。
+
 ## 项目概览
 
 本项目采用 **Monorepo** 架构，包含前端 Web 应用和后端 BFF 服务：
