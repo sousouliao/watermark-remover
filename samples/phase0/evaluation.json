@@ -1,0 +1,1314 @@
+{
+  "date": "2026-09-23",
+  "sample_set": "samples/phase0/manifest.json",
+  "comparison_count": 80,
+  "request": {
+    "api": "POST /api/v3/images/generations",
+    "size": "2K",
+    "output_format": "png",
+    "response_format": "url",
+    "watermark": false,
+    "image": "marked image as data URL via arkcli --input @<file>",
+    "models": {
+      "lite": "ep-20260923164857-dr5rx",
+      "flash": "ep-20260923164909-dxszf"
+    },
+    "direct_prompt": "请仅移除这张照片中后加的 {label} 水印文字或标识，恢复其下的原照片纹理。保留原照片的构图、人物、物体、颜色和原有文字，不要添加新元素或新文字。",
+    "bbox_prompt": "请仅移除 <bbox>{x1} {y1} {x2} {y2}</bbox> 区域内后加的 {label} 水印文字或标识，恢复其下的原照片纹理。区域外保持不变；保留原照片中的人物、物体和原有文字，不要添加新元素或新文字。",
+    "labels": {
+      "corner_text": "© DEMO",
+      "semi_transparent": "SAMPLE",
+      "large_logo": "BRAND",
+      "central_text": "PREVIEW"
+    }
+  },
+  "metric_notes": {
+    "outside_mae": "输出图缩放到 1024x1024 后，与干净参考图在水印框外加 20 像素排除带的 RGB 平均绝对差；越低越好，但会受重新绘制、色彩、裁切与缩放影响。",
+    "target_improvement": "1 - (输出与干净参考在水印框内的 MAE / 标记图与干净参考在框内的 MAE)；越高越好，负值不等于文字残留。",
+    "visual_review": "四张对照拼图在本机临时目录查看；80 个输出均目视未见合成水印残留，样本 19 Flash 花心纹理明显变平滑。"
+  },
+  "results": [
+    {
+      "sample": "01",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 14.581,
+      "result_target_mae": 7.759,
+      "target_improvement": 0.468,
+      "outside_mae": 7.675,
+      "status": "succeeded",
+      "latency_seconds": null,
+      "latency_note": "首个真实样本调用未独立计时",
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG",
+      "prompt_override": "请仅去掉画面右下角后加的 © DEMO 水印文字，恢复其下的照片纹理。保留原照片的构图、人物、物体、颜色和原有文字，不要添加新元素或新文字。"
+    },
+    {
+      "sample": "01",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 14.581,
+      "result_target_mae": 7.296,
+      "target_improvement": 0.5,
+      "outside_mae": 7.52,
+      "status": "succeeded",
+      "latency_seconds": 33.5,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "01",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 14.581,
+      "result_target_mae": 9.315,
+      "target_improvement": 0.361,
+      "outside_mae": 7.752,
+      "status": "succeeded",
+      "latency_seconds": 25.69,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "01",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 14.581,
+      "result_target_mae": 9.122,
+      "target_improvement": 0.374,
+      "outside_mae": 5.137,
+      "status": "succeeded",
+      "latency_seconds": 26.29,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "02",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 13.298,
+      "result_target_mae": 14.189,
+      "target_improvement": -0.067,
+      "outside_mae": 8.507,
+      "status": "succeeded",
+      "latency_seconds": 33.47,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "02",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 13.298,
+      "result_target_mae": 14.532,
+      "target_improvement": -0.093,
+      "outside_mae": 8.314,
+      "status": "succeeded",
+      "latency_seconds": 32.14,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "02",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 13.298,
+      "result_target_mae": 15.168,
+      "target_improvement": -0.141,
+      "outside_mae": 9.866,
+      "status": "succeeded",
+      "latency_seconds": 25.79,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "02",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 13.298,
+      "result_target_mae": 8.415,
+      "target_improvement": 0.367,
+      "outside_mae": 5.34,
+      "status": "succeeded",
+      "latency_seconds": 25.45,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "03",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 99.62,
+      "result_target_mae": 23.346,
+      "target_improvement": 0.766,
+      "outside_mae": 13.345,
+      "status": "succeeded",
+      "latency_seconds": 40.51,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "03",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 99.62,
+      "result_target_mae": 26.686,
+      "target_improvement": 0.732,
+      "outside_mae": 13.405,
+      "status": "succeeded",
+      "latency_seconds": 41.93,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "03",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 99.62,
+      "result_target_mae": 22.244,
+      "target_improvement": 0.777,
+      "outside_mae": 14.108,
+      "status": "succeeded",
+      "latency_seconds": 26.51,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "03",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 99.62,
+      "result_target_mae": 14.83,
+      "target_improvement": 0.851,
+      "outside_mae": 7.261,
+      "status": "succeeded",
+      "latency_seconds": 29.59,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "04",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 29.991,
+      "result_target_mae": 37.131,
+      "target_improvement": -0.238,
+      "outside_mae": 35.172,
+      "status": "succeeded",
+      "latency_seconds": 32.18,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "04",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 29.991,
+      "result_target_mae": 37.1,
+      "target_improvement": -0.237,
+      "outside_mae": 35.09,
+      "status": "succeeded",
+      "latency_seconds": 34.75,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "04",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 29.991,
+      "result_target_mae": 26.697,
+      "target_improvement": 0.11,
+      "outside_mae": 22.635,
+      "status": "succeeded",
+      "latency_seconds": 26.98,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "04",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 29.991,
+      "result_target_mae": 14.964,
+      "target_improvement": 0.501,
+      "outside_mae": 10.96,
+      "status": "succeeded",
+      "latency_seconds": 26.53,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "05",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 19.548,
+      "result_target_mae": 35.849,
+      "target_improvement": -0.834,
+      "outside_mae": 26.145,
+      "status": "succeeded",
+      "latency_seconds": 36.33,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "05",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 19.548,
+      "result_target_mae": 36.644,
+      "target_improvement": -0.875,
+      "outside_mae": 26.364,
+      "status": "succeeded",
+      "latency_seconds": 31.79,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "05",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 19.548,
+      "result_target_mae": 28.132,
+      "target_improvement": -0.439,
+      "outside_mae": 15.103,
+      "status": "succeeded",
+      "latency_seconds": 26.32,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "05",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 19.548,
+      "result_target_mae": 30.009,
+      "target_improvement": -0.535,
+      "outside_mae": 17.802,
+      "status": "succeeded",
+      "latency_seconds": 25.53,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "06",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 14.816,
+      "result_target_mae": 12.492,
+      "target_improvement": 0.157,
+      "outside_mae": 11.443,
+      "status": "succeeded",
+      "latency_seconds": 34.48,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "06",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 14.816,
+      "result_target_mae": 12.649,
+      "target_improvement": 0.146,
+      "outside_mae": 11.635,
+      "status": "succeeded",
+      "latency_seconds": 37.43,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "06",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 14.816,
+      "result_target_mae": 7.7,
+      "target_improvement": 0.48,
+      "outside_mae": 6.291,
+      "status": "succeeded",
+      "latency_seconds": 26.97,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "06",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 14.816,
+      "result_target_mae": 7.145,
+      "target_improvement": 0.518,
+      "outside_mae": 5.702,
+      "status": "succeeded",
+      "latency_seconds": 28.12,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "07",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 31.754,
+      "result_target_mae": 2.099,
+      "target_improvement": 0.934,
+      "outside_mae": 13.682,
+      "status": "succeeded",
+      "latency_seconds": 32.92,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "07",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 31.754,
+      "result_target_mae": 2.641,
+      "target_improvement": 0.917,
+      "outside_mae": 15.029,
+      "status": "succeeded",
+      "latency_seconds": 32.99,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "07",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 31.754,
+      "result_target_mae": 4.263,
+      "target_improvement": 0.866,
+      "outside_mae": 8.217,
+      "status": "succeeded",
+      "latency_seconds": 24.37,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "07",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 31.754,
+      "result_target_mae": 4.212,
+      "target_improvement": 0.867,
+      "outside_mae": 7.6,
+      "status": "succeeded",
+      "latency_seconds": 27.61,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "08",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 25.154,
+      "result_target_mae": 16.772,
+      "target_improvement": 0.333,
+      "outside_mae": 12.288,
+      "status": "succeeded",
+      "latency_seconds": 28.48,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "08",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 25.154,
+      "result_target_mae": 14.823,
+      "target_improvement": 0.411,
+      "outside_mae": 9.505,
+      "status": "succeeded",
+      "latency_seconds": 32.92,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "08",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 25.154,
+      "result_target_mae": 14.552,
+      "target_improvement": 0.422,
+      "outside_mae": 10.591,
+      "status": "succeeded",
+      "latency_seconds": 27.98,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "08",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 25.154,
+      "result_target_mae": 7.644,
+      "target_improvement": 0.696,
+      "outside_mae": 5.211,
+      "status": "succeeded",
+      "latency_seconds": 27.59,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "09",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 17.231,
+      "result_target_mae": 9.476,
+      "target_improvement": 0.45,
+      "outside_mae": 6.217,
+      "status": "succeeded",
+      "latency_seconds": 32.1,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "09",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 17.231,
+      "result_target_mae": 12.228,
+      "target_improvement": 0.29,
+      "outside_mae": 6.04,
+      "status": "succeeded",
+      "latency_seconds": 34.73,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "09",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 17.231,
+      "result_target_mae": 6.652,
+      "target_improvement": 0.614,
+      "outside_mae": 3.363,
+      "status": "succeeded",
+      "latency_seconds": 29.07,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "09",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 17.231,
+      "result_target_mae": 7.487,
+      "target_improvement": 0.565,
+      "outside_mae": 3.095,
+      "status": "succeeded",
+      "latency_seconds": 32.42,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "10",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 14.15,
+      "result_target_mae": 15.985,
+      "target_improvement": -0.13,
+      "outside_mae": 12.931,
+      "status": "succeeded",
+      "latency_seconds": 44.53,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "10",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 14.15,
+      "result_target_mae": 16.29,
+      "target_improvement": -0.151,
+      "outside_mae": 12.792,
+      "status": "succeeded",
+      "latency_seconds": 35.12,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "10",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 14.15,
+      "result_target_mae": 10.419,
+      "target_improvement": 0.264,
+      "outside_mae": 7.757,
+      "status": "succeeded",
+      "latency_seconds": 26.72,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "10",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 14.15,
+      "result_target_mae": 10.712,
+      "target_improvement": 0.243,
+      "outside_mae": 7.95,
+      "status": "succeeded",
+      "latency_seconds": 31.14,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "11",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 83.656,
+      "result_target_mae": 38.654,
+      "target_improvement": 0.538,
+      "outside_mae": 20.343,
+      "status": "succeeded",
+      "latency_seconds": 33.23,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "11",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 83.656,
+      "result_target_mae": 31.823,
+      "target_improvement": 0.62,
+      "outside_mae": 23.001,
+      "status": "succeeded",
+      "latency_seconds": 31.98,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "11",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 83.656,
+      "result_target_mae": 21.364,
+      "target_improvement": 0.745,
+      "outside_mae": 14.666,
+      "status": "succeeded",
+      "latency_seconds": 27.23,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "11",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 83.656,
+      "result_target_mae": 22.739,
+      "target_improvement": 0.728,
+      "outside_mae": 12.234,
+      "status": "succeeded",
+      "latency_seconds": 27.27,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "12",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 23.793,
+      "result_target_mae": 16.174,
+      "target_improvement": 0.32,
+      "outside_mae": 14.366,
+      "status": "succeeded",
+      "latency_seconds": 39.08,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "12",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 23.793,
+      "result_target_mae": 15.442,
+      "target_improvement": 0.351,
+      "outside_mae": 13.728,
+      "status": "succeeded",
+      "latency_seconds": 31.87,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "12",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 23.793,
+      "result_target_mae": 14.956,
+      "target_improvement": 0.371,
+      "outside_mae": 13.148,
+      "status": "succeeded",
+      "latency_seconds": 27.96,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "12",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 23.793,
+      "result_target_mae": 15.332,
+      "target_improvement": 0.356,
+      "outside_mae": 13.981,
+      "status": "succeeded",
+      "latency_seconds": 26.36,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "13",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 17.567,
+      "result_target_mae": 20.441,
+      "target_improvement": -0.164,
+      "outside_mae": 16.963,
+      "status": "succeeded",
+      "latency_seconds": 33.69,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "13",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 17.567,
+      "result_target_mae": 21.426,
+      "target_improvement": -0.22,
+      "outside_mae": 17.715,
+      "status": "succeeded",
+      "latency_seconds": 35.47,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "13",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 17.567,
+      "result_target_mae": 16.715,
+      "target_improvement": 0.048,
+      "outside_mae": 11.653,
+      "status": "succeeded",
+      "latency_seconds": 28.07,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "13",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 17.567,
+      "result_target_mae": 16.383,
+      "target_improvement": 0.067,
+      "outside_mae": 12.224,
+      "status": "succeeded",
+      "latency_seconds": 25.62,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "14",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 12.184,
+      "result_target_mae": 18.495,
+      "target_improvement": -0.518,
+      "outside_mae": 13.465,
+      "status": "succeeded",
+      "latency_seconds": 39.17,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "14",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 12.184,
+      "result_target_mae": 16.237,
+      "target_improvement": -0.333,
+      "outside_mae": 12.787,
+      "status": "succeeded",
+      "latency_seconds": 44.57,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "14",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 12.184,
+      "result_target_mae": 19.338,
+      "target_improvement": -0.587,
+      "outside_mae": 14.197,
+      "status": "succeeded",
+      "latency_seconds": 28.17,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "14",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 12.184,
+      "result_target_mae": 13.968,
+      "target_improvement": -0.146,
+      "outside_mae": 9.84,
+      "status": "succeeded",
+      "latency_seconds": 28.56,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "15",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 82.869,
+      "result_target_mae": 32.519,
+      "target_improvement": 0.608,
+      "outside_mae": 13.282,
+      "status": "succeeded",
+      "latency_seconds": 37.08,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "15",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 82.869,
+      "result_target_mae": 28.418,
+      "target_improvement": 0.657,
+      "outside_mae": 14.076,
+      "status": "succeeded",
+      "latency_seconds": 38.44,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "15",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 82.869,
+      "result_target_mae": 25.043,
+      "target_improvement": 0.698,
+      "outside_mae": 13.575,
+      "status": "succeeded",
+      "latency_seconds": 29.07,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "15",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 82.869,
+      "result_target_mae": 22.316,
+      "target_improvement": 0.731,
+      "outside_mae": 9.29,
+      "status": "succeeded",
+      "latency_seconds": 28.92,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "16",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 25.162,
+      "result_target_mae": 13.424,
+      "target_improvement": 0.466,
+      "outside_mae": 10.544,
+      "status": "succeeded",
+      "latency_seconds": 42.64,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "16",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 25.162,
+      "result_target_mae": 13.828,
+      "target_improvement": 0.45,
+      "outside_mae": 12.056,
+      "status": "succeeded",
+      "latency_seconds": 40.98,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "16",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 25.162,
+      "result_target_mae": 11.395,
+      "target_improvement": 0.547,
+      "outside_mae": 9.553,
+      "status": "succeeded",
+      "latency_seconds": 27.57,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "16",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 25.162,
+      "result_target_mae": 10.557,
+      "target_improvement": 0.58,
+      "outside_mae": 8.366,
+      "status": "succeeded",
+      "latency_seconds": 24.17,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "17",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 17.925,
+      "result_target_mae": 17.908,
+      "target_improvement": 0.001,
+      "outside_mae": 13.52,
+      "status": "succeeded",
+      "latency_seconds": 38.18,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "17",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 17.925,
+      "result_target_mae": 16.616,
+      "target_improvement": 0.073,
+      "outside_mae": 12.768,
+      "status": "succeeded",
+      "latency_seconds": 42.05,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "17",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 17.925,
+      "result_target_mae": 15.603,
+      "target_improvement": 0.13,
+      "outside_mae": 11.886,
+      "status": "succeeded",
+      "latency_seconds": 27.63,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "17",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 17.925,
+      "result_target_mae": 14.602,
+      "target_improvement": 0.185,
+      "outside_mae": 11.74,
+      "status": "succeeded",
+      "latency_seconds": 23.21,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "18",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 11.021,
+      "result_target_mae": 11.5,
+      "target_improvement": -0.044,
+      "outside_mae": 9.397,
+      "status": "succeeded",
+      "latency_seconds": 31.83,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "18",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 11.021,
+      "result_target_mae": 12.052,
+      "target_improvement": -0.094,
+      "outside_mae": 9.484,
+      "status": "succeeded",
+      "latency_seconds": 35.42,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "18",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 11.021,
+      "result_target_mae": 6.53,
+      "target_improvement": 0.407,
+      "outside_mae": 5.555,
+      "status": "succeeded",
+      "latency_seconds": 27.49,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "18",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 11.021,
+      "result_target_mae": 6.471,
+      "target_improvement": 0.413,
+      "outside_mae": 5.442,
+      "status": "succeeded",
+      "latency_seconds": 27.19,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "19",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 95.368,
+      "result_target_mae": 10.504,
+      "target_improvement": 0.89,
+      "outside_mae": 4.381,
+      "status": "succeeded",
+      "latency_seconds": 34.72,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "19",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 95.368,
+      "result_target_mae": 13.622,
+      "target_improvement": 0.857,
+      "outside_mae": 5.465,
+      "status": "succeeded",
+      "latency_seconds": 33.68,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "19",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 95.368,
+      "result_target_mae": 7.817,
+      "target_improvement": 0.918,
+      "outside_mae": 4.399,
+      "status": "succeeded",
+      "latency_seconds": 28.79,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "19",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 95.368,
+      "result_target_mae": 7.184,
+      "target_improvement": 0.925,
+      "outside_mae": 4.42,
+      "status": "succeeded",
+      "latency_seconds": 27.22,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "20",
+      "model": "lite",
+      "mode": "direct",
+      "base_target_mae": 27.322,
+      "result_target_mae": 11.139,
+      "target_improvement": 0.592,
+      "outside_mae": 5.715,
+      "status": "succeeded",
+      "latency_seconds": 34.08,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "20",
+      "model": "lite",
+      "mode": "bbox",
+      "base_target_mae": 27.322,
+      "result_target_mae": 11.343,
+      "target_improvement": 0.585,
+      "outside_mae": 5.911,
+      "status": "succeeded",
+      "latency_seconds": 35.15,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "20",
+      "model": "flash",
+      "mode": "direct",
+      "base_target_mae": 27.322,
+      "result_target_mae": 10.555,
+      "target_improvement": 0.614,
+      "outside_mae": 5.681,
+      "status": "succeeded",
+      "latency_seconds": 27.8,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    },
+    {
+      "sample": "20",
+      "model": "flash",
+      "mode": "bbox",
+      "base_target_mae": 27.322,
+      "result_target_mae": 8.899,
+      "target_improvement": 0.674,
+      "outside_mae": 3.689,
+      "status": "succeeded",
+      "latency_seconds": 29.8,
+      "output_size": [
+        2048,
+        2048
+      ],
+      "output_format": "PNG"
+    }
+  ]
+}

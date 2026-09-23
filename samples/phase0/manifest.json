@@ -1,0 +1,482 @@
+[
+  {
+    "id": "01",
+    "source_title": "File:Bike on a snowy street in Quebec City at night.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ABike_on_a_snowy_street_in_Quebec_City_at_night.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "city street",
+    "watermark_type": "corner_text",
+    "watermark_bbox_px": [
+      665,
+      900,
+      1020,
+      1005
+    ],
+    "watermark_bbox_norm": [
+      649,
+      878,
+      995,
+      980
+    ],
+    "clean": "01-clean.jpg",
+    "marked": "01-marked.jpg",
+    "marked_sha256": "710a589485d2cf1b2889c493546ae151e4d83c334b32ac0ed59fc1e160a2c1ae"
+  },
+  {
+    "id": "02",
+    "source_title": "File:Chateau Frontenac at dusk in Quebec City.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AChateau_Frontenac_at_dusk_in_Quebec_City.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "city street",
+    "watermark_type": "semi_transparent",
+    "watermark_bbox_px": [
+      145,
+      430,
+      850,
+      580
+    ],
+    "watermark_bbox_norm": [
+      141,
+      420,
+      829,
+      566
+    ],
+    "clean": "02-clean.jpg",
+    "marked": "02-marked.jpg",
+    "marked_sha256": "f63024ce1832439c0c299fa44b5880a4bb665ac250093161ed102a223f4bed18"
+  },
+  {
+    "id": "03",
+    "source_title": "File:Château Frontenac in Quebec city, Canada colorfull.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ACh%C3%A2teau_Frontenac_in_Quebec_city%2C_Canada_colorfull.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "city street",
+    "watermark_type": "large_logo",
+    "watermark_bbox_px": [
+      210,
+      350,
+      815,
+      660
+    ],
+    "watermark_bbox_norm": [
+      205,
+      341,
+      795,
+      644
+    ],
+    "clean": "03-clean.jpg",
+    "marked": "03-marked.jpg",
+    "marked_sha256": "48f7cd88506a99f1299cacc62b228fa3df77e4ff38619890aa24ce032005dfed"
+  },
+  {
+    "id": "04",
+    "source_title": "File:Forest trail, Oberlibbach.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AForest_trail%2C_Oberlibbach.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "forest trail",
+    "watermark_type": "central_text",
+    "watermark_bbox_px": [
+      165,
+      465,
+      880,
+      610
+    ],
+    "watermark_bbox_norm": [
+      161,
+      454,
+      859,
+      595
+    ],
+    "clean": "04-clean.jpg",
+    "marked": "04-marked.jpg",
+    "marked_sha256": "a70d054ff5375a2f93515ff2fa10ed2bbb88345a442b7a8d88f31a933e2ef1f4"
+  },
+  {
+    "id": "05",
+    "source_title": "File:Harburg forest trail.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AHarburg_forest_trail.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "forest trail",
+    "watermark_type": "corner_text",
+    "watermark_bbox_px": [
+      665,
+      900,
+      1020,
+      1005
+    ],
+    "watermark_bbox_norm": [
+      649,
+      878,
+      995,
+      980
+    ],
+    "clean": "05-clean.jpg",
+    "marked": "05-marked.jpg",
+    "marked_sha256": "7e8805e5d93e3aa09cf2acd759be7bf5ba5dfd343f7af30eb195fd9fb688ac04"
+  },
+  {
+    "id": "06",
+    "source_title": "File:Sunrise Meadows (14585088049).jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ASunrise_Meadows_%2814585088049%29.jpg",
+    "license": "Public domain",
+    "license_url": "",
+    "source_query": "forest trail",
+    "watermark_type": "semi_transparent",
+    "watermark_bbox_px": [
+      145,
+      430,
+      850,
+      580
+    ],
+    "watermark_bbox_norm": [
+      141,
+      420,
+      829,
+      566
+    ],
+    "clean": "06-clean.jpg",
+    "marked": "06-marked.jpg",
+    "marked_sha256": "569e387cbc8123fa3806fc7eb7d166d447b0d5a8490a2a5a0bfcce61d0fac12b"
+  },
+  {
+    "id": "07",
+    "source_title": "File:1145 Market St, San Francisco, United States (Unsplash).jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3A1145_Market_St%2C_San_Francisco%2C_United_States_%28Unsplash%29.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "market street",
+    "watermark_type": "large_logo",
+    "watermark_bbox_px": [
+      210,
+      350,
+      815,
+      660
+    ],
+    "watermark_bbox_norm": [
+      205,
+      341,
+      795,
+      644
+    ],
+    "clean": "07-clean.jpg",
+    "marked": "07-marked.jpg",
+    "marked_sha256": "cfea55e6735083c93d8743b6e97557d3e9262b52b2cb751812240c3d62e210c8"
+  },
+  {
+    "id": "08",
+    "source_title": "File:Fishmonger smiling, Maracaibo street market, Venezuela.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AFishmonger_smiling%2C_Maracaibo_street_market%2C_Venezuela.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "market street",
+    "watermark_type": "central_text",
+    "watermark_bbox_px": [
+      165,
+      465,
+      880,
+      610
+    ],
+    "watermark_bbox_norm": [
+      161,
+      454,
+      859,
+      595
+    ],
+    "clean": "08-clean.jpg",
+    "marked": "08-marked.jpg",
+    "marked_sha256": "a33e206151851d6349b623a4c9b49ccb8dd20d5ac392b908b5fccb183d721fb4"
+  },
+  {
+    "id": "09",
+    "source_title": "File:Large meeting room (Unsplash).jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ALarge_meeting_room_%28Unsplash%29.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "market street",
+    "watermark_type": "corner_text",
+    "watermark_bbox_px": [
+      665,
+      900,
+      1020,
+      1005
+    ],
+    "watermark_bbox_norm": [
+      649,
+      878,
+      995,
+      980
+    ],
+    "clean": "09-clean.jpg",
+    "marked": "09-marked.jpg",
+    "marked_sha256": "cc2a1fe62e6b95766e889dfb0cba635ec3a910db632900f00b6b39daaa978767"
+  },
+  {
+    "id": "10",
+    "source_title": "File:Intérieur de la Basilique Sainte-Anne-de-Beaupré, Quebéc, Canada.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AInt%C3%A9rieur_de_la_Basilique_Sainte-Anne-de-Beaupr%C3%A9%2C_Queb%C3%A9c%2C_Canada.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "building interior",
+    "watermark_type": "semi_transparent",
+    "watermark_bbox_px": [
+      145,
+      430,
+      850,
+      580
+    ],
+    "watermark_bbox_norm": [
+      141,
+      420,
+      829,
+      566
+    ],
+    "clean": "10-clean.jpg",
+    "marked": "10-marked.jpg",
+    "marked_sha256": "08c04475d97e66b2b6445038d2666d89445cef179449880dccdf47a8b2de1f81"
+  },
+  {
+    "id": "11",
+    "source_title": "File:Dark cream speckled patchy granite boulder seamless stone surface texture.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ADark_cream_speckled_patchy_granite_boulder_seamless_stone_surface_texture.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "stone texture",
+    "watermark_type": "large_logo",
+    "watermark_bbox_px": [
+      210,
+      350,
+      815,
+      660
+    ],
+    "watermark_bbox_norm": [
+      205,
+      341,
+      795,
+      644
+    ],
+    "clean": "11-clean.jpg",
+    "marked": "11-marked.jpg",
+    "marked_sha256": "359b65c3c05d0a12205ae18f9985490d5265236fd55ddf66a368eb7862eee125"
+  },
+  {
+    "id": "12",
+    "source_title": "File:Grey boulder seamless stone surface texture.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AGrey_boulder_seamless_stone_surface_texture.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "stone texture",
+    "watermark_type": "central_text",
+    "watermark_bbox_px": [
+      165,
+      465,
+      880,
+      610
+    ],
+    "watermark_bbox_norm": [
+      161,
+      454,
+      859,
+      595
+    ],
+    "clean": "12-clean.jpg",
+    "marked": "12-marked.jpg",
+    "marked_sha256": "daaf1d4718847d03a3e45b08f9074a43619b8a73c7fca0b08fec84d92c9336a2"
+  },
+  {
+    "id": "13",
+    "source_title": "File:Grey bumpy wavy granite boulder seamless stone surface texture.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AGrey_bumpy_wavy_granite_boulder_seamless_stone_surface_texture.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "stone texture",
+    "watermark_type": "corner_text",
+    "watermark_bbox_px": [
+      665,
+      900,
+      1020,
+      1005
+    ],
+    "watermark_bbox_norm": [
+      649,
+      878,
+      995,
+      980
+    ],
+    "clean": "13-clean.jpg",
+    "marked": "13-marked.jpg",
+    "marked_sha256": "e8dc6830833f13c6b3a509b9454cfa69d0e5660a5c574940e9f8706dcec621ce"
+  },
+  {
+    "id": "14",
+    "source_title": "File:Murbach a street name signs collage.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AMurbach_a_street_name_signs_collage.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "street signs photograph",
+    "watermark_type": "semi_transparent",
+    "watermark_bbox_px": [
+      145,
+      430,
+      850,
+      580
+    ],
+    "watermark_bbox_norm": [
+      141,
+      420,
+      829,
+      566
+    ],
+    "clean": "14-clean.jpg",
+    "marked": "14-marked.jpg",
+    "marked_sha256": "ad98b85b173272c1696a932d6071eeee8c19347a9a8a0343e25974567a137e26"
+  },
+  {
+    "id": "15",
+    "source_title": "File:Rhinecliff & Dow street signs - Arlington, MA.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ARhinecliff_%26_Dow_street_signs_-_Arlington%2C_MA.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "street signs photograph",
+    "watermark_type": "large_logo",
+    "watermark_bbox_px": [
+      210,
+      350,
+      815,
+      660
+    ],
+    "watermark_bbox_norm": [
+      205,
+      341,
+      795,
+      644
+    ],
+    "clean": "15-clean.jpg",
+    "marked": "15-marked.jpg",
+    "marked_sha256": "e33216d38766a864befc349f9a564d4554d7485f834a40c535002f9882e09d1f"
+  },
+  {
+    "id": "16",
+    "source_title": "File:Street signs Oulun Urheilutalo 20150125.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AStreet_signs_Oulun_Urheilutalo_20150125.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "street signs photograph",
+    "watermark_type": "central_text",
+    "watermark_bbox_px": [
+      165,
+      465,
+      880,
+      610
+    ],
+    "watermark_bbox_norm": [
+      161,
+      454,
+      859,
+      595
+    ],
+    "clean": "16-clean.jpg",
+    "marked": "16-marked.jpg",
+    "marked_sha256": "9221ad01b359848d186b61a8b8916293bfec95de686bfddbcdd1a81226da9850"
+  },
+  {
+    "id": "17",
+    "source_title": "File:Building in Paulista Avenue 09.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ABuilding_in_Paulista_Avenue_09.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "building facade photograph",
+    "watermark_type": "corner_text",
+    "watermark_bbox_px": [
+      665,
+      900,
+      1020,
+      1005
+    ],
+    "watermark_bbox_norm": [
+      649,
+      878,
+      995,
+      980
+    ],
+    "clean": "17-clean.jpg",
+    "marked": "17-marked.jpg",
+    "marked_sha256": "2a821dc31b1c4c955638e47a8168b7e77fcd0b2d7d03a98e50c29c5fcd506d15"
+  },
+  {
+    "id": "18",
+    "source_title": "File:Detail main facade Building of Parliament of Greece Athens.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3ADetail_main_facade_Building_of_Parliament_of_Greece_Athens.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "building facade photograph",
+    "watermark_type": "semi_transparent",
+    "watermark_bbox_px": [
+      145,
+      430,
+      850,
+      580
+    ],
+    "watermark_bbox_norm": [
+      141,
+      420,
+      829,
+      566
+    ],
+    "clean": "18-clean.jpg",
+    "marked": "18-marked.jpg",
+    "marked_sha256": "578e94f4eeb08ae54524fca3ef46227a06c51961a997022c6aba660df7397761"
+  },
+  {
+    "id": "19",
+    "source_title": "File:Macro flower wallpaper.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AMacro_flower_wallpaper.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "flower macro photograph",
+    "watermark_type": "large_logo",
+    "watermark_bbox_px": [
+      210,
+      350,
+      815,
+      660
+    ],
+    "watermark_bbox_norm": [
+      205,
+      341,
+      795,
+      644
+    ],
+    "clean": "19-clean.jpg",
+    "marked": "19-marked.jpg",
+    "marked_sha256": "5b1e6e40b8c0d97796995f418a5519a2f1ef1ca399f08cd2779310efeefc7cbd"
+  },
+  {
+    "id": "20",
+    "source_title": "File:Macro shot of a dried wild flower buds.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File%3AMacro_shot_of_a_dried_wild_flower_buds.jpg",
+    "license": "CC0",
+    "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source_query": "flower macro photograph",
+    "watermark_type": "central_text",
+    "watermark_bbox_px": [
+      165,
+      465,
+      880,
+      610
+    ],
+    "watermark_bbox_norm": [
+      161,
+      454,
+      859,
+      595
+    ],
+    "clean": "20-clean.jpg",
+    "marked": "20-marked.jpg",
+    "marked_sha256": "ca171524c8e24647a3eafefacc541813aae9c0037771dac2f4bc1d891759cff1"
+  }
+]
