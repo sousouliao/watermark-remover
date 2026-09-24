@@ -1,7 +1,5 @@
 export const PROCESSING_STEPS = [
-  'Analyzing image...',
-  'Detecting watermark region...',
-  'Running AI inpainting model...',
-  'Reconstructing pixels...',
-  'Finalizing result...',
+  'Sending image to Seedream...',
+  'Removing watermark...',
+  'Preparing result...',
 ]

@@ -12,7 +12,7 @@ export function useWatermarkApp() {
   const steps = ['Upload', 'Choose & Edit', 'Result']
   const step = ref<AppStep>('upload')
   const imageDataUrl = ref<string | null>(null)
-  const selectedModel = ref<WatermarkModel | null>(null)
+  const selectedModel = ref<WatermarkModel>('lite')
   const mode = ref<RemoveMode>('direct')
   const resultUrl = ref<string | null>(null)
   const resultModel = ref<WatermarkModel | null>(null)
@@ -37,7 +37,7 @@ export function useWatermarkApp() {
   function handleImageSelect(_file: File, dataUrl: string) {
     invalidateRequest()
     imageDataUrl.value = dataUrl
-    selectedModel.value = null
+    selectedModel.value = 'lite'
     mode.value = 'direct'
     clearResult()
     step.value = 'editor'
@@ -119,7 +119,7 @@ export function useWatermarkApp() {
   function handleReset() {
     invalidateRequest()
     imageDataUrl.value = null
-    selectedModel.value = null
+    selectedModel.value = 'lite'
     mode.value = 'direct'
     clearResult()
     step.value = 'upload'

@@ -17,7 +17,7 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 
 - **图片上传** — 拖拽或点击上传，支持 PNG、JPG、WEBP 格式（最大 10MB）
 - **指定区域** — 画笔标记水印位置，支持调整画笔大小、撤销、清除；也可不标记直接处理
-- **AI 移除** — 明确选择 Seedream 5.0 Lite 或 Flash 处理图片
+- **AI 移除** — 默认使用 Seedream 5.0 Lite，也可选择 Flash 处理图片
 - **结果对比** — 滑块对比视图 / 并排视图，直观查看效果
 - **暗黑模式** — 支持亮色/暗色主题切换
 - **响应式布局** — 适配桌面端和移动端
@@ -37,7 +37,7 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 
 - **框架**: NestJS
 - **语言**: TypeScript
-- **AI 集成**: 方舟 Seedream 图像 API；`@gradio/client` 仍用于其他现有功能
+- **AI 集成**: 方舟 Seedream 图像 API；图片放大功能使用 `@gradio/client`
 - **运行环境**: Node.js v20+
 
 ### 工程化
@@ -62,7 +62,7 @@ pnpm install
 
 ### 启动开发
 
-先在 `apps/server/.env` 中配置 `ARK_API_KEY`、`ARK_SEEDREAM_LITE_ENDPOINT` 和 `ARK_SEEDREAM_FLASH_ENDPOINT`；可参照 [`apps/server/.env.example`](./apps/server/.env.example)。已有 `.env` 时直接补充这三项，不要覆盖原有配置。密钥只供后端读取，不要放入前端环境变量。
+先在 `apps/server/.env` 中配置 `ARK_API_KEY`、`ARK_SEEDREAM_LITE_ENDPOINT` 和 `ARK_SEEDREAM_FLASH_ENDPOINT`；可参照 [`apps/server/.env.example`](./apps/server/.env.example)。两个接入点分别填写当前账号可用的 Lite / Flash `ep-...` ID。已有 `.env` 时直接补充这三项，不要覆盖原有配置。密钥只供后端读取，不要放入前端环境变量。
 
 ```bash
 # 同时启动前端和后端
@@ -91,17 +91,11 @@ watermark-remover/
 │   │   │   ├── App.vue               # 根组件（背景渐变 + 布局）
 │   │   │   ├── main.ts               # 应用入口
 │   │   │   ├── style.css             # 全局样式 + CSS 变量
+│   │   │   ├── pages/WatermarkApp.vue # 主页面与步骤管理
 │   │   │   ├── components/
-│   │   │   │   ├── WatermarkApp.vue  # 主应用容器（步骤管理）
-│   │   │   │   ├── AppHeader.vue     # 头部（Logo + 标题 + 主题切换）
-│   │   │   │   ├── AppFooter.vue     # 底部
-│   │   │   │   ├── ThemeToggle.vue   # 暗黑模式切换
-│   │   │   │   ├── ImageUploader.vue # 图片上传（拖拽 + 点击）
-│   │   │   │   ├── MaskEditor.vue    # 蒙版编辑器（画笔绘制）
-│   │   │   │   ├── ActionBar.vue     # 操作栏（Reset + Remove）
-│   │   │   │   ├── ProcessingOverlay.vue # 处理中动画
-│   │   │   │   ├── ResultViewer.vue  # 结果对比查看器
-│   │   │   │   └── ui/              # shadcn-vue UI 组件
+│   │   │   │   ├── MaskEditor/       # 指定区域画笔
+│   │   │   │   ├── ResultViewer/     # 结果对比与下载
+│   │   │   │   └── ui/               # UI 基础组件
 │   │   │   └── lib/
 │   │   │       └── utils.ts          # 工具函数
 │   │   ├── components.json           # shadcn-vue 配置
@@ -140,7 +134,7 @@ watermark-remover/
 }
 ```
 
-`image` 支持 PNG、JPEG、WebP 的 Base64 data URI，原图最大 30 MB。`model` 必须明确填写 `lite` 或 `flash`。指定区域时将 `mode` 改为 `region`，并传入按原图归一化到 0–999 的坐标：
+`image` 支持 PNG、JPEG、WebP 的 Base64 data URI，原图最大 30 MB。API 请求的 `model` 必须明确填写 `lite` 或 `flash`；网页默认发送 `lite`，用户可切换为 `flash`。指定区域时将 `mode` 改为 `region`，并传入按原图归一化到 0–999 的坐标：
 
 ```json
 {
