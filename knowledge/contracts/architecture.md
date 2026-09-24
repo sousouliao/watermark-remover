@@ -3,7 +3,8 @@
 ## 当前实现
 
 - `apps/web`：Vue 3 页面负责上传、蒙版编辑、结果对比和下载。
-- `apps/server`：NestJS 暴露 `/api/watermark/remove`，当前转发原图和二值蒙版至 IOPaint-LaMA。
+- `apps/server`：NestJS 的 `/api/watermark/remove` 已接入方舟 Seedream 5.0 Lite / Flash；请求携带原图、明确模型与操作模式，服务端处理鉴权、区域提示和图片响应。
+- 前端暂未接入新请求格式，仍发送原图和二值蒙版；阶段 2 将统一页面流程。
 
 ## 重构目标
 

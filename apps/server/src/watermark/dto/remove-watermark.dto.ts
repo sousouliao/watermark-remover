@@ -1,23 +1,45 @@
-/**
- * @file remove-watermark.dto.ts
- * @description 水印移除请求的数据传输对象，验证图片和蒙版输入
- * @pos DTO 层 - 验证和转换传入的请求数据
- */
-import { IsNotEmpty, IsString } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsDefined, IsIn, IsInt, IsNotEmpty, IsString, Max, Min, ValidateIf, ValidateNested } from 'class-validator'
+
+export type WatermarkModel = 'lite' | 'flash'
+export type RemoveMode = 'direct' | 'region'
+
+export class RegionDto {
+  @IsInt()
+  @Min(0)
+  @Max(999)
+  x1: number
+
+  @IsInt()
+  @Min(0)
+  @Max(999)
+  y1: number
+
+  @IsInt()
+  @Min(0)
+  @Max(999)
+  x2: number
+
+  @IsInt()
+  @Min(0)
+  @Max(999)
+  y2: number
+}
 
 export class RemoveWatermarkDto {
-  /**
-   * Base64 编码的图片或图片 URL
-   */
   @IsString()
   @IsNotEmpty()
   image: string
 
-  /**
-   * Base64 编码的蒙版或蒙版 URL
-   * 蒙版应为白色标记需要移除水印的区域
-   */
-  @IsString()
-  @IsNotEmpty()
-  mask: string
+  @IsIn(['lite', 'flash'])
+  model: WatermarkModel
+
+  @IsIn(['direct', 'region'])
+  mode: RemoveMode
+
+  @ValidateIf(dto => dto.mode === 'region' || dto.region !== undefined)
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => RegionDto)
+  region?: RegionDto
 }

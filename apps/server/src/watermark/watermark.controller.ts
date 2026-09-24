@@ -16,9 +16,9 @@ export class WatermarkController {
 
   @Post('remove')
   @HttpCode(HttpStatus.OK)
-  async removeWatermark(@Body() dto: RemoveWatermarkDto): Promise<ApiResponse<{ image: string }>> {
+  async removeWatermark(@Body() dto: RemoveWatermarkDto): Promise<ApiResponse<{ image: string, model: string }>> {
     this.logger.log('POST /api/watermark/remove 已进入控制器')
-    const processedImage = await this.watermarkService.removeWatermark(dto)
-    return ApiResponse.success({ image: processedImage }, '水印移除成功')
+    const result = await this.watermarkService.removeWatermark(dto)
+    return ApiResponse.success(result, '水印移除成功')
   }
 }

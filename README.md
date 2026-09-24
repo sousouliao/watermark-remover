@@ -37,7 +37,7 @@ AI 驱动的图片水印移除工具。上传图片、标记水印区域、一�
 
 - **框架**: NestJS
 - **语言**: TypeScript
-- **AI 集成**: `@gradio/client` (Hugging Face Space)
+- **AI 集成**: 方舟 Seedream 图像 API；`@gradio/client` 仍用于其他现有功能
 - **运行环境**: Node.js v20+
 
 ### 工程化
@@ -124,16 +124,30 @@ watermark-remover/
 
 ### POST /api/watermark/remove
 
-使用 AI Inpainting 移除图片中的水印。
+通过方舟 Seedream 5.0 Lite 或 Flash 移除图片中的水印。当前前端仍使用旧蒙版请求，需在阶段 2 接入此接口。
 
 **请求体:**
 
 ```json
 {
   "image": "data:image/png;base64,...",
-  "mask": "data:image/png;base64,..."
+  "model": "flash",
+  "mode": "direct"
 }
 ```
+
+`image` 支持 PNG、JPEG、WebP 的 Base64 data URI，原图最大 30 MB。`model` 必须明确填写 `lite` 或 `flash`。指定区域时将 `mode` 改为 `region`，并传入按原图归一化到 0–999 的坐标：
+
+```json
+{
+  "image": "data:image/png;base64,...",
+  "model": "flash",
+  "mode": "region",
+  "region": { "x1": 205, "y1": 341, "x2": 795, "y2": 644 }
+}
+```
+
+指定区域只用于提示模型，不能保证框外像素不变。请求超时为 120 秒；失败时返回标准 HTTP 错误状态和可读的 `message`，不会自动切换模型重试。
 
 **响应:**
 
@@ -141,7 +155,8 @@ watermark-remover/
 {
   "success": true,
   "data": {
-    "image": "data:image/png;base64,..."
+    "image": "data:image/png;base64,...",
+    "model": "flash"
   }
 }
 ```
@@ -155,8 +170,13 @@ watermark-remover/
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
 | `PORT` | `3000` | 后端服务端口 |
+| `ARK_API_KEY` | 无 | 服务端方舟 API Key |
+| `ARK_SEEDREAM_LITE_ENDPOINT` | 无 | Lite 接入点 ID |
+| `ARK_SEEDREAM_FLASH_ENDPOINT` | 无 | Flash 接入点 ID |
 | CORS | 全部来源 | 跨域配置 |
 | Body 限制 | 50MB | Base64 图片请求体上限 |
+
+本地配置示例见 [`apps/server/.env.example`](./apps/server/.env.example)。密钥只保存在服务端环境中。
 
 ## 许可证
 
