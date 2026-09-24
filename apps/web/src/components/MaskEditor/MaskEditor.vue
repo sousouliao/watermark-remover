@@ -30,11 +30,10 @@ const {
   handlePointerUp,
   handleUndo,
   handleClear,
-  getMaskDataUrl,
-  hasMask,
+  getRegion,
 } = useMaskEditor(props, { containerRef, imageCanvasRef, maskCanvasRef })
 
-defineExpose({ getMaskDataUrl, hasMask })
+defineExpose({ getRegion })
 </script>
 
 <template>
@@ -138,7 +137,7 @@ defineExpose({ getMaskDataUrl, hasMask })
             variant="outline"
             size="sm"
             :disabled="!hasMaskStrokes"
-            aria-label="Clear all masks"
+            aria-label="Clear all marks"
             class="h-8 gap-1.5 rounded-xl border-destructive/40 bg-destructive/10 px-2.5 text-xs text-destructive hover:border-destructive/60 hover:bg-destructive/20 hover:text-destructive"
             @click="handleClear"
           >
@@ -175,7 +174,7 @@ defineExpose({ getMaskDataUrl, hasMask })
           ref="maskCanvasRef"
           class="absolute inset-0 cursor-none touch-none"
           :style="{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }"
-          aria-label="Mask drawing canvas. Use your mouse or finger to paint over the watermark."
+          aria-label="Watermark area drawing canvas. Use your mouse or finger to mark the watermark."
           role="img"
           @mousedown="handlePointerDown"
           @mouseenter="handlePointerEnter"

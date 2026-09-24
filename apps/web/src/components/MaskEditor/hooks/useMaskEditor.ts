@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import type { Stroke } from '@/types/mask'
+import type { Point, Region, Stroke } from '@/types/mask'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { getCanvasPoint } from '@/utils/canvas'
 
@@ -20,24 +20,27 @@ export function useMaskEditor(
   const strokes = ref<Stroke[]>([])
   const currentStroke = ref<Stroke | null>(null)
   const canvasSize = ref({ width: 0, height: 0 })
-  const imageLoaded = ref(false)
   const showToolbar = ref(true)
   const imageEl = ref<HTMLImageElement | null>(null)
-  const scaleValue = ref(1)
+  let resizeObserver: ResizeObserver | null = null
 
   const cursorX = ref(0)
   const cursorY = ref(0)
   const isHovering = ref(false)
 
   function loadImage() {
+    strokes.value = []
+    currentStroke.value = null
+    imageEl.value = null
     const img = new Image()
     img.crossOrigin = 'anonymous'
+    const imageUrl = props.imageDataUrl
     img.onload = () => {
+      if (props.imageDataUrl !== imageUrl) return
       imageEl.value = img
-      imageLoaded.value = true
       nextTick(() => resizeAndDraw())
     }
-    img.src = props.imageDataUrl
+    img.src = imageUrl
   }
 
   function resizeAndDraw() {
@@ -45,10 +48,10 @@ export function useMaskEditor(
 
     const img = imageEl.value
     const containerWidth = containerRef.value.clientWidth
+    if (!containerWidth) return
     const maxHeight = Math.min(window.innerHeight * 0.55, 500)
 
     const scale = Math.min(containerWidth / img.width, maxHeight / img.height, 1)
-    scaleValue.value = scale
 
     const w = Math.round(img.width * scale)
     const h = Math.round(img.height * scale)
@@ -70,9 +73,7 @@ export function useMaskEditor(
       maskCanvas.width = w
       maskCanvas.height = h
     }
-
-    strokes.value = []
-    currentStroke.value = null
+    redrawMask()
   }
 
   function redrawMask() {
@@ -87,18 +88,39 @@ export function useMaskEditor(
       ? [...strokes.value, currentStroke.value]
       : strokes.value
 
+    const img = imageEl.value
+    if (!img) return
+    const scaleX = canvas.width / img.width
+    const scaleY = canvas.height / img.height
+
     for (const stroke of allStrokes) {
-      if (stroke.points.length < 2) continue
+      if (!stroke.points.length) continue
       ctx.beginPath()
       ctx.strokeStyle = 'rgba(34, 211, 238, 0.6)'
-      ctx.lineWidth = stroke.brushSize
+      ctx.lineWidth = stroke.brushSize * scaleX
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
-      ctx.moveTo(stroke.points[0].x, stroke.points[0].y)
+      ctx.moveTo(stroke.points[0].x * scaleX, stroke.points[0].y * scaleY)
+      if (stroke.points.length === 1) {
+        ctx.arc(stroke.points[0].x * scaleX, stroke.points[0].y * scaleY, ctx.lineWidth / 2, 0, Math.PI * 2)
+        ctx.fillStyle = ctx.strokeStyle
+        ctx.fill()
+        continue
+      }
       for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x, stroke.points[i].y)
+        ctx.lineTo(stroke.points[i].x * scaleX, stroke.points[i].y * scaleY)
       }
       ctx.stroke()
+    }
+  }
+
+  function toImagePoint(point: Point): Point | null {
+    const img = imageEl.value
+    const { width, height } = canvasSize.value
+    if (!img || !width || !height) return null
+    return {
+      x: Math.max(0, Math.min(img.width, point.x * img.width / width)),
+      y: Math.max(0, Math.min(img.height, point.y * img.height / height)),
     }
   }
 
@@ -110,10 +132,15 @@ export function useMaskEditor(
     e.preventDefault()
     const canvas = maskCanvasRef.value
     if (!canvas) return
-    const point = getCanvasPoint(e, canvas)
-    if (!point) return
+    const displayPoint = getCanvasPoint(e, canvas)
+    const point = displayPoint && toImagePoint(displayPoint)
+    const img = imageEl.value
+    if (!point || !img) return
     isDrawing.value = true
-    currentStroke.value = { points: [point], brushSize: brushSize.value[0] }
+    currentStroke.value = {
+      points: [point],
+      brushSize: brushSize.value[0] * img.width / canvasSize.value.width,
+    }
   }
 
   function handlePointerEnter() {
@@ -128,13 +155,15 @@ export function useMaskEditor(
   function handlePointerMove(e: MouseEvent | TouchEvent) {
     const canvas = maskCanvasRef.value
     if (!canvas) return
-    const point = getCanvasPoint(e, canvas)
-    if (!point) return
+    const displayPoint = getCanvasPoint(e, canvas)
+    if (!displayPoint) return
 
-    cursorX.value = point.x
-    cursorY.value = point.y
+    cursorX.value = displayPoint.x
+    cursorY.value = displayPoint.y
 
     if (!isDrawing.value || !currentStroke.value) return
+    const point = toImagePoint(displayPoint)
+    if (!point) return
     e.preventDefault()
     currentStroke.value = {
       ...currentStroke.value,
@@ -143,7 +172,7 @@ export function useMaskEditor(
   }
 
   function handlePointerUp() {
-    if (currentStroke.value && currentStroke.value.points.length > 1) {
+    if (currentStroke.value) {
       strokes.value = [...strokes.value, currentStroke.value]
     }
     currentStroke.value = null
@@ -159,58 +188,49 @@ export function useMaskEditor(
     currentStroke.value = null
   }
 
-  function getMaskDataUrl(): string | null {
-    if (!imageEl.value) return null
+  function getRegion(): Region | null {
     const img = imageEl.value
-    const offscreen = document.createElement('canvas')
-    offscreen.width = img.width
-    offscreen.height = img.height
-    const ctx = offscreen.getContext('2d')
-    if (!ctx) return null
+    if (!img || !strokes.value.length) return null
 
-    ctx.fillStyle = '#000000'
-    ctx.fillRect(0, 0, offscreen.width, offscreen.height)
-
-    const scale = scaleValue.value
+    let left = img.width
+    let top = img.height
+    let right = 0
+    let bottom = 0
     for (const stroke of strokes.value) {
-      if (stroke.points.length < 2) continue
-      ctx.beginPath()
-      ctx.strokeStyle = '#ffffff'
-      ctx.lineWidth = stroke.brushSize / scale
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.moveTo(stroke.points[0].x / scale, stroke.points[0].y / scale)
-      for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x / scale, stroke.points[i].y / scale)
+      const radius = stroke.brushSize / 2
+      for (const point of stroke.points) {
+        left = Math.min(left, point.x - radius)
+        top = Math.min(top, point.y - radius)
+        right = Math.max(right, point.x + radius)
+        bottom = Math.max(bottom, point.y + radius)
       }
-      ctx.stroke()
     }
-    return offscreen.toDataURL('image/png')
+
+    const x1 = Math.max(0, Math.floor(left / img.width * 999))
+    const y1 = Math.max(0, Math.floor(top / img.height * 999))
+    const x2 = Math.min(999, Math.ceil(right / img.width * 999))
+    const y2 = Math.min(999, Math.ceil(bottom / img.height * 999))
+    return { x1, y1, x2: Math.max(x1 + 1, x2), y2: Math.max(y1 + 1, y2) }
   }
 
-  const hasMask = () => strokes.value.length > 0
-
   watch(() => props.imageDataUrl, () => {
-    imageLoaded.value = false
-    strokes.value = []
-    currentStroke.value = null
     loadImage()
   })
 
   onMounted(() => {
     loadImage()
 
-    const observer = new ResizeObserver(() => {
+    resizeObserver = new ResizeObserver(() => {
       if (imageEl.value && containerRef.value) {
         resizeAndDraw()
       }
     })
     if (containerRef.value) {
-      observer.observe(containerRef.value)
+      resizeObserver.observe(containerRef.value)
     }
-
-    onUnmounted(() => observer.disconnect())
   })
+
+  onUnmounted(() => resizeObserver?.disconnect())
 
   const hasMaskStrokes = computed(() => strokes.value.length > 0)
 
@@ -218,7 +238,6 @@ export function useMaskEditor(
     brushSize,
     isDrawing,
     canvasSize,
-    imageLoaded,
     showToolbar,
     cursorX,
     cursorY,
@@ -231,7 +250,6 @@ export function useMaskEditor(
     handlePointerUp,
     handleUndo,
     handleClear,
-    getMaskDataUrl,
-    hasMask,
+    getRegion,
   }
 }

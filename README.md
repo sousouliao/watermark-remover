@@ -1,6 +1,6 @@
 # Watermark Remover
 
-AI 驱动的图片水印移除工具。上传图片、标记水印区域、一键移除，即刻下载干净图片。
+AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite 或 Flash，可直接处理或标记水印区域，检查结果后下载。
 
 新版重构与 Seedream 5.0 Lite / Flash 双模型接入计划见[路线图](./knowledge/roadmap.md)；开发过程与项目约定从[知识库](./knowledge/README.md)进入。
 
@@ -16,8 +16,8 @@ AI 驱动的图片水印移除工具。上传图片、标记水印区域、一�
 ## 功能特性
 
 - **图片上传** — 拖拽或点击上传，支持 PNG、JPG、WEBP 格式（最大 10MB）
-- **蒙版编辑** — 画笔标记水印区域，支持调整画笔大小、撤销、清除
-- **AI 移除** — 调用 AI Inpainting 模型自动移除水印
+- **指定区域** — 画笔标记水印位置，支持调整画笔大小、撤销、清除；也可不标记直接处理
+- **AI 移除** — 明确选择 Seedream 5.0 Lite 或 Flash 处理图片
 - **结果对比** — 滑块对比视图 / 并排视图，直观查看效果
 - **暗黑模式** — 支持亮色/暗色主题切换
 - **响应式布局** — 适配桌面端和移动端
@@ -62,6 +62,8 @@ pnpm install
 
 ### 启动开发
 
+先在 `apps/server/.env` 中配置 `ARK_API_KEY`、`ARK_SEEDREAM_LITE_ENDPOINT` 和 `ARK_SEEDREAM_FLASH_ENDPOINT`；可参照 [`apps/server/.env.example`](./apps/server/.env.example)。已有 `.env` 时直接补充这三项，不要覆盖原有配置。密钥只供后端读取，不要放入前端环境变量。
+
 ```bash
 # 同时启动前端和后端
 pnpm dev
@@ -70,6 +72,8 @@ pnpm dev
 pnpm start:web      # 前端 (http://localhost:5173)
 pnpm start:server   # 后端 (http://localhost:3000)
 ```
+
+如果页面提示无法连接图像服务，先打开 `http://localhost:3000/api/health`：无法访问表示后端没有启动；返回 `status: ok` 后仍无法处理图片，再检查 `apps/server/.env` 中的三项方舟配置。仅启动前端无法处理图片。
 
 ### 构建
 
@@ -124,7 +128,7 @@ watermark-remover/
 
 ### POST /api/watermark/remove
 
-通过方舟 Seedream 5.0 Lite 或 Flash 移除图片中的水印。当前前端仍使用旧蒙版请求，需在阶段 2 接入此接口。
+通过方舟 Seedream 5.0 Lite 或 Flash 移除图片中的水印。前端的直接处理和指定区域处理均使用此接口。
 
 **请求体:**
 

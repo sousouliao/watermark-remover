@@ -6,6 +6,7 @@ defineProps<{
   isProcessing: boolean
   canProcess: boolean
   hasImage: boolean
+  processLabel: string
 }>()
 
 const emit = defineEmits<{
@@ -31,7 +32,7 @@ const emit = defineEmits<{
       <Button
         :disabled="!canProcess || isProcessing"
         class="gradient-btn h-11 gap-2 rounded-xl px-8 text-sm font-medium text-primary-foreground shadow-md shadow-primary/15 transition-all hover:shadow-lg hover:shadow-primary/20 disabled:opacity-50 disabled:shadow-none"
-        aria-label="Remove watermark from image"
+        :aria-label="processLabel"
         @click="emit('process')"
       >
         <template v-if="isProcessing">
@@ -40,7 +41,7 @@ const emit = defineEmits<{
         </template>
         <template v-else>
           <Wand2 class="h-4 w-4" />
-          Remove Watermark
+          {{ processLabel }}
         </template>
       </Button>
     </div>
@@ -60,7 +61,7 @@ const emit = defineEmits<{
       <Button
         :disabled="!canProcess || isProcessing"
         class="gradient-btn h-11 flex-1 gap-2 rounded-xl text-sm font-medium text-primary-foreground shadow-md shadow-primary/15 disabled:opacity-50 disabled:shadow-none"
-        aria-label="Remove watermark from image"
+        :aria-label="processLabel"
         @click="emit('process')"
       >
         <template v-if="isProcessing">
@@ -69,7 +70,7 @@ const emit = defineEmits<{
         </template>
         <template v-else>
           <Wand2 class="h-4 w-4" />
-          Remove Watermark
+          {{ processLabel }}
         </template>
       </Button>
     </div>

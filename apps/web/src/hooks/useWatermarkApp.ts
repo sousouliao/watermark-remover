@@ -1,26 +1,81 @@
-import type { AppStep } from '@/types/app'
+import type { AppStep, RemoveMode, WatermarkModel } from '@/types/app'
+import type { Region } from '@/types/mask'
 import { computed, ref } from 'vue'
 
+interface RemoveResponse {
+  success: boolean
+  data?: { image: string, model: WatermarkModel }
+  message?: string | string[]
+}
+
 export function useWatermarkApp() {
-  const steps: string[] = ['Upload', 'Edit', 'Result']
+  const steps = ['Upload', 'Choose & Edit', 'Result']
   const step = ref<AppStep>('upload')
-  const imageFile = ref<File | null>(null)
   const imageDataUrl = ref<string | null>(null)
+  const selectedModel = ref<WatermarkModel | null>(null)
+  const mode = ref<RemoveMode>('direct')
   const resultUrl = ref<string | null>(null)
+  const resultModel = ref<WatermarkModel | null>(null)
   const error = ref<string | null>(null)
 
-  function handleImageSelect(file: File, dataUrl: string) {
-    imageFile.value = file
-    imageDataUrl.value = dataUrl
+  let requestController: AbortController | null = null
+  let requestId = 0
+
+  function invalidateRequest() {
+    requestId++
+    requestController?.abort()
+    requestController = null
+  }
+
+  function clearResult() {
     resultUrl.value = null
+    resultModel.value = null
     error.value = null
+    if (step.value === 'result' || step.value === 'processing') step.value = 'editor'
+  }
+
+  function handleImageSelect(_file: File, dataUrl: string) {
+    invalidateRequest()
+    imageDataUrl.value = dataUrl
+    selectedModel.value = null
+    mode.value = 'direct'
+    clearResult()
     step.value = 'editor'
   }
 
-  async function handleProcess(getMaskDataUrl: () => string | null) {
-    const maskDataUrl = getMaskDataUrl()
-    if (!maskDataUrl) return
+  function selectModel(model: WatermarkModel) {
+    if (selectedModel.value === model) return
+    invalidateRequest()
+    selectedModel.value = model
+    clearResult()
+  }
 
+  function selectMode(value: RemoveMode) {
+    if (mode.value === value) return
+    invalidateRequest()
+    mode.value = value
+    clearResult()
+  }
+
+  async function handleProcess(region: Region | null = null) {
+    const image = imageDataUrl.value
+    const model = selectedModel.value
+    const requestMode = mode.value
+    if (!image || !model) {
+      error.value = 'Please select a model before processing.'
+      return
+    }
+    if (requestMode === 'region' && !region) {
+      error.value = 'Paint over the watermark before using the marked area.'
+      return
+    }
+
+    invalidateRequest()
+    const currentRequest = requestId
+    const controller = new AbortController()
+    requestController = controller
+    resultUrl.value = null
+    resultModel.value = null
     error.value = null
     step.value = 'processing'
 
@@ -28,30 +83,46 @@ export function useWatermarkApp() {
       const response = await fetch('/api/watermark/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageDataUrl.value,
-          mask: maskDataUrl,
-        }),
+        body: JSON.stringify({ image, model, mode: requestMode, ...(requestMode === 'region' ? { region } : {}) }),
+        signal: controller.signal,
       })
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`)
+      const result = await response.json() as RemoveResponse
+      if (!response.ok || !result.success) {
+        const message = typeof result.message === 'string' ? result.message : 'Unable to process this image. Please check it and try again.'
+        throw new Error(message)
       }
-
-      const result = await response.json()
-      if (result.success) {
-        resultUrl.value = result.data.image
-        step.value = 'result'
+      if (!result.data?.image?.startsWith('data:image/') || result.data.model !== model) {
+        throw new Error('The image service returned an invalid result. Please try again.')
       }
-      else {
-        throw new Error(result.message || 'Unknown server error')
-      }
+      if (currentRequest !== requestId) return
+      resultUrl.value = result.data.image
+      resultModel.value = result.data.model
+      step.value = 'result'
     }
-    catch (err) {
-      console.error(err)
-      error.value = 'Something went wrong. Please try again.'
+    catch (cause) {
+      if (controller.signal.aborted || currentRequest !== requestId) return
+      error.value = cause instanceof Error && cause.name !== 'SyntaxError' && cause.name !== 'TypeError'
+        ? cause.message
+        : 'Unable to reach the image service. Check that the server is running and try again.'
       step.value = 'editor'
     }
+    finally {
+      if (currentRequest === requestId) requestController = null
+    }
+  }
+
+  function handleEdit() {
+    invalidateRequest()
+    clearResult()
+  }
+
+  function handleReset() {
+    invalidateRequest()
+    imageDataUrl.value = null
+    selectedModel.value = null
+    mode.value = 'direct'
+    clearResult()
+    step.value = 'upload'
   }
 
   const currentStepIndex = computed(() => {
@@ -70,26 +141,23 @@ export function useWatermarkApp() {
     return i === currentStepIndex.value ? 'text-foreground' : 'text-muted-foreground'
   }
 
-  function handleReset() {
-    step.value = 'upload'
-    imageFile.value = null
-    imageDataUrl.value = null
-    resultUrl.value = null
-    error.value = null
-  }
-
   return {
     steps,
     step,
-    imageFile,
     imageDataUrl,
+    selectedModel,
+    mode,
     resultUrl,
+    resultModel,
     error,
     currentStepIndex,
     handleImageSelect,
+    selectModel,
+    selectMode,
     handleProcess,
+    handleEdit,
+    handleReset,
     getStepClass,
     getLabelClass,
-    handleReset,
   }
 }

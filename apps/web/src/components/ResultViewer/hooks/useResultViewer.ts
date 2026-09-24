@@ -18,6 +18,7 @@ export function useResultViewer(
   const upscaleError = ref<string | null>(null)
   const preUpscaleUrl = ref<string | null>(null)
   const upscaledUrl = ref<string | null>(null)
+  let upscaleController: AbortController | null = null
 
   let rafId = 0
   let pendingClientX: number | null = null
@@ -104,6 +105,7 @@ export function useResultViewer(
   })
 
   onUnmounted(() => {
+    upscaleController?.abort()
     window.removeEventListener('mousemove', handleMove)
     window.removeEventListener('mouseup', handleUp)
     window.removeEventListener('touchmove', handleMove)
@@ -134,6 +136,8 @@ export function useResultViewer(
 
     isUpscaling.value = true
     upscaleError.value = null
+    const controller = new AbortController()
+    upscaleController = controller
 
     // 保存增强前的图片，以便回退
     preUpscaleUrl.value = props.resultUrl
@@ -142,6 +146,7 @@ export function useResultViewer(
       const response = await fetch('/api/upscale', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           image: props.resultUrl,
           scale: 2,
@@ -153,6 +158,7 @@ export function useResultViewer(
       }
 
       const result = await response.json()
+      if (controller.signal.aborted) return
       if (result.success) {
         upscaledUrl.value = result.data.image // 缓存增强结果
         emit('update:resultUrl', result.data.image)
@@ -163,11 +169,13 @@ export function useResultViewer(
       }
     }
     catch (err) {
+      if (controller.signal.aborted) return
       console.error('Upscale failed:', err)
       upscaleError.value = 'Enhancement failed. Please try again.'
       preUpscaleUrl.value = null
     }
     finally {
+      if (upscaleController === controller) upscaleController = null
       isUpscaling.value = false
     }
   }
