@@ -13,6 +13,7 @@
 | 用户流程、输出应满足什么 | [产品契约](contracts/product.md) |
 | 前后端与模型服务各负责什么 | [架构契约](contracts/architecture.md) |
 | 重构阶段、顺序和验收条件 | [路线图](roadmap.md) |
+| 新模型如何做同口径图像对照并生成 HTML | [模型评测流程](model-evaluation.md) |
 | 当前做到哪里、下一步是什么 | [当前状态](state/CURRENT.md) |
 | 为什么做出长期有效的选择 | [决策记录](decisions/) |
 | 某次实施与验证实际发生了什么 | [开发日志](logs/) |

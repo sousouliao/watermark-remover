@@ -1,0 +1,1908 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Seedream 5.0 去水印对照</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f7f6f2;
+        --ink: #202521;
+        --muted: #6b716b;
+        --line: #d8dbd4;
+        --accent: #aa4f32;
+        --accent-soft: #f0e3db;
+        --image-bg: #e9eae5;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      button,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      a {
+        color: inherit;
+        text-underline-offset: 0.22em;
+      }
+      a:hover {
+        color: var(--accent);
+      }
+      .page {
+        width: min(100% - 64px, 1420px);
+        margin: 0 auto;
+      }
+
+      .masthead {
+        min-height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+      .eyebrow,
+      .date,
+      .section-index,
+      .control-label,
+      .footer,
+      .case-number,
+      .case-type,
+      .image-label,
+      .metric,
+      th {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        letter-spacing: 0.035em;
+      }
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .mark {
+        width: 10px;
+        height: 10px;
+        display: inline-block;
+        border: 2px solid var(--accent);
+        border-radius: 50%;
+      }
+      .date {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .intro {
+        padding: 75px 0 58px;
+      }
+      .section-index {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 650;
+        margin: 0 0 20px;
+      }
+      h1 {
+        max-width: 850px;
+        font-size: clamp(43px, 5vw, 74px);
+        letter-spacing: -0.055em;
+        line-height: 1.08;
+        margin: 0;
+        font-weight: 670;
+      }
+      .dek {
+        max-width: 670px;
+        font-size: clamp(16px, 1.5vw, 19px);
+        line-height: 1.75;
+        color: var(--muted);
+        margin: 25px 0 0;
+      }
+      .intro-rule {
+        width: 100%;
+        border-top: 1px solid var(--line);
+        margin-top: 56px;
+      }
+      .totals {
+        display: flex;
+        gap: 68px;
+        padding-top: 24px;
+        flex-wrap: wrap;
+      }
+      .total {
+        min-width: 110px;
+      }
+      .total strong {
+        display: block;
+        font-size: clamp(30px, 3.3vw, 43px);
+        font-weight: 620;
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+      .total span {
+        display: block;
+        margin-top: 9px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .overview,
+      .gallery-section {
+        padding-top: 54px;
+        border-top: 1px solid var(--ink);
+      }
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 35px;
+        margin-bottom: 35px;
+      }
+      .section-head .section-index {
+        margin-bottom: 13px;
+      }
+      h2 {
+        font-size: clamp(28px, 2.8vw, 40px);
+        letter-spacing: -0.04em;
+        line-height: 1.15;
+        margin: 0;
+        font-weight: 640;
+      }
+      .section-aside {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.65;
+        max-width: 355px;
+        margin: 0 0 3px;
+      }
+      .table-scroll {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+        white-space: nowrap;
+      }
+      th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        padding: 0 14px 15px 0;
+        border-bottom: 1px solid var(--ink);
+      }
+      td {
+        padding: 17px 14px 17px 0;
+        border-bottom: 1px solid var(--line);
+        font-variant-numeric: tabular-nums;
+      }
+      td:first-child {
+        font-weight: 650;
+      }
+      .findings {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 32px;
+        padding: 35px 0 57px;
+      }
+      .finding {
+        border-left: 2px solid var(--accent);
+        padding-left: 17px;
+      }
+      .finding h3 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        font-weight: 680;
+      }
+      .finding p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .gallery-section {
+        padding-top: 54px;
+      }
+      .gallery-head {
+        margin-bottom: 32px;
+      }
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 26px;
+        padding: 17px 0;
+        border-bottom: 1px solid var(--ink);
+        background: rgba(247, 246, 242, 0.94);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+      .toolbar-group {
+        display: flex;
+        align-items: center;
+        gap: 19px;
+        min-width: 0;
+      }
+      .control-label {
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .variant-switch {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .variant-switch button {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        border-radius: 3px;
+        padding: 9px 12px;
+        font-size: 13px;
+        white-space: nowrap;
+        transition:
+          background 0.18s ease,
+          color 0.18s ease;
+      }
+      .variant-switch button:hover {
+        background: #eaece5;
+        color: var(--ink);
+      }
+      .variant-switch button[aria-pressed='true'] {
+        color: #fff;
+        background: var(--ink);
+      }
+      select {
+        color: var(--ink);
+        border: 1px solid var(--line);
+        background: transparent;
+        border-radius: 3px;
+        padding: 9px 30px 9px 11px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      select:focus-visible,
+      button:focus-visible,
+      summary:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      .case {
+        display: grid;
+        grid-template-columns: minmax(170px, 210px) minmax(0, 1fr);
+        gap: 38px;
+        padding: 42px 0 50px;
+        border-bottom: 1px solid var(--line);
+        scroll-margin-top: 110px;
+        animation: rise 0.36s ease both;
+      }
+      .case[hidden] {
+        display: none;
+      }
+      .case-number {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .case-type {
+        display: block;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .case-meta h3 {
+        font-size: 24px;
+        font-weight: 650;
+        letter-spacing: -0.035em;
+        line-height: 1.24;
+        margin: 8px 0 16px;
+      }
+      .case-source {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+      }
+      .case-source a {
+        display: inline-block;
+        margin-top: 6px;
+      }
+      .case-note {
+        margin: 21px 0 0;
+        color: var(--accent);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      figure {
+        margin: 0;
+        min-width: 0;
+      }
+      .image-button {
+        border: 0;
+        background: var(--image-bg);
+        padding: 0;
+        width: 100%;
+        display: block;
+        overflow: hidden;
+      }
+      .image-button img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: contain;
+        display: block;
+        transition:
+          transform 0.25s ease,
+          opacity 0.18s ease;
+      }
+      .image-button:hover img {
+        transform: scale(1.018);
+      }
+      .image-label {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 620;
+        margin-top: 11px;
+        text-transform: uppercase;
+      }
+      .image-label span:last-child {
+        color: var(--muted);
+        font-weight: 400;
+      }
+      .metrics {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-top: 19px;
+      }
+      .metric {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .metric strong {
+        color: var(--ink);
+        font-weight: 650;
+      }
+      .missing {
+        aspect-ratio: 1;
+        width: 100%;
+        display: grid;
+        place-items: center;
+        background: var(--image-bg);
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .missing[hidden] {
+        display: none;
+      }
+      .case-details {
+        margin-top: 21px;
+      }
+      .case-details summary {
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 630;
+        cursor: pointer;
+        width: fit-content;
+        list-style: none;
+        border-bottom: 1px solid var(--ink);
+        padding-bottom: 4px;
+      }
+      .case-details summary::-webkit-details-marker {
+        display: none;
+      }
+      .case-details summary::after {
+        content: '  ↗';
+        color: var(--accent);
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 22px;
+      }
+      .detail-grid .image-label {
+        display: block;
+        line-height: 1.45;
+      }
+      .detail-grid .image-button img {
+        aspect-ratio: 1;
+      }
+      .detail-grid .detail-caption {
+        color: var(--muted);
+        font-size: 11px;
+        margin-top: 4px;
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 65px 0 40px;
+        color: var(--muted);
+        font-size: 11px;
+        border-top: 1px solid var(--ink);
+        margin-top: 30px;
+      }
+
+      .viewer {
+        max-width: min(92vw, 1300px);
+        max-height: 96vh;
+        border: 0;
+        background: #f7f6f2;
+        padding: 45px 20px 18px;
+        box-shadow: 0 20px 90px rgba(0, 0, 0, 0.25);
+      }
+      .viewer::backdrop {
+        background: rgba(18, 25, 21, 0.84);
+      }
+      .viewer img {
+        display: block;
+        max-width: 100%;
+        max-height: calc(96vh - 105px);
+        object-fit: contain;
+        margin: auto;
+      }
+      .viewer p {
+        margin: 10px 0 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .viewer-close {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        font-size: 13px;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(9px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (max-width: 1000px) {
+        .toolbar {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 13px;
+        }
+        .detail-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .case {
+          grid-template-columns: 165px minmax(0, 1fr);
+          gap: 24px;
+        }
+      }
+      @media (max-width: 680px) {
+        .page {
+          width: min(100% - 28px, 1420px);
+        }
+        .masthead {
+          min-height: 65px;
+        }
+        .date {
+          font-size: 10px;
+        }
+        .intro {
+          padding: 53px 0 45px;
+        }
+        .intro-rule {
+          margin-top: 40px;
+        }
+        .totals {
+          gap: 25px;
+        }
+        .total {
+          min-width: 80px;
+        }
+        .section-head {
+          display: block;
+        }
+        .section-aside {
+          margin-top: 14px;
+        }
+        .findings {
+          grid-template-columns: 1fr;
+          gap: 22px;
+          padding-bottom: 45px;
+        }
+        .toolbar {
+          position: static;
+        }
+        .toolbar-group {
+          width: 100%;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .toolbar-group:first-child {
+          flex-direction: column;
+        }
+        .variant-switch {
+          gap: 3px;
+        }
+        .variant-switch button {
+          padding: 8px 9px;
+          font-size: 12px;
+        }
+        .case {
+          grid-template-columns: 1fr;
+          gap: 18px;
+          padding: 32px 0 42px;
+        }
+        .case-meta h3 {
+          margin-bottom: 8px;
+        }
+        .case-source a {
+          margin-top: 1px;
+        }
+        .case-note {
+          margin-top: 9px;
+        }
+        .pair {
+          gap: 8px;
+        }
+        .image-label {
+          font-size: 10px;
+          display: block;
+        }
+        .image-label span:last-child {
+          display: block;
+          margin-top: 3px;
+        }
+        .detail-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .footer {
+          padding: 45px 0 30px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        .case {
+          animation: none;
+        }
+        .image-button img,
+        .variant-switch button {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <div class="eyebrow"><span class="mark"></span> NOMARK / MODEL EVALUATION</div>
+        <div class="date" id="report-date"></div>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="report-title">
+          <p class="section-index">实验记录 / 01</p>
+          <h1 id="report-title"></h1>
+          <p class="dek" id="report-subtitle"></p>
+          <div class="intro-rule"></div>
+          <div class="totals" id="report-totals"></div>
+        </section>
+
+        <section class="overview" aria-labelledby="overview-title">
+          <div class="section-head">
+            <div>
+              <p class="section-index">结果摘要 / 02</p>
+              <h2 id="overview-title">同一批样本，逐项对照</h2>
+            </div>
+            <p class="section-aside" id="cost-note"></p>
+          </div>
+          <div class="table-scroll">
+            <table id="summary-table">
+              <thead>
+                <tr>
+                  <th>模型</th>
+                  <th>方式</th>
+                  <th>成功</th>
+                  <th>中位耗时</th>
+                  <th>框外像素差 ↓</th>
+                  <th>目录价估算</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="findings" id="findings"></div>
+        </section>
+
+        <section class="gallery-section" aria-labelledby="gallery-title">
+          <div class="section-head gallery-head">
+            <div>
+              <p class="section-index">逐图对照 / 03</p>
+              <h2 id="gallery-title">看结果，也看改动</h2>
+            </div>
+            <p class="section-aside" id="method-note"></p>
+          </div>
+          <div class="toolbar" id="toolbar">
+            <div class="toolbar-group">
+              <span class="control-label">查看结果</span>
+              <div class="variant-switch" id="variant-switch" role="group" aria-label="选择模型和编辑方式"></div>
+            </div>
+            <div class="toolbar-group">
+              <label class="control-label" for="type-filter">样本类型</label
+              ><select id="type-filter">
+                <option value="all">全部类型</option>
+              </select>
+            </div>
+          </div>
+          <div class="case-list" id="case-list"></div>
+        </section>
+
+        <footer class="footer"><span>NOMARK / EVALUATION</span><span>离线报告 · 图片为压缩预览</span></footer>
+      </main>
+    </div>
+
+    <dialog class="viewer" id="viewer" aria-label="查看大图">
+      <button class="viewer-close" id="viewer-close" type="button" aria-label="关闭大图">关闭 ×</button>
+      <img id="viewer-image" alt="" />
+      <p id="viewer-caption"></p>
+    </dialog>
+    <script type="application/json" id="report-data">
+      {
+        "title": "Seedream 5.0 去水印对照",
+        "subtitle": "20 张有干净参照的真实照片，四种请求条件；观察水印残留、画面保真、耗时与目录价。",
+        "date": "2026-09-23",
+        "sampleCount": 20,
+        "resultCount": 80,
+        "successCount": 80,
+        "models": ["lite", "flash"],
+        "modelLabels": { "lite": "Seedream 5.0 Lite", "flash": "Seedream 5.0 Flash" },
+        "modes": ["direct", "bbox"],
+        "modeLabels": { "direct": "直接编辑", "bbox": "指定区域" },
+        "summaries": [
+          {
+            "model": "lite",
+            "mode": "direct",
+            "total": 20,
+            "success": 20,
+            "latency": 34.48,
+            "outsideMae": 13.11,
+            "catalogCost": 4.4
+          },
+          {
+            "model": "lite",
+            "mode": "bbox",
+            "total": 20,
+            "success": 20,
+            "latency": 34.94,
+            "outsideMae": 12.78,
+            "catalogCost": 4.4
+          },
+          {
+            "model": "flash",
+            "mode": "direct",
+            "total": 20,
+            "success": 20,
+            "latency": 27.53,
+            "outsideMae": 10.23,
+            "catalogCost": 2.4
+          },
+          {
+            "model": "flash",
+            "mode": "bbox",
+            "total": 20,
+            "success": 20,
+            "latency": 27.24,
+            "outsideMae": 7.78,
+            "catalogCost": 2.4
+          }
+        ],
+        "cases": [
+          {
+            "id": "01",
+            "type": "corner_text",
+            "typeLabel": "角落小字",
+            "sourceTitle": "File:Bike on a snowy street in Quebec City at night.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ABike_on_a_snowy_street_in_Quebec_City_at_night.jpg",
+            "license": "CC0",
+            "before": "assets/01-before.jpg",
+            "clean": "assets/01-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": null,
+                "outside_mae": 7.675,
+                "target_improvement": 0.468,
+                "error": null,
+                "image": "assets/01-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 33.5,
+                "outside_mae": 7.52,
+                "target_improvement": 0.5,
+                "error": null,
+                "image": "assets/01-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 25.69,
+                "outside_mae": 7.752,
+                "target_improvement": 0.361,
+                "error": null,
+                "image": "assets/01-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 26.29,
+                "outside_mae": 5.137,
+                "target_improvement": 0.374,
+                "error": null,
+                "image": "assets/01-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "02",
+            "type": "semi_transparent",
+            "typeLabel": "半透明文字",
+            "sourceTitle": "File:Chateau Frontenac at dusk in Quebec City.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AChateau_Frontenac_at_dusk_in_Quebec_City.jpg",
+            "license": "CC0",
+            "before": "assets/02-before.jpg",
+            "clean": "assets/02-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 33.47,
+                "outside_mae": 8.507,
+                "target_improvement": -0.067,
+                "error": null,
+                "image": "assets/02-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 32.14,
+                "outside_mae": 8.314,
+                "target_improvement": -0.093,
+                "error": null,
+                "image": "assets/02-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 25.79,
+                "outside_mae": 9.866,
+                "target_improvement": -0.141,
+                "error": null,
+                "image": "assets/02-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 25.45,
+                "outside_mae": 5.34,
+                "target_improvement": 0.367,
+                "error": null,
+                "image": "assets/02-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "03",
+            "type": "large_logo",
+            "typeLabel": "大块标识",
+            "sourceTitle": "File:Château Frontenac in Quebec city, Canada colorfull.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ACh%C3%A2teau_Frontenac_in_Quebec_city%2C_Canada_colorfull.jpg",
+            "license": "CC0",
+            "before": "assets/03-before.jpg",
+            "clean": "assets/03-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 40.51,
+                "outside_mae": 13.345,
+                "target_improvement": 0.766,
+                "error": null,
+                "image": "assets/03-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 41.93,
+                "outside_mae": 13.405,
+                "target_improvement": 0.732,
+                "error": null,
+                "image": "assets/03-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 26.51,
+                "outside_mae": 14.108,
+                "target_improvement": 0.777,
+                "error": null,
+                "image": "assets/03-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 29.59,
+                "outside_mae": 7.261,
+                "target_improvement": 0.851,
+                "error": null,
+                "image": "assets/03-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "04",
+            "type": "central_text",
+            "typeLabel": "中央文字",
+            "sourceTitle": "File:Forest trail, Oberlibbach.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AForest_trail%2C_Oberlibbach.jpg",
+            "license": "CC0",
+            "before": "assets/04-before.jpg",
+            "clean": "assets/04-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 32.18,
+                "outside_mae": 35.172,
+                "target_improvement": -0.238,
+                "error": null,
+                "image": "assets/04-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 34.75,
+                "outside_mae": 35.09,
+                "target_improvement": -0.237,
+                "error": null,
+                "image": "assets/04-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 26.98,
+                "outside_mae": 22.635,
+                "target_improvement": 0.11,
+                "error": null,
+                "image": "assets/04-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 26.53,
+                "outside_mae": 10.96,
+                "target_improvement": 0.501,
+                "error": null,
+                "image": "assets/04-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "05",
+            "type": "corner_text",
+            "typeLabel": "角落小字",
+            "sourceTitle": "File:Harburg forest trail.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AHarburg_forest_trail.jpg",
+            "license": "CC0",
+            "before": "assets/05-before.jpg",
+            "clean": "assets/05-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 36.33,
+                "outside_mae": 26.145,
+                "target_improvement": -0.834,
+                "error": null,
+                "image": "assets/05-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 31.79,
+                "outside_mae": 26.364,
+                "target_improvement": -0.875,
+                "error": null,
+                "image": "assets/05-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 26.32,
+                "outside_mae": 15.103,
+                "target_improvement": -0.439,
+                "error": null,
+                "image": "assets/05-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 25.53,
+                "outside_mae": 17.802,
+                "target_improvement": -0.535,
+                "error": null,
+                "image": "assets/05-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "06",
+            "type": "semi_transparent",
+            "typeLabel": "半透明文字",
+            "sourceTitle": "File:Sunrise Meadows (14585088049).jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ASunrise_Meadows_%2814585088049%29.jpg",
+            "license": "Public domain",
+            "before": "assets/06-before.jpg",
+            "clean": "assets/06-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 34.48,
+                "outside_mae": 11.443,
+                "target_improvement": 0.157,
+                "error": null,
+                "image": "assets/06-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 37.43,
+                "outside_mae": 11.635,
+                "target_improvement": 0.146,
+                "error": null,
+                "image": "assets/06-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 26.97,
+                "outside_mae": 6.291,
+                "target_improvement": 0.48,
+                "error": null,
+                "image": "assets/06-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 28.12,
+                "outside_mae": 5.702,
+                "target_improvement": 0.518,
+                "error": null,
+                "image": "assets/06-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "07",
+            "type": "large_logo",
+            "typeLabel": "大块标识",
+            "sourceTitle": "File:1145 Market St, San Francisco, United States (Unsplash).jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3A1145_Market_St%2C_San_Francisco%2C_United_States_%28Unsplash%29.jpg",
+            "license": "CC0",
+            "before": "assets/07-before.jpg",
+            "clean": "assets/07-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 32.92,
+                "outside_mae": 13.682,
+                "target_improvement": 0.934,
+                "error": null,
+                "image": "assets/07-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 32.99,
+                "outside_mae": 15.029,
+                "target_improvement": 0.917,
+                "error": null,
+                "image": "assets/07-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 24.37,
+                "outside_mae": 8.217,
+                "target_improvement": 0.866,
+                "error": null,
+                "image": "assets/07-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 27.61,
+                "outside_mae": 7.6,
+                "target_improvement": 0.867,
+                "error": null,
+                "image": "assets/07-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "08",
+            "type": "central_text",
+            "typeLabel": "中央文字",
+            "sourceTitle": "File:Fishmonger smiling, Maracaibo street market, Venezuela.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AFishmonger_smiling%2C_Maracaibo_street_market%2C_Venezuela.jpg",
+            "license": "CC0",
+            "before": "assets/08-before.jpg",
+            "clean": "assets/08-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 28.48,
+                "outside_mae": 12.288,
+                "target_improvement": 0.333,
+                "error": null,
+                "image": "assets/08-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 32.92,
+                "outside_mae": 9.505,
+                "target_improvement": 0.411,
+                "error": null,
+                "image": "assets/08-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 27.98,
+                "outside_mae": 10.591,
+                "target_improvement": 0.422,
+                "error": null,
+                "image": "assets/08-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 27.59,
+                "outside_mae": 5.211,
+                "target_improvement": 0.696,
+                "error": null,
+                "image": "assets/08-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "09",
+            "type": "corner_text",
+            "typeLabel": "角落小字",
+            "sourceTitle": "File:Large meeting room (Unsplash).jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ALarge_meeting_room_%28Unsplash%29.jpg",
+            "license": "CC0",
+            "before": "assets/09-before.jpg",
+            "clean": "assets/09-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 32.1,
+                "outside_mae": 6.217,
+                "target_improvement": 0.45,
+                "error": null,
+                "image": "assets/09-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 34.73,
+                "outside_mae": 6.04,
+                "target_improvement": 0.29,
+                "error": null,
+                "image": "assets/09-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 29.07,
+                "outside_mae": 3.363,
+                "target_improvement": 0.614,
+                "error": null,
+                "image": "assets/09-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 32.42,
+                "outside_mae": 3.095,
+                "target_improvement": 0.565,
+                "error": null,
+                "image": "assets/09-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "10",
+            "type": "semi_transparent",
+            "typeLabel": "半透明文字",
+            "sourceTitle": "File:Intérieur de la Basilique Sainte-Anne-de-Beaupré, Quebéc, Canada.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AInt%C3%A9rieur_de_la_Basilique_Sainte-Anne-de-Beaupr%C3%A9%2C_Queb%C3%A9c%2C_Canada.jpg",
+            "license": "CC0",
+            "before": "assets/10-before.jpg",
+            "clean": "assets/10-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 44.53,
+                "outside_mae": 12.931,
+                "target_improvement": -0.13,
+                "error": null,
+                "image": "assets/10-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 35.12,
+                "outside_mae": 12.792,
+                "target_improvement": -0.151,
+                "error": null,
+                "image": "assets/10-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 26.72,
+                "outside_mae": 7.757,
+                "target_improvement": 0.264,
+                "error": null,
+                "image": "assets/10-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 31.14,
+                "outside_mae": 7.95,
+                "target_improvement": 0.243,
+                "error": null,
+                "image": "assets/10-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "11",
+            "type": "large_logo",
+            "typeLabel": "大块标识",
+            "sourceTitle": "File:Dark cream speckled patchy granite boulder seamless stone surface texture.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ADark_cream_speckled_patchy_granite_boulder_seamless_stone_surface_texture.jpg",
+            "license": "CC0",
+            "before": "assets/11-before.jpg",
+            "clean": "assets/11-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 33.23,
+                "outside_mae": 20.343,
+                "target_improvement": 0.538,
+                "error": null,
+                "image": "assets/11-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 31.98,
+                "outside_mae": 23.001,
+                "target_improvement": 0.62,
+                "error": null,
+                "image": "assets/11-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 27.23,
+                "outside_mae": 14.666,
+                "target_improvement": 0.745,
+                "error": null,
+                "image": "assets/11-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 27.27,
+                "outside_mae": 12.234,
+                "target_improvement": 0.728,
+                "error": null,
+                "image": "assets/11-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "12",
+            "type": "central_text",
+            "typeLabel": "中央文字",
+            "sourceTitle": "File:Grey boulder seamless stone surface texture.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AGrey_boulder_seamless_stone_surface_texture.jpg",
+            "license": "CC0",
+            "before": "assets/12-before.jpg",
+            "clean": "assets/12-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 39.08,
+                "outside_mae": 14.366,
+                "target_improvement": 0.32,
+                "error": null,
+                "image": "assets/12-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 31.87,
+                "outside_mae": 13.728,
+                "target_improvement": 0.351,
+                "error": null,
+                "image": "assets/12-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 27.96,
+                "outside_mae": 13.148,
+                "target_improvement": 0.371,
+                "error": null,
+                "image": "assets/12-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 26.36,
+                "outside_mae": 13.981,
+                "target_improvement": 0.356,
+                "error": null,
+                "image": "assets/12-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "13",
+            "type": "corner_text",
+            "typeLabel": "角落小字",
+            "sourceTitle": "File:Grey bumpy wavy granite boulder seamless stone surface texture.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AGrey_bumpy_wavy_granite_boulder_seamless_stone_surface_texture.jpg",
+            "license": "CC0",
+            "before": "assets/13-before.jpg",
+            "clean": "assets/13-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 33.69,
+                "outside_mae": 16.963,
+                "target_improvement": -0.164,
+                "error": null,
+                "image": "assets/13-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 35.47,
+                "outside_mae": 17.715,
+                "target_improvement": -0.22,
+                "error": null,
+                "image": "assets/13-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 28.07,
+                "outside_mae": 11.653,
+                "target_improvement": 0.048,
+                "error": null,
+                "image": "assets/13-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 25.62,
+                "outside_mae": 12.224,
+                "target_improvement": 0.067,
+                "error": null,
+                "image": "assets/13-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "14",
+            "type": "semi_transparent",
+            "typeLabel": "半透明文字",
+            "sourceTitle": "File:Murbach a street name signs collage.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AMurbach_a_street_name_signs_collage.jpg",
+            "license": "CC0",
+            "before": "assets/14-before.jpg",
+            "clean": "assets/14-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 39.17,
+                "outside_mae": 13.465,
+                "target_improvement": -0.518,
+                "error": null,
+                "image": "assets/14-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 44.57,
+                "outside_mae": 12.787,
+                "target_improvement": -0.333,
+                "error": null,
+                "image": "assets/14-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 28.17,
+                "outside_mae": 14.197,
+                "target_improvement": -0.587,
+                "error": null,
+                "image": "assets/14-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 28.56,
+                "outside_mae": 9.84,
+                "target_improvement": -0.146,
+                "error": null,
+                "image": "assets/14-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "15",
+            "type": "large_logo",
+            "typeLabel": "大块标识",
+            "sourceTitle": "File:Rhinecliff & Dow street signs - Arlington, MA.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ARhinecliff_%26_Dow_street_signs_-_Arlington%2C_MA.jpg",
+            "license": "CC0",
+            "before": "assets/15-before.jpg",
+            "clean": "assets/15-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 37.08,
+                "outside_mae": 13.282,
+                "target_improvement": 0.608,
+                "error": null,
+                "image": "assets/15-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 38.44,
+                "outside_mae": 14.076,
+                "target_improvement": 0.657,
+                "error": null,
+                "image": "assets/15-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 29.07,
+                "outside_mae": 13.575,
+                "target_improvement": 0.698,
+                "error": null,
+                "image": "assets/15-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 28.92,
+                "outside_mae": 9.29,
+                "target_improvement": 0.731,
+                "error": null,
+                "image": "assets/15-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "16",
+            "type": "central_text",
+            "typeLabel": "中央文字",
+            "sourceTitle": "File:Street signs Oulun Urheilutalo 20150125.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AStreet_signs_Oulun_Urheilutalo_20150125.jpg",
+            "license": "CC0",
+            "before": "assets/16-before.jpg",
+            "clean": "assets/16-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 42.64,
+                "outside_mae": 10.544,
+                "target_improvement": 0.466,
+                "error": null,
+                "image": "assets/16-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 40.98,
+                "outside_mae": 12.056,
+                "target_improvement": 0.45,
+                "error": null,
+                "image": "assets/16-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 27.57,
+                "outside_mae": 9.553,
+                "target_improvement": 0.547,
+                "error": null,
+                "image": "assets/16-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 24.17,
+                "outside_mae": 8.366,
+                "target_improvement": 0.58,
+                "error": null,
+                "image": "assets/16-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "17",
+            "type": "corner_text",
+            "typeLabel": "角落小字",
+            "sourceTitle": "File:Building in Paulista Avenue 09.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ABuilding_in_Paulista_Avenue_09.jpg",
+            "license": "CC0",
+            "before": "assets/17-before.jpg",
+            "clean": "assets/17-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 38.18,
+                "outside_mae": 13.52,
+                "target_improvement": 0.001,
+                "error": null,
+                "image": "assets/17-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 42.05,
+                "outside_mae": 12.768,
+                "target_improvement": 0.073,
+                "error": null,
+                "image": "assets/17-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 27.63,
+                "outside_mae": 11.886,
+                "target_improvement": 0.13,
+                "error": null,
+                "image": "assets/17-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 23.21,
+                "outside_mae": 11.74,
+                "target_improvement": 0.185,
+                "error": null,
+                "image": "assets/17-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "18",
+            "type": "semi_transparent",
+            "typeLabel": "半透明文字",
+            "sourceTitle": "File:Detail main facade Building of Parliament of Greece Athens.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3ADetail_main_facade_Building_of_Parliament_of_Greece_Athens.jpg",
+            "license": "CC0",
+            "before": "assets/18-before.jpg",
+            "clean": "assets/18-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 31.83,
+                "outside_mae": 9.397,
+                "target_improvement": -0.044,
+                "error": null,
+                "image": "assets/18-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 35.42,
+                "outside_mae": 9.484,
+                "target_improvement": -0.094,
+                "error": null,
+                "image": "assets/18-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 27.49,
+                "outside_mae": 5.555,
+                "target_improvement": 0.407,
+                "error": null,
+                "image": "assets/18-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 27.19,
+                "outside_mae": 5.442,
+                "target_improvement": 0.413,
+                "error": null,
+                "image": "assets/18-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          },
+          {
+            "id": "19",
+            "type": "large_logo",
+            "typeLabel": "大块标识",
+            "sourceTitle": "File:Macro flower wallpaper.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AMacro_flower_wallpaper.jpg",
+            "license": "CC0",
+            "before": "assets/19-before.jpg",
+            "clean": "assets/19-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 34.72,
+                "outside_mae": 4.381,
+                "target_improvement": 0.89,
+                "error": null,
+                "image": "assets/19-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 33.68,
+                "outside_mae": 5.465,
+                "target_improvement": 0.857,
+                "error": null,
+                "image": "assets/19-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 28.79,
+                "outside_mae": 4.399,
+                "target_improvement": 0.918,
+                "error": null,
+                "image": "assets/19-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 27.22,
+                "outside_mae": 4.42,
+                "target_improvement": 0.925,
+                "error": null,
+                "image": "assets/19-flash-bbox.jpg"
+              }
+            },
+            "note": "重点检查：Flash 两种模式的花心颗粒细节都被明显平滑；Lite 保留更多可见纹理。"
+          },
+          {
+            "id": "20",
+            "type": "central_text",
+            "typeLabel": "中央文字",
+            "sourceTitle": "File:Macro shot of a dried wild flower buds.jpg",
+            "sourcePage": "https://commons.wikimedia.org/wiki/File%3AMacro_shot_of_a_dried_wild_flower_buds.jpg",
+            "license": "CC0",
+            "before": "assets/20-before.jpg",
+            "clean": "assets/20-clean.jpg",
+            "variants": {
+              "lite:direct": {
+                "status": "succeeded",
+                "latency_seconds": 34.08,
+                "outside_mae": 5.715,
+                "target_improvement": 0.592,
+                "error": null,
+                "image": "assets/20-lite-direct.jpg"
+              },
+              "lite:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 35.15,
+                "outside_mae": 5.911,
+                "target_improvement": 0.585,
+                "error": null,
+                "image": "assets/20-lite-bbox.jpg"
+              },
+              "flash:direct": {
+                "status": "succeeded",
+                "latency_seconds": 27.8,
+                "outside_mae": 5.681,
+                "target_improvement": 0.614,
+                "error": null,
+                "image": "assets/20-flash-direct.jpg"
+              },
+              "flash:bbox": {
+                "status": "succeeded",
+                "latency_seconds": 29.8,
+                "outside_mae": 3.689,
+                "target_improvement": 0.674,
+                "error": null,
+                "image": "assets/20-flash-bbox.jpg"
+              }
+            },
+            "note": ""
+          }
+        ],
+        "findings": [
+          {
+            "label": "调用结果",
+            "text": "80 次请求全部返回图像。对照拼图未见可辨的合成水印残留；这组样本并不覆盖所有真实水印。"
+          },
+          {
+            "label": "速度与区域",
+            "text": "Flash 中位耗时约 27 秒，Lite 约 35 秒。Flash 的指定区域结果在 15/20 张样本上有更小的框外像素差。"
+          },
+          {
+            "label": "细节风险",
+            "text": "样本 19 的花心在 Flash 输出中被明显平滑；区域提示仍可能改动目标外内容，不能当作硬蒙版。"
+          }
+        ],
+        "methodNote": "框外像素差是辅助指标；生成模型的重绘、调色和缩放会影响数值。点击图片可放大，展开可看干净参照与四路结果。",
+        "costNote": "目录价为 40 张 Lite × ¥0.22 + 40 张 Flash × ¥0.12；Lite 当时有免费额度，实际账单尚未出齐。",
+        "defaultVariant": "flash:bbox"
+      }
+    </script>
+    <script>
+      const report = JSON.parse(document.getElementById('report-data').textContent)
+      const variants = report.models.flatMap((model) => report.modes.map((mode) => `${model}:${mode}`))
+      let selectedVariant = report.defaultVariant
+      const caseViews = []
+
+      function element(tag, className, content) {
+        const node = document.createElement(tag)
+        if (className) node.className = className
+        if (content !== undefined) node.textContent = content
+        return node
+      }
+
+      function modelLabel(key) {
+        return report.modelLabels[key] || key
+      }
+      function modeLabel(key) {
+        return report.modeLabels[key] || key
+      }
+      function variantLabel(key) {
+        const [model, mode] = key.split(':')
+        return `${modelLabel(model)} · ${modeLabel(mode)}`
+      }
+      function number(value, suffix = '') {
+        return typeof value === 'number' ? `${value.toFixed(2)}${suffix}` : '—'
+      }
+
+      function openViewer(source, caption) {
+        const dialog = document.getElementById('viewer')
+        const image = document.getElementById('viewer-image')
+        image.src = source
+        image.alt = caption
+        document.getElementById('viewer-caption').textContent = caption
+        dialog.showModal()
+      }
+
+      function imageButton(source, alt, loading = 'lazy') {
+        const button = element('button', 'image-button')
+        button.type = 'button'
+        button.setAttribute('aria-label', `放大查看：${alt}`)
+        const image = document.createElement('img')
+        image.src = source
+        image.alt = alt
+        image.loading = loading
+        image.decoding = 'async'
+        button.append(image)
+        button.addEventListener('click', () => openViewer(image.src, image.alt))
+        return { button, image }
+      }
+
+      function metric(label, value) {
+        const item = element('span', 'metric')
+        item.append(`${label} `, element('strong', '', value))
+        return item
+      }
+
+      function renderHeader() {
+        document.getElementById('report-date').textContent = report.date
+        document.getElementById('report-title').textContent = report.title
+        document.getElementById('report-subtitle').textContent = report.subtitle
+        document.getElementById('method-note').textContent = report.methodNote
+        document.getElementById('cost-note').textContent = report.costNote
+
+        const totals = document.getElementById('report-totals')
+        for (const [value, label] of [
+          [report.sampleCount, '授权照片'],
+          [report.resultCount, '编辑请求'],
+          [report.successCount, '成功输出'],
+        ]) {
+          const block = element('div', 'total')
+          block.append(element('strong', '', String(value)), element('span', '', label))
+          totals.append(block)
+        }
+
+        const tbody = document.querySelector('#summary-table tbody')
+        for (const row of report.summaries) {
+          const tr = document.createElement('tr')
+          const values = [
+            modelLabel(row.model),
+            modeLabel(row.mode),
+            `${row.success} / ${row.total}`,
+            number(row.latency, ' s'),
+            number(row.outsideMae),
+            row.catalogCost === null ? '—' : `¥${row.catalogCost.toFixed(2)}`,
+          ]
+          for (const value of values) tr.append(element('td', '', value))
+          tbody.append(tr)
+        }
+
+        const findings = document.getElementById('findings')
+        for (const finding of report.findings) {
+          const node = element('div', 'finding')
+          node.append(element('h3', '', finding.label), element('p', '', finding.text))
+          findings.append(node)
+        }
+        if (!report.findings.length) findings.hidden = true
+      }
+
+      function renderControls() {
+        const switcher = document.getElementById('variant-switch')
+        for (const key of variants) {
+          const button = element('button', '', variantLabel(key))
+          button.type = 'button'
+          button.dataset.variant = key
+          button.setAttribute('aria-pressed', String(key === selectedVariant))
+          button.addEventListener('click', () => selectVariant(key))
+          switcher.append(button)
+        }
+        const filter = document.getElementById('type-filter')
+        const types = [...new Map(report.cases.map((item) => [item.type, item.typeLabel])).entries()]
+        for (const [type, label] of types) {
+          const option = element('option', '', label)
+          option.value = type
+          filter.append(option)
+        }
+        filter.addEventListener('change', () => {
+          for (const view of caseViews) view.node.hidden = filter.value !== 'all' && view.data.type !== filter.value
+        })
+      }
+
+      function renderDetail(caseData, container) {
+        const entries = [{ label: '干净参照', image: caseData.clean }]
+        for (const key of variants) {
+          entries.push({ label: variantLabel(key), image: caseData.variants[key]?.image })
+        }
+        for (const entry of entries) {
+          const figure = document.createElement('figure')
+          if (entry.image) {
+            figure.append(imageButton(entry.image, `${caseData.id} · ${entry.label}`).button)
+          } else {
+            figure.append(element('div', 'missing', '无输出'))
+          }
+          figure.append(element('figcaption', 'image-label', entry.label))
+          container.append(figure)
+        }
+      }
+
+      function renderCases() {
+        const list = document.getElementById('case-list')
+        for (const caseData of report.cases) {
+          const section = element('section', 'case')
+          section.id = `sample-${caseData.id}`
+          section.dataset.type = caseData.type
+          const aside = element('div', 'case-meta')
+          aside.append(element('span', 'case-number', `NO. ${caseData.id}`))
+          aside.append(element('span', 'case-type', caseData.type.toUpperCase().replaceAll('_', ' ')))
+          aside.append(element('h3', '', caseData.typeLabel))
+          const source = element('div', 'case-source')
+          source.append(element('span', '', `${caseData.license} · 来源：`))
+          const sourceLink = element('a', '', caseData.sourceTitle.replace(/^File:/, ''))
+          sourceLink.href = caseData.sourcePage
+          sourceLink.target = '_blank'
+          sourceLink.rel = 'noopener noreferrer'
+          source.append(sourceLink)
+          aside.append(source)
+          if (caseData.note) aside.append(element('p', 'case-note', caseData.note))
+
+          const content = element('div', 'case-content')
+          const pair = element('div', 'pair')
+          const before = document.createElement('figure')
+          before.append(imageButton(caseData.before, `${caseData.id} · 去水印前`).button)
+          const beforeCaption = element('figcaption', 'image-label')
+          beforeCaption.append(element('span', '', '输入 / 有水印'), element('span', '', '点击放大'))
+          before.append(beforeCaption)
+          const after = document.createElement('figure')
+          const afterButton = imageButton(caseData.before, `${caseData.id} · 去水印后`)
+          after.append(afterButton.button)
+          const missing = element('div', 'missing', '本条件无成功输出')
+          missing.hidden = true
+          after.append(missing)
+          const afterCaption = element('figcaption', 'image-label')
+          afterCaption.append(element('span', '', '输出'), element('span', '', ''))
+          after.append(afterCaption)
+          pair.append(before, after)
+          content.append(pair)
+          const metrics = element('div', 'metrics')
+          content.append(metrics)
+
+          const details = element('details', 'case-details')
+          details.append(element('summary', '', '查看干净参照与全部结果'))
+          const grid = element('div', 'detail-grid')
+          details.append(grid)
+          details.addEventListener('toggle', () => {
+            if (details.open && !grid.childElementCount) renderDetail(caseData, grid)
+          })
+          content.append(details)
+          section.append(aside, content)
+          list.append(section)
+          caseViews.push({
+            node: section,
+            data: caseData,
+            image: afterButton.image,
+            button: afterButton.button,
+            missing,
+            caption: afterCaption.lastChild,
+            metrics,
+          })
+        }
+        selectVariant(selectedVariant)
+      }
+
+      function selectVariant(key) {
+        selectedVariant = key
+        for (const button of document.querySelectorAll('#variant-switch button')) {
+          button.setAttribute('aria-pressed', String(button.dataset.variant === key))
+        }
+        for (const view of caseViews) {
+          const row = view.data.variants[key]
+          const hasImage = Boolean(row?.image)
+          view.button.hidden = !hasImage
+          view.missing.hidden = hasImage
+          if (hasImage) {
+            view.image.src = row.image
+            view.image.alt = `${view.data.id} · ${variantLabel(key)} 去水印结果`
+          }
+          view.caption.textContent = variantLabel(key)
+          view.metrics.replaceChildren()
+          if (row) {
+            view.metrics.append(
+              metric(
+                '状态',
+                { succeeded: '成功', failed: '失败', unknown: '待核对' }[row.status] || row.status || '未记录',
+              ),
+              metric('耗时', number(row.latency_seconds, ' s')),
+              metric('框外差', number(row.outside_mae)),
+              metric(
+                '目标区改善',
+                typeof row.target_improvement === 'number' ? `${Math.round(row.target_improvement * 100)}%` : '—',
+              ),
+            )
+            if (row.error) view.metrics.append(metric('原因', row.error))
+          }
+        }
+      }
+
+      document.getElementById('viewer-close').addEventListener('click', () => document.getElementById('viewer').close())
+      document.getElementById('viewer').addEventListener('click', (event) => {
+        if (event.target.id === 'viewer') event.target.close()
+      })
+      document.addEventListener('keydown', (event) => {
+        if (
+          document.getElementById('viewer').open ||
+          ['SELECT', 'INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)
+        )
+          return
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+        const offset = event.key === 'ArrowRight' ? 1 : -1
+        selectVariant(variants[(variants.indexOf(selectedVariant) + offset + variants.length) % variants.length])
+      })
+
+      renderHeader()
+      renderControls()
+      renderCases()
+    </script>
+  </body>
+</html>

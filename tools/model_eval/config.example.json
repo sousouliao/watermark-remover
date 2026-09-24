@@ -1,0 +1,24 @@
+{
+  "date": "YYYY-MM-DD",
+  "modes": ["direct", "bbox"],
+  "prices_cny": {
+    "candidate": 0.12
+  },
+  "request": {
+    "models": {
+      "candidate": "REPLACE_WITH_EP_ID"
+    },
+    "size": "2K",
+    "output_format": "png",
+    "response_format": "url",
+    "watermark": false,
+    "labels": {
+      "corner_text": "© DEMO",
+      "semi_transparent": "SAMPLE",
+      "large_logo": "BRAND",
+      "central_text": "PREVIEW"
+    },
+    "direct_prompt": "请仅移除这张照片中后加的 {label} 水印文字或标识，恢复其下的原照片纹理。保留原照片的构图、人物、物体、颜色和原有文字，不要添加新元素或新文字。",
+    "bbox_prompt": "请仅移除 <bbox>{x1} {y1} {x2} {y2}</bbox> 区域内后加的 {label} 水印文字或标识，恢复其下的原照片纹理。区域外保持不变；保留原照片中的人物、物体和原有文字，不要添加新元素或新文字。"
+  }
+}

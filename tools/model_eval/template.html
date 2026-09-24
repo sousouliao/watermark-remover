@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>__TITLE__</title>
+    <style>
+      __CSS__
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <div class="eyebrow"><span class="mark"></span> NOMARK / MODEL EVALUATION</div>
+        <div class="date" id="report-date"></div>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="report-title">
+          <p class="section-index">实验记录 / 01</p>
+          <h1 id="report-title"></h1>
+          <p class="dek" id="report-subtitle"></p>
+          <div class="intro-rule"></div>
+          <div class="totals" id="report-totals"></div>
+        </section>
+
+        <section class="overview" aria-labelledby="overview-title">
+          <div class="section-head">
+            <div>
+              <p class="section-index">结果摘要 / 02</p>
+              <h2 id="overview-title">同一批样本，逐项对照</h2>
+            </div>
+            <p class="section-aside" id="cost-note"></p>
+          </div>
+          <div class="table-scroll">
+            <table id="summary-table">
+              <thead>
+                <tr>
+                  <th>模型</th>
+                  <th>方式</th>
+                  <th>成功</th>
+                  <th>中位耗时</th>
+                  <th>框外像素差 ↓</th>
+                  <th>目录价估算</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="findings" id="findings"></div>
+        </section>
+
+        <section class="gallery-section" aria-labelledby="gallery-title">
+          <div class="section-head gallery-head">
+            <div>
+              <p class="section-index">逐图对照 / 03</p>
+              <h2 id="gallery-title">看结果，也看改动</h2>
+            </div>
+            <p class="section-aside" id="method-note"></p>
+          </div>
+          <div class="toolbar" id="toolbar">
+            <div class="toolbar-group">
+              <span class="control-label">查看结果</span>
+              <div class="variant-switch" id="variant-switch" role="group" aria-label="选择模型和编辑方式"></div>
+            </div>
+            <div class="toolbar-group">
+              <label class="control-label" for="type-filter">样本类型</label
+              ><select id="type-filter">
+                <option value="all">全部类型</option>
+              </select>
+            </div>
+          </div>
+          <div class="case-list" id="case-list"></div>
+        </section>
+
+        <footer class="footer"><span>NOMARK / EVALUATION</span><span>离线报告 · 图片为压缩预览</span></footer>
+      </main>
+    </div>
+
+    <dialog class="viewer" id="viewer" aria-label="查看大图">
+      <button class="viewer-close" id="viewer-close" type="button" aria-label="关闭大图">关闭 ×</button>
+      <img id="viewer-image" alt="" />
+      <p id="viewer-caption"></p>
+    </dialog>
+    <script type="application/json" id="report-data">
+      __DATA__
+    </script>
+    <script>
+      __JS__
+    </script>
+  </body>
+</html>
