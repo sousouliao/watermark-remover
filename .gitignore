@@ -56,3 +56,6 @@ build/
 lint_output.txt
 server_errors.txt
 web_errors.txt
+
+# Private XHS verification inputs, reports and downloaded media
+.local/xhs-verification/
