@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle'
 import { EASE_OUT, SPRING_PRESS } from '@/lib/ease'
+import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth'
 
 export default function AppHeader() {
@@ -87,35 +88,42 @@ function UserMenu({
         whileTap={reduce ? undefined : { scale: 0.96 }}
         transition={SPRING_PRESS}
         onClick={() => setIsOpen(prev => !prev)}
-        className="flex items-center gap-2 rounded-full border border-border bg-muted/40 px-2 py-1 text-xs text-foreground transition-colors hover:border-foreground/30 hover:bg-muted/70 cursor-pointer select-none"
+        className={cn(
+          'flex h-8 min-w-36 max-w-48 shrink-0 items-center justify-between gap-2 rounded-full border px-2.5 text-xs text-foreground transition-colors cursor-pointer select-none',
+          isOpen
+            ? 'border-foreground/40 bg-muted/70'
+            : 'border-border bg-muted/40 hover:border-foreground/30 hover:bg-muted/70',
+        )}
       >
-        <div className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-foreground text-background">
-          {avatarSrc
-            ? (
-                <img
-                  src={avatarSrc}
-                  alt={user.login}
-                  className="size-full object-cover"
-                  onError={() => setAvatarError(true)}
-                />
-              )
-            : (
-                <span className="text-[10px] font-semibold leading-none">
-                  {user.login.slice(0, 1).toUpperCase()}
-                </span>
-              )}
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-foreground text-background">
+            {avatarSrc
+              ? (
+                  <img
+                    src={avatarSrc}
+                    alt={user.login}
+                    className="size-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                )
+              : (
+                  <span className="text-[10px] font-semibold leading-none">
+                    {user.login.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+          </div>
+
+          <span className="truncate font-mono text-xs">{user.login}</span>
         </div>
 
-        <span className="font-mono text-xs">{user.login}</span>
-
         <ChevronDown
-          className={`size-3 text-muted-foreground transition-transform duration-150 ${
+          className={`size-3 shrink-0 text-muted-foreground transition-transform duration-150 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
       </motion.button>
 
-      {/* Dropdown Menu (Strict Zero Shadow, pure hairline border with Spring Reveal) */}
+      {/* Dropdown Menu (Strict Zero Shadow, pure hairline border with Spring Reveal, strictly matching trigger width) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -124,7 +132,7 @@ function UserMenu({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
             transition={{ duration: 0.15, ease: EASE_OUT }}
-            className="absolute right-0 top-full mt-1.5 z-50 w-44 rounded-xl border border-border bg-background p-1 text-foreground"
+            className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl border border-border bg-background p-1 text-foreground"
           >
             <div className="flex flex-col px-2.5 py-1.5">
               <span className="font-mono text-xs font-medium text-foreground truncate">

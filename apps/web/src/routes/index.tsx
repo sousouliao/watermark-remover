@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Eraser } from 'lucide-react'
+import { Alert, AlertContent, AlertDescription, AlertIcon } from '@/components/motion/alert'
 import { MotionButton } from '@/components/motion/button'
 import { Card, CardContent } from '@/components/ui/card'
 import WatermarkApp from '@/pages/WatermarkApp'
@@ -34,12 +35,12 @@ function Home() {
           </div>
 
           {error && (
-            <p
-              role="alert"
-              className="w-full rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive"
-            >
-              {error}
-            </p>
+            <Alert variant="destructive" className="w-full text-left">
+              <AlertIcon />
+              <AlertContent>
+                <AlertDescription>{error}</AlertDescription>
+              </AlertContent>
+            </Alert>
           )}
 
           {/* Action */}

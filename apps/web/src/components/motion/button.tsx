@@ -103,10 +103,10 @@ export const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
         transition={SPRING_PRESS}
         onPointerDown={handlePointerDown}
         className={cn(
-          'inline-flex items-center justify-center font-medium select-none cursor-pointer',
+          'inline-flex items-center justify-center font-medium select-none cursor-pointer whitespace-nowrap shrink-0',
           'transition-colors duration-150',
           'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1',
-          'disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed',
+          'disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed',
           ripple && 'relative overflow-hidden',
           VARIANT_CLASS[variant],
           SIZE_CLASS[size],

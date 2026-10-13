@@ -14,9 +14,11 @@
 
 `apps/web` 已完成 PASS 1、PASS 2 与 PASS 3，并完成向 beUI (beui.dev) 交互动效规范与黑白极简工作室设计（Monochrome Studio）的全面重构：
 1. 彻底淘汰原有的紫色调（`hsl(243, 75%, 59%)` 及各类 purple/violet 散落类），全站贯彻**纯黑白极简单色调**与**严格零阴影 (Zero-Shadow)**；
-2. 基础组件全面替换为 beUI 原生组件：`RangeSlider`（物理弹簧与手势捕获）、`Card`（组合式 parts 与 interactive 缩放）、`Loader`（17 种高拟真动画变体）、`Input`（错误抖动与状态反馈）、`MotionButton` / `StatefulButton`（字符流动动画）、`Alert`（Animated Alert 弹性进退场）；
-3. 顶栏右侧重构：主题切换置于左侧并接入 beUI `ActionSwapIcon` 原地流转，头像与登录名组成整体胶囊，点击弹出 Spring 动效下拉菜单；
-4. 前端类型检查、生产构建及 ESLint 校验全部 0 错误通过，详见[beUI 重构记录](../logs/2026-10-13-beui-monochrome-redesign.md)。真实 OAuth、模型和放大服务仍需与 Go 后端联调验收。
+2. 基础组件全面替换为 beUI 原生组件：`RangeSlider` / `InlineSlider`（一体化内嵌 Label 与读数、物理弹簧与过字裂开避让手柄、点状刻度）、`FileUpload`（beUI 原装居中上传组件，消除 hover 浮点缩放导致的亚像素边框模糊/裁切）、`Card`（组合式 parts 与 interactive 缩放）、`Loader`（17 种高拟真动画变体）、`Input`（错误抖动与状态反馈）、`MotionButton` / `StatefulButton`（字符流动动画）、`Alert`（Animated Alert 弹性进退场）、`AnimatedBadge`（状态图标轮转、文字翻滚与微呼吸）、`ReasoningText`（AI 执行状态分步 Shimmer 与字符过渡）；
+3. 顶栏右侧重构：主题切换接入 beUI 原生 `ThemeToggle`（View Transitions 全屏径向扩散与 `ActionSwapIcon` 原地流转），头像与登录名组成整体胶囊，点击弹出 Spring 动效下拉菜单；
+4. 前端类型检查、生产构建及 ESLint 校验全部 0 错误通过，详见[beUI 重构记录](../logs/2026-10-13-beui-monochrome-redesign.md)及[UI 细节调优与处理状态重构记录](../logs/2026-10-14-ui-polish-and-processing-overlay-redesign.md)；
+5. 彻底解决“全图消除”与“涂抹消除”两模式同图不同尺寸的渲染撕裂：废除双 DOM 容器，改为由统一的 `MaskEditor` 单 Canvas 底座承载两种模式，确保 100% 像素级同一尺寸；同时将原本局促的画笔滑块从 `w-36` 拓展至大方舒展的 `w-72`（288px）；
+6. 新增小红书无水印解析与图集下载前端页面（`XHSApp`），并接入 beUI 原生 `Dock` 组件（`SPRING_LAYOUT` 药丸流动悬浮导航）实现小红书解析与图片去水印工作台无缝切换，支持单图受控流式下载、ZIP 打包下载与一键送入去水印画布。详见[小红书前端与 Dock 实施记录](../logs/2026-10-14-xhs-frontend-dock-implementation.md)。真实 OAuth、模型和放大服务仍需与 Go 后端联调验收。
 
 ## 下一步
 

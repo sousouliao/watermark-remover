@@ -1,4 +1,4 @@
-import { ImagePlus, Sparkles } from 'lucide-react'
+import { Eraser, ImagePlus } from 'lucide-react'
 import { MotionButton, StatefulButton } from '@/components/motion/button'
 
 interface Props {
@@ -44,7 +44,7 @@ export default function ActionBar({
           variant="primary"
           size="lg"
           className="flex-1 gap-2 rounded-xl text-xs font-medium md:flex-none md:min-w-44 md:text-sm"
-          icon={<Sparkles className="size-4" />}
+          icon={<Eraser className="size-4" />}
           loadingText="处理中…"
           onClick={onProcess}
         >

@@ -63,11 +63,8 @@ export function useMaskEditor(imageDataUrl: string) {
     function resizeAndDraw() {
       const width = containerRef.current?.clientWidth
       if (!active || !imageRef.current || !width) return
-      const scale = Math.min(
-        width / img.width,
-        Math.min(window.innerHeight * 0.55, 500) / img.height,
-        1,
-      )
+      const maxHeight = Math.min(window.innerHeight * 0.54, 560)
+      const scale = Math.min(width / img.width, maxHeight / img.height)
       const w = Math.max(1, Math.round(img.width * scale))
       const h = Math.max(1, Math.round(img.height * scale))
       setCanvasSize({ width: w, height: h })

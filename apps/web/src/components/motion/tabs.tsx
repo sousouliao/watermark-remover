@@ -90,9 +90,9 @@ export function Tabs({
 }
 
 const listClasses: Record<Variant, string> = {
-  pill: 'inline-flex items-center gap-0.5 rounded-full bg-secondary/80 p-0.5 border border-border/60',
-  underline: 'inline-flex items-center gap-1 border-b border-border',
-  segment: 'inline-flex items-center gap-0.5 rounded-xl bg-secondary/80 p-0.5 border border-border/60',
+  pill: 'flex items-center gap-1 rounded-full bg-muted p-1',
+  underline: 'flex items-center border-b border-border',
+  segment: 'flex items-center gap-1 rounded-lg bg-muted p-1',
 }
 
 export function TabsList({

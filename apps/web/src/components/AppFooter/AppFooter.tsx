@@ -1,10 +1,10 @@
 export default function AppFooter() {
   return (
     <footer
-      className="hidden items-center justify-center px-4 py-2 text-center md:flex"
-      style={{ paddingBottom: 'calc(0.5rem + var(--safe-bottom))' }}
+      className="hidden md:block fixed bottom-2 right-4 text-[10px] text-muted-foreground/50 pointer-events-none select-none z-10"
+      style={{ paddingBottom: 'var(--safe-bottom)' }}
     >
-      <p className="text-[11px] text-muted-foreground/70">
+      <p>
         由 Seedream 提供支持 · ©
         {' '}
         {new Date().getFullYear()}

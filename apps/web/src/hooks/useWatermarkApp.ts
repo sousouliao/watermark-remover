@@ -37,8 +37,8 @@ export function useWatermarkApp() {
     setStep(value => (value === 'result' || value === 'processing' ? 'editor' : value))
   }, [])
 
-  const handleImageSelect = useCallback(
-    (_file: File, dataUrl: string) => {
+  const loadImage = useCallback(
+    (dataUrl: string) => {
       invalidateRequest()
       setImageDataUrl(dataUrl)
       setSelectedModel('lite')
@@ -47,6 +47,13 @@ export function useWatermarkApp() {
       setStep('editor')
     },
     [invalidateRequest, clearResult],
+  )
+
+  const handleImageSelect = useCallback(
+    (_file: File, dataUrl: string) => {
+      loadImage(dataUrl)
+    },
+    [loadImage],
   )
 
   const selectModel = useCallback(
@@ -153,6 +160,7 @@ export function useWatermarkApp() {
     error,
     setError,
     currentStepIndex,
+    loadImage,
     handleImageSelect,
     selectModel,
     selectMode,
@@ -161,3 +169,4 @@ export function useWatermarkApp() {
     handleReset,
   }
 }
+export type WatermarkAppInstance = ReturnType<typeof useWatermarkApp>

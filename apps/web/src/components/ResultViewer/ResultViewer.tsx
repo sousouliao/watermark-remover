@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
-import { Columns2, Download, GripVertical, RotateCcw, SlidersHorizontal, Sparkles, Undo2 } from 'lucide-react'
+import { Columns2, Download, GripVertical, RotateCcw, SlidersHorizontal, Undo2, ZoomIn } from 'lucide-react'
 import { Alert, AlertContent, AlertDescription, AlertIcon } from '@/components/motion/alert'
+import { AnimatedBadge } from '@/components/motion/animated-badge'
 import { MotionButton } from '@/components/motion/button'
 import { Loader } from '@/components/motion/loader'
 import { Tabs, TabsList, TabsTrigger } from '@/components/motion/tabs'
@@ -26,13 +27,13 @@ export default function ResultViewer(props: Props) {
           onValueChange={val => viewer.setViewMode(val as 'slider' | 'side-by-side')}
           variant="segment"
         >
-          <TabsList className="bg-secondary/60">
-            <TabsTrigger value="slider" className="gap-1.5 text-xs">
-              <SlidersHorizontal className="size-3" />
+          <TabsList>
+            <TabsTrigger value="slider" className="gap-1.5">
+              <SlidersHorizontal className="size-3.5" />
               <span>滑动</span>
             </TabsTrigger>
-            <TabsTrigger value="side-by-side" className="gap-1.5 text-xs">
-              <Columns2 className="size-3" />
+            <TabsTrigger value="side-by-side" className="gap-1.5">
+              <Columns2 className="size-3.5" />
               <span>并排</span>
             </TabsTrigger>
           </TabsList>
@@ -86,26 +87,36 @@ export default function ResultViewer(props: Props) {
               </div>
 
               {/* Badges */}
-              <span className="pointer-events-none absolute left-3 top-3 rounded-full border border-white/20 bg-black/80 px-2.5 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm">
+              <AnimatedBadge
+                status="neutral"
+                size="sm"
+                className="pointer-events-none absolute left-3 top-3 border-white/20 bg-black/80 text-white backdrop-blur-md"
+              >
                 原图
-              </span>
-              <span className="pointer-events-none absolute right-3 top-3 rounded-full border border-black/10 bg-white/95 px-2.5 py-0.5 text-[11px] font-medium text-black backdrop-blur-sm">
+              </AnimatedBadge>
+              <AnimatedBadge
+                status="success"
+                size="sm"
+                className="pointer-events-none absolute right-3 top-3 border-black/10 bg-white/95 text-black backdrop-blur-md"
+              >
                 去水印
-              </span>
+              </AnimatedBadge>
             </div>
           )
         : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {[
-                { url: props.originalUrl, label: '原图' },
-                { url: props.resultUrl, label: '去水印' },
+                { url: props.originalUrl, label: '原图', status: 'neutral' as const },
+                { url: props.resultUrl, label: '去水印', status: 'success' as const },
               ].map(image => (
                 <div
                   key={image.label}
                   className="glass-card overflow-hidden rounded-xl border-border"
                 >
                   <div className="flex items-center justify-between border-b border-border/60 bg-secondary/40 px-3 py-1.5 text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">{image.label}</span>
+                    <AnimatedBadge status={image.status} size="sm">
+                      {image.label}
+                    </AnimatedBadge>
                   </div>
                   <img
                     src={image.url}
@@ -164,7 +175,7 @@ export default function ResultViewer(props: Props) {
                       <Loader variant="spinner" size={16} />
                     )
                   : (
-                      <Sparkles className="size-4 text-foreground" />
+                      <ZoomIn className="size-4 text-foreground" />
                     )}
                 <span>{viewer.isUpscaling ? '增强中…' : '超清放大'}</span>
               </MotionButton>
