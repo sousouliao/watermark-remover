@@ -1,5 +1,5 @@
 export const PROCESSING_STEPS = [
-  'Sending image to Seedream...',
-  'Removing watermark...',
-  'Preparing result...',
+  '正在将图片发送至 Seedream…',
+  '正在移除水印…',
+  '正在准备结果…',
 ]

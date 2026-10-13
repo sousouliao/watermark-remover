@@ -1,4 +1,4 @@
-import { sessionToken } from './session'
+import { sessionStore, setSessionToken } from './session'
 
 const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 
@@ -8,9 +8,10 @@ export function apiUrl(path: string): string {
 
 export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers)
-  if (sessionToken.value) headers.set('Authorization', `Bearer ${sessionToken.value}`)
+  const token = sessionStore.getState().token
+  if (token) headers.set('Authorization', `Bearer ${token}`)
   const response = await fetch(apiUrl(path), { ...options, headers })
-  if (response.status === 401) sessionToken.value = ''
+  if (response.status === 401) setSessionToken('')
   return response
 }
 

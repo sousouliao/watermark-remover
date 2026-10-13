@@ -2,7 +2,7 @@
 
 日期：2026-10-13。状态：用户已确认；代码已实现，本地验证通过，云端整体验收进行中。
 
-前端保持 Vue/Vite，部署 Vercel；Go 替换 NestJS，部署既有腾讯云服务器。保留双模型去水印和图片放大，新增小红书完整下载后端，本轮不增加小红书页面。
+原决策的前端为 Vue/Vite，部署 Vercel；Go 替换 NestJS，部署既有腾讯云服务器。保留双模型去水印和图片放大，新增小红书完整下载后端，本轮不增加小红书页面。
 
 选择标准 net/http，OAuth2 与 CORS 采用两个专用库。按功能组织 internal 包，显式装配；不引入 Web 框架、ORM、DI 容器、数据库或通用缓存。会话与笔记结果使用有界进程内存储，服务重启后重新登录/解析，符合当前仅机主自用的范围。
 
@@ -11,3 +11,5 @@
 解析器保留同机独立 XHS-Downloader 2.8 容器。Go 负责适配、受限媒体下载和 ZIP，ZIP 逐图写单个临时压缩包，完整完成后发送。
 
 依据：[Go 设计核对](../logs/2026-10-13-go-backend-design-review.md)、[解析器部署与样本验证](../logs/2026-10-13-xhs-deployment-review.md)。实际迁移和验证见[实施记录](../logs/2026-10-13-go-api-migration.md)。
+
+2026-10-13 后续更新：前端已原地迁移为 React + TanStack Router/Query + Zustand 的 Vite SPA，Vercel 分离部署与包名保持不变。当前栈见[架构契约](../contracts/architecture.md)，文档与工具清理见 [PASS 3](../logs/2026-10-13-react-pass-3.md)。

@@ -10,7 +10,7 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 
 | 应用 | 技术栈 | 说明 |
 |------|--------|------|
-| `apps/web` | Vue 3 + Tailwind CSS v4 + shadcn-vue | 前端交互界面 |
+| `apps/web` | React 19 + TanStack Router/Query + Zustand 5 + Tailwind CSS v4 | 前端交互界面 |
 | `apps/server` | Go + net/http | 后端 BFF 服务 |
 
 ## 功能特性
@@ -26,11 +26,13 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 
 ### 前端 (`apps/web`)
 
-- **框架**: Vue 3 (Composition API + `<script setup>`)
-- **构建工具**: Vite 7
+- **框架**: React 19 SPA
+- **构建工具**: Vite 8
 - **样式**: Tailwind CSS v4 + tw-animate-css
-- **UI 组件**: shadcn-vue (radix-vue)
-- **图标**: lucide-vue-next
+- **路由与请求状态**: TanStack Router 文件路由 + TanStack Query
+- **客户端状态**: Zustand 5
+- **UI 组件**: Radix React primitives + shadcn 风格 TSX 组件
+- **图标**: lucide-react
 - **语言**: TypeScript
 
 ### 后端 (`apps/server`)
@@ -46,7 +48,7 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 - **包管理**: pnpm (Workspace)
 - **代码规范**: ESLint (@antfu/eslint-config)
 - **提交规范**: Commitlint + Husky + lint-staged
-- **类型检查**: vue-tsc
+- **类型检查**: TypeScript（`pnpm --filter @watermark-remover/web type-check`；前端构建先执行 `tsc -b`）
 
 ## 快速开始
 
@@ -88,19 +90,21 @@ pnpm build
 ```
 watermark-remover/
 ├── apps/
-│   ├── web/                          # 前端 Vue 应用
+│   ├── web/                          # 前端 React SPA
 │   │   ├── src/
-│   │   │   ├── App.vue               # 根组件（背景渐变 + 布局）
-│   │   │   ├── main.ts               # 应用入口
+│   │   │   ├── main.tsx              # React 应用入口
+│   │   │   ├── routes/               # 文件路由（/ 与 /auth/callback）
+│   │   │   ├── routeTree.gen.ts       # 自动生成的路由树
 │   │   │   ├── style.css             # 全局样式 + CSS 变量
-│   │   │   ├── pages/WatermarkApp.vue # 主页面与步骤管理
+│   │   │   ├── pages/WatermarkApp.tsx # 主页面与步骤管理
 │   │   │   ├── components/
 │   │   │   │   ├── MaskEditor/       # 指定区域画笔
 │   │   │   │   ├── ResultViewer/     # 结果对比与下载
 │   │   │   │   └── ui/               # UI 基础组件
+│   │   │   ├── stores/auth.ts        # Zustand 会话与认证
 │   │   │   └── lib/
 │   │   │       └── utils.ts          # 工具函数
-│   │   ├── components.json           # shadcn-vue 配置
+│   │   ├── components.json           # shadcn React 配置
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   │
@@ -111,7 +115,7 @@ watermark-remover/
 │       └── package.json             # pnpm 开发/构建命令桥接
 ├── package.json                      # Monorepo 根配置
 ├── pnpm-workspace.yaml
-└── eslint.config.js
+└── eslint.config.mjs
 ```
 
 ## API 接口

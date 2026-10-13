@@ -1,238 +1,170 @@
-import type { Ref } from 'vue'
+import { useEffect, useRef, useState } from 'react'
+import type { KeyboardEvent, PointerEvent } from 'react'
 import type { ViewMode } from '@/types/app'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { apiFetch } from '@/lib/api'
 
-export function useResultViewer(
-  props: { originalUrl: string, resultUrl: string },
-  containerRef: Ref<HTMLDivElement | null>,
-  emit: (event: 'update:resultUrl', url: string) => void,
-) {
-  const viewMode = ref<ViewMode>('slider')
-  const sliderPosition = ref(50)
-  const isDragging = ref(false)
-  const imageSize = ref({ width: 0, height: 0 })
+export function useResultViewer({
+  originalUrl,
+  resultUrl,
+  onResultChange
+}: {
+  originalUrl: string
+  resultUrl: string
+  onResultChange: (url: string) => void
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('slider')
+  const [sliderPosition, setSliderPosition] = useState(50)
+  const [isDragging, setIsDragging] = useState(false)
+  const [aspectRatio, setAspectRatio] = useState(16 / 9)
+  const [isUpscaling, setIsUpscaling] = useState(false)
+  const [isUpscaled, setIsUpscaled] = useState(false)
+  const [upscaleError, setUpscaleError] = useState<string | null>(null)
+  const preUpscaleUrl = useRef<string | null>(null)
+  const upscaledUrl = useRef<string | null>(null)
+  const controllerRef = useRef<AbortController | null>(null)
+  const drag = useRef<{
+    pointerId: number | null
+    pct: number
+    raf: number
+    pendingX: number | null
+  }>({ pointerId: null, pct: 50, raf: 0, pendingX: null })
 
-  // Upscale 状态
-  const isUpscaling = ref(false)
-  const isUpscaled = ref(false)
-  const upscaleError = ref<string | null>(null)
-  const preUpscaleUrl = ref<string | null>(null)
-  const upscaledUrl = ref<string | null>(null)
-  let upscaleController: AbortController | null = null
-
-  let rafId = 0
-  let pendingClientX: number | null = null
-  let lastPct = 50
-
-  onMounted(() => {
+  useEffect(() => {
     const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      imageSize.value = { width: img.width, height: img.height }
+    img.onload = () => setAspectRatio(img.width / img.height)
+    img.src = originalUrl
+    return () => {
+      img.onload = null
     }
-    img.src = props.originalUrl
-  })
+  }, [originalUrl])
+  useEffect(
+    () => () => {
+      controllerRef.current?.abort()
+      cancelAnimationFrame(drag.current.raf)
+    },
+    []
+  )
+  useEffect(() => {
+    containerRef.current?.style.setProperty('--slider-pct', String(sliderPosition))
+  }, [viewMode, sliderPosition])
 
-  const aspectRatio = computed(() => {
-    if (imageSize.value.width && imageSize.value.height) {
-      return imageSize.value.width / imageSize.value.height
-    }
-    return 16 / 9
-  })
-
-  function updateSliderFromClientX(clientX: number) {
-    if (!containerRef.value) return
-    const rect = containerRef.value.getBoundingClientRect()
-    const x = clientX - rect.left
-    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100))
-    lastPct = pct
-    containerRef.value.style.setProperty('--slider-pct', String(pct))
+  function setPosition(pct: number) {
+    drag.current.pct = Math.max(0, Math.min(100, pct))
+    containerRef.current?.style.setProperty('--slider-pct', String(drag.current.pct))
+    containerRef.current?.setAttribute('aria-valuenow', String(Math.round(drag.current.pct)))
   }
-
-  function tick() {
-    rafId = 0
-    if (pendingClientX === null) return
-    const x = pendingClientX
-    pendingClientX = null
-    updateSliderFromClientX(x)
+  function updatePosition(clientX: number) {
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (rect?.width) setPosition(((clientX - rect.left) / rect.width) * 100)
   }
-
-  function syncSliderPositionToRef() {
-    sliderPosition.value = lastPct
-  }
-
-  function setSliderPctFromRef() {
-    if (containerRef.value) {
-      lastPct = sliderPosition.value
-      containerRef.value.style.setProperty('--slider-pct', String(sliderPosition.value))
-    }
-  }
-
-  function handleMouseDown(e: MouseEvent) {
+  function handlePointerDown(e: PointerEvent<HTMLDivElement>) {
+    if (drag.current.pointerId !== null || (e.pointerType === 'mouse' && e.button !== 0)) return
     e.preventDefault()
-    isDragging.value = true
-    updateSliderFromClientX(e.clientX)
+    e.currentTarget.focus()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    drag.current.pointerId = e.pointerId
+    setIsDragging(true)
+    updatePosition(e.clientX)
   }
-
-  function handleTouchStart(e: TouchEvent) {
-    isDragging.value = true
-    updateSliderFromClientX(e.touches[0].clientX)
+  function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
+    if (drag.current.pointerId !== e.pointerId) return
+    drag.current.pendingX = e.clientX
+    if (!drag.current.raf)
+      drag.current.raf = requestAnimationFrame(() => {
+        drag.current.raf = 0
+        if (drag.current.pendingX !== null) updatePosition(drag.current.pendingX)
+        drag.current.pendingX = null
+      })
   }
-
-  function handleMove(e: MouseEvent | TouchEvent) {
-    if (!isDragging.value) return
-    const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-    pendingClientX = clientX
-    if (rafId === 0) rafId = requestAnimationFrame(tick)
+  function handlePointerUp(e: PointerEvent<HTMLDivElement>) {
+    if (drag.current.pointerId !== e.pointerId) return
+    cancelAnimationFrame(drag.current.raf)
+    drag.current.raf = 0
+    if (drag.current.pendingX !== null) updatePosition(drag.current.pendingX)
+    drag.current.pendingX = null
+    drag.current.pointerId = null
+    setSliderPosition(drag.current.pct)
+    setIsDragging(false)
+    if (e.currentTarget.hasPointerCapture(e.pointerId))
+      e.currentTarget.releasePointerCapture(e.pointerId)
   }
-
-  function handleUp() {
-    isDragging.value = false
-    syncSliderPositionToRef()
+  function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return
+    e.preventDefault()
+    setPosition(
+      e.key === 'Home'
+        ? 0
+        : e.key === 'End'
+          ? 100
+          : drag.current.pct + (e.key === 'ArrowLeft' ? -2 : 2)
+    )
+    setSliderPosition(drag.current.pct)
   }
-
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === 'ArrowLeft') sliderPosition.value = Math.max(0, sliderPosition.value - 2)
-    if (e.key === 'ArrowRight') sliderPosition.value = Math.min(100, sliderPosition.value + 2)
-    setSliderPctFromRef()
-  }
-
-  onMounted(() => {
-    window.addEventListener('mousemove', handleMove)
-    window.addEventListener('mouseup', handleUp)
-    window.addEventListener('touchmove', handleMove, { passive: true })
-    window.addEventListener('touchend', handleUp)
-  })
-
-  onUnmounted(() => {
-    upscaleController?.abort()
-    window.removeEventListener('mousemove', handleMove)
-    window.removeEventListener('mouseup', handleUp)
-    window.removeEventListener('touchmove', handleMove)
-    window.removeEventListener('touchend', handleUp)
-    if (rafId !== 0) cancelAnimationFrame(rafId)
-  })
-
   function handleDownload() {
     const a = document.createElement('a')
-    a.href = props.resultUrl
-    const prefix = isUpscaled.value ? 'upscaled' : 'watermark-removed'
-    a.download = `${prefix}-${Date.now()}.png`
+    a.href = resultUrl
+    a.download = `${isUpscaled ? 'upscaled' : 'watermark-removed'}-${Date.now()}.png`
     document.body.appendChild(a)
     a.click()
-    document.body.removeChild(a)
+    a.remove()
   }
-
   async function handleUpscale() {
-    if (isUpscaling.value || isUpscaled.value) return
-
-    // 缓存命中：直接使用之前增强过的结果，秒切换
-    if (upscaledUrl.value) {
-      preUpscaleUrl.value = props.resultUrl
-      emit('update:resultUrl', upscaledUrl.value)
-      isUpscaled.value = true
+    if (controllerRef.current || isUpscaled) return
+    preUpscaleUrl.current = resultUrl
+    setUpscaleError(null)
+    if (upscaledUrl.current) {
+      onResultChange(upscaledUrl.current)
+      setIsUpscaled(true)
       return
     }
-
-    isUpscaling.value = true
-    upscaleError.value = null
     const controller = new AbortController()
-    upscaleController = controller
-
-    // 保存增强前的图片，以便回退
-    preUpscaleUrl.value = props.resultUrl
-
+    controllerRef.current = controller
+    setIsUpscaling(true)
     try {
       const response = await apiFetch('/api/upscale', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          image: props.resultUrl,
-          scale: 2,
-        }),
+        body: JSON.stringify({ image: resultUrl, scale: 2 }),
+        signal: controller.signal
       })
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`)
-      }
-
       const result = await response.json()
       if (controller.signal.aborted) return
-      if (result.success) {
-        upscaledUrl.value = result.data.image // 缓存增强结果
-        emit('update:resultUrl', result.data.image)
-        isUpscaled.value = true
-      }
-      else {
-        throw new Error(result.message || 'Unknown server error')
-      }
-    }
-    catch (err) {
+      if (!response.ok || !result.success || !result.data?.image?.startsWith('data:image/'))
+        throw new Error('Invalid enhancement result')
+      upscaledUrl.current = result.data.image
+      onResultChange(result.data.image)
+      setIsUpscaled(true)
+    } catch {
       if (controller.signal.aborted) return
-      console.error('Upscale failed:', err)
-      upscaleError.value = 'Enhancement failed. Please try again.'
-      preUpscaleUrl.value = null
-    }
-    finally {
-      if (upscaleController === controller) upscaleController = null
-      isUpscaling.value = false
+      setUpscaleError('增强失败，请重试。')
+      preUpscaleUrl.current = null
+    } finally {
+      if (controllerRef.current === controller) controllerRef.current = null
+      if (!controller.signal.aborted) setIsUpscaling(false)
     }
   }
-
   function handleRevertUpscale() {
-    if (!preUpscaleUrl.value) return
-    emit('update:resultUrl', preUpscaleUrl.value)
-    isUpscaled.value = false
-    // 不清空 upscaledUrl，保留缓存以便再次切换
+    if (!preUpscaleUrl.current) return
+    onResultChange(preUpscaleUrl.current)
+    setIsUpscaled(false)
   }
-
-  let resizeObserver: ResizeObserver | null = null
-  watch(
-    () => viewMode.value === 'slider' && containerRef.value,
-    (shouldObserve) => {
-      const el = containerRef.value
-      if (!shouldObserve || !el) {
-        resizeObserver?.disconnect()
-        resizeObserver = null
-        return
-      }
-      if (!resizeObserver) {
-        resizeObserver = new ResizeObserver((entries) => {
-          const entry = entries[0]
-          if (!entry || !containerRef.value) return
-          const width = (entry.target as HTMLElement).clientWidth
-          containerRef.value.style.setProperty('--container-width-px', `${width}px`)
-          containerRef.value.style.setProperty('--slider-pct', String(sliderPosition.value))
-          lastPct = sliderPosition.value
-        })
-      }
-      resizeObserver.observe(el)
-      const width = el.clientWidth
-      el.style.setProperty('--container-width-px', `${width}px`)
-      el.style.setProperty('--slider-pct', String(sliderPosition.value))
-      lastPct = sliderPosition.value
-    },
-    { immediate: true },
-  )
-  onUnmounted(() => {
-    resizeObserver?.disconnect()
-  })
-
   return {
+    containerRef,
     viewMode,
+    setViewMode,
     sliderPosition,
     isDragging,
     aspectRatio,
     isUpscaling,
     isUpscaled,
     upscaleError,
-    handleMouseDown,
-    handleTouchStart,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
     handleKeyDown,
     handleDownload,
     handleUpscale,
-    handleRevertUpscale,
+    handleRevertUpscale
   }
 }

@@ -10,6 +10,10 @@
 
 用户已确认 Go 统一后端、Vercel 前端、公网 IP HTTPS 和仅允许 GitHub ID 37927306 的登录。Go 迁移及下载后端、前端登录、部署配置已实现，本地 Go race 测试/vet、前端构建/类型检查与改动文件 lint 已通过。前端已发布 https://watermark-remover-rose-chi.vercel.app；Go 尚未部署，服务器 pending 配置已保存但未安装。
 
+## React 前端迁移
+
+`apps/web` 已完成 PASS 1、PASS 2 与 PASS 3：React 19/Vite SPA、TanStack Router 的 `/` 与 `/auth/callback`、TanStack Query provider、Zustand 5 PKCE 认证、Tailwind 4、React UI primitives 和 PWA 配置，以及上传、双模型/模式选择、画布区域编辑、处理取消、结果对比、重试、下载和高清增强。Vue 文件与临时类型检查排除项已删除。前端类型检查、构建及浏览器模拟 API 功能验证通过；真实 OAuth、模型和放大服务仍需联调验收。PASS 3 已同步当前栈文档并清理根工具中的 Vue 配置，详见[PASS 3 记录](../logs/2026-10-13-react-pass-3.md)。
+
 ## 下一步
 
 以固定 Git 提交交付完整源码，完成服务器 Go/systemd、Nginx/IP 证书与续期，安装 pending 配置后验收真实 GitHub 登录、双模型/区域处理、放大及 Go 小红书单图/ZIP。源码包传递截断是本次实际部署阻塞；不能将前端发布和 Python 解析器历史成功标记整体上线。详见[实施记录](../logs/2026-10-13-go-api-migration.md)。

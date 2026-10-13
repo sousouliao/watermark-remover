@@ -1,12 +1,12 @@
 # Watermark Remover 重构路线图
 
-更新日期：2026-09-23
+更新日期：2026-10-13
 
 ## 目标与范围
 
 保留“上传图片 → 移除水印 → 对比结果 → 下载”的产品目标，重构现有以手绘蒙版和 IOPaint-LaMA 为中心的实现。新版通过火山方舟托管 API 同时支持 **Doubao Seedream 5.0 Lite** 和 **Doubao Seedream 5.0 Flash**；用户可以明确选择模型，后续依据真实样本的效果、耗时和费用决定默认模型。
 
-本轮重构完成后，不再依赖 IOPaint、LaMA 服务或常驻 GPU。沿用现有 Vue 3 前端和 NestJS 后端，除非实施时出现直接阻碍，不为重构而更换框架或拆出新包。自动检测水印、账户与计费、多云路由、自部署模型不在本轮范围内。
+本轮重构完成后，不再依赖 IOPaint、LaMA 服务或常驻 GPU。当前实现为 React 19 + TanStack Router/Query + Zustand 5 + Tailwind 4 的 Vite SPA 与 Go API，继续保留现有 Monorepo；迁移进度见[当前状态](state/CURRENT.md)。自动检测水印、账户与计费、多云路由、自部署模型不在本轮范围内。
 
 ## 模型与产品约定
 

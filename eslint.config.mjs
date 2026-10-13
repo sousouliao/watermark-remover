@@ -2,7 +2,8 @@ import antfu from '@antfu/eslint-config'
 
 export default antfu(
   {
-    vue: true,
+    vue: false,
+    jsx: true,
     typescript: true,
     markdown: false,
     formatters: {
@@ -22,10 +23,6 @@ export default antfu(
     rules: {
       'no-console': 'warn',
       'antfu/if-newline': 'off',
-      'vue/max-attributes-per-line': ['error', {
-        singleline: { max: 5 },
-        multiline: { max: 1 },
-      }],
     },
   },
   {

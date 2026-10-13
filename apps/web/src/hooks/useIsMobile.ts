@@ -1,12 +1,14 @@
-import { useMediaQuery } from '@vueuse/core'
+import { useSyncExternalStore } from 'react'
 
-const MOBILE_BREAKPOINT = 768
+export const MOBILE_QUERY = '(max-width: 768px)'
+const media = window.matchMedia(MOBILE_QUERY)
 
-/**
- * 判断当前设备是否为移动端
- * 基于 VueUse 的 useMediaQuery，使用 matchMedia API 响应式检测
- */
+function subscribe(onChange: () => void) {
+  media.addEventListener('change', onChange)
+  return () => media.removeEventListener('change', onChange)
+}
+
 export function useIsMobile() {
-  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`)
+  const isMobile = useSyncExternalStore(subscribe, () => media.matches, () => false)
   return { isMobile }
 }

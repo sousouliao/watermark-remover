@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ==========================================================
-   shadcn-vue Theme Variables (v0 Design Port)
+   shadcn Theme Variables (v0 Design Port)
    ========================================================== */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
