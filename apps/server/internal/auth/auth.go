@@ -6,8 +6,11 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -133,7 +136,13 @@ func (s *Service) exchange(w http.ResponseWriter, r *http.Request) {
 	ctx := context.WithValue(r.Context(), oauth2.HTTPClient, s.client)
 	token, err := s.oauth.Exchange(ctx, input.Code, oauth2.VerifierOption(input.Verifier))
 	if err != nil {
-		httpapi.WriteError(w, httpapi.Fail(502, "GitHub 授权失败，请重新登录"))
+		message := "GitHub 授权失败，请重新登录"
+		var urlErr *url.Error
+		var netErr net.Error
+		if errors.Is(err, context.DeadlineExceeded) || errors.As(err, &urlErr) || errors.As(err, &netErr) {
+			message = "无法连接 GitHub 换取授权，请检查服务器到 github.com 的出站连通性"
+		}
+		httpapi.WriteError(w, httpapi.Fail(502, message))
 		return
 	}
 	req, err := http.NewRequestWithContext(r.Context(), "GET", s.userURL, nil)

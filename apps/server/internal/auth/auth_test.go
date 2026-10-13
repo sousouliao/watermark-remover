@@ -2,8 +2,11 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,6 +17,56 @@ import (
 
 	"golang.org/x/oauth2"
 )
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func TestOAuthExchangeFailureMessages(t *testing.T) {
+	const networkMessage = "无法连接 GitHub 换取授权，请检查服务器到 github.com 的出站连通性"
+	for _, tc := range []struct {
+		name    string
+		err     error
+		message string
+	}{
+		{"deadline", fmt.Errorf("wrapped: %w", context.DeadlineExceeded), networkMessage},
+		{"timeout", &net.DNSError{Err: "timeout", IsTimeout: true}, networkMessage},
+		{"network", &net.DNSError{Err: "no such host"}, networkMessage},
+		{"connection closed", io.EOF, networkMessage},
+		{"authorization rejected", nil, "GitHub 授权失败，请重新登录"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			client := &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+				if tc.err != nil {
+					return nil, tc.err
+				}
+				return &http.Response{StatusCode: 400, Header: http.Header{"Content-Type": {"application/json"}},
+					Body: io.NopCloser(strings.NewReader(`{"error":"invalid_grant","error_description":"sensitive upstream detail"}`))}, nil
+			})}
+			s := New("client", "secret", "https://frontend.vercel.app", 37927306, client)
+			s.oauth.Endpoint.AuthStyle = oauth2.AuthStyleInParams
+			verifier := oauth2.GenerateVerifier()
+			s.states["state"] = attempt{oauth2.S256ChallengeFromVerifier(verifier), time.Now().Add(time.Minute)}
+			mux := http.NewServeMux()
+			s.Register(mux)
+			w := request(t, mux, "/api/auth/github/exchange", map[string]string{
+				"state": "state", "code": "code", "codeVerifier": verifier,
+			}, "")
+			var response struct {
+				Message string `json:"message"`
+			}
+			if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+				t.Fatal(err)
+			}
+			if w.Code != http.StatusBadGateway || response.Message != tc.message {
+				t.Fatalf("exchange: status=%d body=%s", w.Code, w.Body)
+			}
+			if strings.Contains(w.Body.String(), "sensitive upstream detail") {
+				t.Fatal("upstream detail leaked")
+			}
+		})
+	}
+}
 
 func request(t *testing.T, mux http.Handler, path string, body any, token string) *httptest.ResponseRecorder {
 	t.Helper()

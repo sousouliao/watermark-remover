@@ -16,7 +16,7 @@ import (
 
 func New(cfg config.Config, logger *slog.Logger) *http.Server {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.Proxy = nil
+	transport.Proxy = http.ProxyFromEnvironment
 	client := &http.Client{Transport: transport, Timeout: 185 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	authentication := auth.New(cfg.GithubClientID, cfg.GithubClientSecret, cfg.FrontendURL, cfg.GithubUserID, &http.Client{Transport: transport, Timeout: 15 * time.Second, CheckRedirect: client.CheckRedirect})
 	watermarks := watermark.New(client, cfg.ArkKey, cfg.LiteEndpoint, cfg.FlashEndpoint)

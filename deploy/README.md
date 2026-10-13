@@ -35,6 +35,16 @@ ARK_SEEDREAM_FLASH_ENDPOINT=<endpoint>
 
 缺少 OAuth 配置时业务接口保持 401，登录开始返回 503；缺少模型配置时去水印返回 503。不能据此标记完整上线成功。
 
+### GitHub 登录出站连通性
+
+广州主机可能无法连接 `github.com`，即使 `api.github.com` 可访问；OAuth 换令牌必须访问 `https://github.com/login/oauth/access_token`。生产已临时在 `/etc/hosts` 使用以下映射：
+
+```text
+140.82.114.3 github.com
+```
+
+IP 可能变化，应用或调整映射后用 `curl --connect-timeout 5 --max-time 15 -X POST https://github.com/login/oauth/access_token` 重新验证是否及时收到响应（无需发送凭证；这不验证登录成功）。也可配置并启用 mihomo，再在 `/etc/watermark-api.env` 设置 `HTTPS_PROXY=http://127.0.0.1:<mihomo HTTP 代理端口>`，重启 Go 服务；HTTP 请求支持 `HTTP_PROXY`，按需设置 `NO_PROXY` 排除直连目标。当前 mihomo 已安装但禁用，且 `/etc/mihomo` 缺失，启用前需补齐配置。
+
 ## 公网 IP HTTPS
 
 确认 80/443 无冲突且轻量防火墙允许访问；保留已有 Nginx 站点，单独增加配置。先加载 `nginx-http.conf`（确保 nginx -t 通过），建立 `/var/www/watermark-acme`。使用 Certbot 5.4+ 的 webroot/IP/shortlived 支持，先测试再生产：
