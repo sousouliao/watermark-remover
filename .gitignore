@@ -59,3 +59,7 @@ web_errors.txt
 
 # Private XHS verification inputs, reports and downloaded media
 .local/xhs-verification/
+.local/toolchains/
+.vercel
+.env*
+!.env.example

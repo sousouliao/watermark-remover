@@ -1,6 +1,7 @@
 import type { Ref } from 'vue'
 import type { ViewMode } from '@/types/app'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { apiFetch } from '@/lib/api'
 
 export function useResultViewer(
   props: { originalUrl: string, resultUrl: string },
@@ -143,7 +144,7 @@ export function useResultViewer(
     preUpscaleUrl.value = props.resultUrl
 
     try {
-      const response = await fetch('/api/upscale', {
+      const response = await apiFetch('/api/upscale', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,

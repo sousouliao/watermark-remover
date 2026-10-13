@@ -11,7 +11,7 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 | 应用 | 技术栈 | 说明 |
 |------|--------|------|
 | `apps/web` | Vue 3 + Tailwind CSS v4 + shadcn-vue | 前端交互界面 |
-| `apps/server` | NestJS + TypeScript | 后端 BFF 服务 |
+| `apps/server` | Go + net/http | 后端 BFF 服务 |
 
 ## 功能特性
 
@@ -35,10 +35,11 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 
 ### 后端 (`apps/server`)
 
-- **框架**: NestJS
-- **语言**: TypeScript
-- **AI 集成**: 方舟 Seedream 图像 API；图片放大功能使用 `@gradio/client`
-- **运行环境**: Node.js v20+
+- **HTTP**: Go 标准库 `net/http`
+- **语言与工具链**: Go 1.27.2
+- **AI 集成**: 方舟 Seedream 图像 API；Gradio HTTP 图片放大
+- **身份**: GitHub OAuth + PKCE，仅允许指定用户 ID
+- **解析**: 同机 XHS-Downloader 2.8，提供单图与 ZIP 下载接口
 
 ### 工程化
 
@@ -51,7 +52,8 @@ AI 驱动的图片水印移除工具。上传图片后选择 Seedream 5.0 Lite �
 
 ### 环境要求
 
-- Node.js >= 20
+- Node.js >= 22.22
+- Go 1.27.2
 - pnpm >= 10
 
 ### 安装依赖
@@ -62,7 +64,7 @@ pnpm install
 
 ### 启动开发
 
-先在 `apps/server/.env` 中配置 `ARK_API_KEY`、`ARK_SEEDREAM_LITE_ENDPOINT` 和 `ARK_SEEDREAM_FLASH_ENDPOINT`；可参照 [`apps/server/.env.example`](./apps/server/.env.example)。两个接入点分别填写当前账号可用的 Lite / Flash `ep-...` ID。已有 `.env` 时直接补充这三项，不要覆盖原有配置。密钥只供后端读取，不要放入前端环境变量。
+按[后端配置与接口](./apps/server/README.md)注册 GitHub OAuth App，并在 `apps/server/.env` 中配置登录凭据、前端 origin 和 `ARK_API_KEY`、`ARK_SEEDREAM_LITE_ENDPOINT` 和 `ARK_SEEDREAM_FLASH_ENDPOINT`；可参照 [`apps/server/.env.example`](./apps/server/.env.example)。两个接入点分别填写当前账号可用的 Lite / Flash `ep-...` ID。已有 `.env` 时直接补充这三项，不要覆盖原有配置。密钥只供后端读取，不要放入前端环境变量。
 
 ```bash
 # 同时启动前端和后端
@@ -102,23 +104,19 @@ watermark-remover/
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   │
-│   └── server/                       # 后端 NestJS 服务
-│       └── src/
-│           ├── main.ts               # 应用入口
-│           ├── app.module.ts         # 根模块
-│           ├── health/               # 健康检查
-│           ├── watermark/            # 水印移除模块
-│           │   ├── watermark.controller.ts
-│           │   ├── watermark.service.ts
-│           │   └── dto/
-│           └── common/               # 公共定义
-│               └── dto/
+│   └── server/                       # Go API
+│       ├── cmd/server/main.go        # 启动入口
+│       ├── internal/                # 按功能组织的服务实现
+│       ├── go.mod / go.sum           # Go 依赖锁定
+│       └── package.json             # pnpm 开发/构建命令桥接
 ├── package.json                      # Monorepo 根配置
 ├── pnpm-workspace.yaml
 └── eslint.config.js
 ```
 
 ## API 接口
+
+业务接口需要本应用 Bearer 会话；成功响应兼容旧接口。GitHub 登录、小红书解析/单图/ZIP 完整接口见[后端文档](./apps/server/README.md)，分离部署见[部署说明](./deploy/README.md)。
 
 ### POST /api/watermark/remove
 
@@ -171,7 +169,10 @@ watermark-remover/
 | `ARK_API_KEY` | 无 | 服务端方舟 API Key |
 | `ARK_SEEDREAM_LITE_ENDPOINT` | 无 | Lite 接入点 ID |
 | `ARK_SEEDREAM_FLASH_ENDPOINT` | 无 | Flash 接入点 ID |
-| CORS | 全部来源 | 跨域配置 |
+| `FRONTEND_URL` | `http://localhost:5173` | 精确 CORS 来源及 OAuth 回调 origin |
+| `XHS_API_URL` | `http://127.0.0.1:5556` | 同机解析服务 |
+| `GITHUB_ALLOWED_USER_ID` | `37927306` | 唯一允许登录身份 |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | 无 | 服务端 OAuth 配置 |
 | Body 限制 | 50MB | Base64 图片请求体上限 |
 
 本地配置示例见 [`apps/server/.env.example`](./apps/server/.env.example)。密钥只保存在服务端环境中。

@@ -1,0 +1,7 @@
+.local/**
+apps/server/**
+knowledge/**
+samples/**
+scripts/**
+**/.env*
+**/node_modules/**

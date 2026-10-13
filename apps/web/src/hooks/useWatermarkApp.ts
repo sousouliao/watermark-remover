@@ -1,6 +1,7 @@
 import type { AppStep, RemoveMode, WatermarkModel } from '@/types/app'
 import type { Region } from '@/types/mask'
 import { computed, ref } from 'vue'
+import { apiFetch } from '@/lib/api'
 
 interface RemoveResponse {
   success: boolean
@@ -80,7 +81,7 @@ export function useWatermarkApp() {
     step.value = 'processing'
 
     try {
-      const response = await fetch('/api/watermark/remove', {
+      const response = await apiFetch('/api/watermark/remove', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image, model, mode: requestMode, ...(requestMode === 'region' ? { region } : {}) }),

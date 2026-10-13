@@ -1,0 +1,27 @@
+[Unit]
+Description=Watermark Remover Go API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=watermark-api
+Group=watermark-api
+WorkingDirectory=/opt/watermark-api/current
+EnvironmentFile=/etc/watermark-api.env
+Environment=GOMEMLIMIT=400MiB
+ExecStart=/opt/watermark-api/current/server
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=35
+MemoryMax=512M
+CPUQuota=100%
+TasksMax=256
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

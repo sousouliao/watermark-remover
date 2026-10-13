@@ -28,6 +28,7 @@
     "typescript": "^5.7.3"
   },
   "lint-staged": {
-    "*": "eslint --fix"
+    "*.{ts,tsx,js,mjs,cjs,vue,json,yaml,yml,css}": "eslint --fix",
+    "*.go": "gofmt -w"
   }
 }

@@ -1,0 +1,31 @@
+# Go API 迁移实施与上线进度
+
+日期：2026-10-13。本记录区分本地实现、模拟协议测试和云端真实验收。
+
+## 已实现
+
+- Go 1.27.2、ServeMux、slog，直接依赖 oauth2 v0.37.0 与 rs/cors v1.11.1。按功能组织认证、去水印、放大、小红书及受限下载；移除 NestJS 实现/依赖，保留 pnpm 开发与构建入口。
+- GitHub OAuth/PKCE，五分钟一次性 state，固定用户 ID 37927306；本应用会话八小时有效。所有业务路由、图片及 ZIP 均验证 Bearer，凭据不下发前端。
+- 原有双模型/区域接口兼容；Gradio 按当前 Space 的 /upload、/call/predict 与 SSE 结果适配，不引入通用 SDK。
+- 小红书匿名解析、结果缓存、单图及 ZIP；资源 URL/重定向/实际公网 IP 检查，TLS 校验开启，有限大小与并发，完整交付及临时文件清理。
+- Vue 登录/退出、回调及统一 API 地址；未新增小红书页面。部署配置包含 Nginx、systemd 和 Certbot IP 证书续期。
+
+## 本地验证
+
+- Go test -race ./... 与 go vet 通过；覆盖授权交换/PKCE/白名单/撤销/过期、实际并发缓存访问、既有模型与区域契约、Gradio 上传与结果、小红书响应及图集 ZIP、媒体地址/重定向和请求边界。
+- 前端类型检查、Vite 构建和改动文件 ESLint 通过。Go 本机与 Linux amd64 构建通过；模拟上游测试不消耗付费模型调用。
+- 官方 Go 工具链下载校验后安装到 Git 忽略的本地目录。前端构建存在原有 Browserslist 和 PWA/Vite peer 提醒，未扩大处理范围。
+
+## 部署实际状态
+
+Vercel 项目 xcm1115s-projects/watermark-remover 已创建，生产固定地址为 https://watermark-remover-rose-chi.vercel.app；页面 HTTP 200，浏览器显示登录入口。前端生产 API 配置为 https://43.138.214.93，前端上传排除后端、私有目录与所有环境文件。
+
+Go 初次部署 webhook（任务 9bf28e79-fe01-4402-854e-57ba1516301f）中的源码包在传递时截断，机主确认 Go 未部署。后续敏感配置任务（9a90d7e3-f6d0-43a2-96e1-d6d4f0a2aa1c）已将八项配置保存为服务器 /etc/watermark-api.pending.json，root:root 0600；未合并环境文件、未启动服务，XHS 未变。不得把 webhook success 或配置落盘当成部署成功。
+
+为避免长正文继续截断，改为用本仓固定提交交付源码，再让助手部署并安装服务器已有 pending 配置，不重复传递密钥。完整密钥和私人输入不写入本记录或 Git。
+
+## 待完成
+
+- Go/systemd、Nginx、公网 IP 可信证书及自动续期尚需实际回传验证；本地探测 HTTPS health 尚未成功，登录页面能正确显示后端连接错误。
+- 需要配置安装后真实 GitHub 登录、各模型/区域及放大调用、Go 小红书解析/单图/ZIP 的服务器与浏览器验收。历史 Python 解析器 3条/10张成功不能替代 Go 链路验收。
+- 上线任务保持进行中；不承诺已完整可用。
