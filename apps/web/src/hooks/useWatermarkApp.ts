@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AppStep, RemoveMode, WatermarkModel } from '@/types/app'
 import type { Region } from '@/types/mask'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 
 const steps = ['上传图片', '选择与编辑', '查看结果']
 interface RemoveResponse {
   success: boolean
-  data?: { image: string; model: WatermarkModel }
+  data?: { image: string, model: WatermarkModel }
   message?: string | string[]
 }
 
@@ -18,9 +18,9 @@ export function useWatermarkApp() {
   const [resultUrl, setResultUrl] = useState<string | null>(null)
   const [resultModel, setResultModel] = useState<WatermarkModel | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const request = useRef<{ id: number; controller: AbortController | null }>({
+  const request = useRef<{ id: number, controller: AbortController | null }>({
     id: 0,
-    controller: null
+    controller: null,
   })
 
   const invalidateRequest = useCallback(() => {
@@ -34,7 +34,7 @@ export function useWatermarkApp() {
     setResultUrl(null)
     setResultModel(null)
     setError(null)
-    setStep((value) => (value === 'result' || value === 'processing' ? 'editor' : value))
+    setStep(value => (value === 'result' || value === 'processing' ? 'editor' : value))
   }, [])
 
   const handleImageSelect = useCallback(
@@ -46,7 +46,7 @@ export function useWatermarkApp() {
       clearResult()
       setStep('editor')
     },
-    [invalidateRequest, clearResult]
+    [invalidateRequest, clearResult],
   )
 
   const selectModel = useCallback(
@@ -56,7 +56,7 @@ export function useWatermarkApp() {
       setSelectedModel(model)
       clearResult()
     },
-    [selectedModel, invalidateRequest, clearResult]
+    [selectedModel, invalidateRequest, clearResult],
   )
 
   const selectMode = useCallback(
@@ -66,7 +66,7 @@ export function useWatermarkApp() {
       setMode(value)
       clearResult()
     },
-    [mode, invalidateRequest, clearResult]
+    [mode, invalidateRequest, clearResult],
   )
 
   const handleProcess = useCallback(
@@ -93,14 +93,14 @@ export function useWatermarkApp() {
             image: imageDataUrl,
             model: selectedModel,
             mode,
-            ...(mode === 'region' ? { region } : {})
+            ...(mode === 'region' ? { region } : {}),
           }),
-          signal: controller.signal
+          signal: controller.signal,
         })
         const result = (await response.json()) as RemoveResponse
         if (!response.ok || !result.success) {
           throw new Error(
-            typeof result.message === 'string' ? result.message : '无法处理这张图片，请检查后重试。'
+            typeof result.message === 'string' ? result.message : '无法处理这张图片，请检查后重试。',
           )
         }
         if (!result.data?.image?.startsWith('data:image/') || result.data.model !== selectedModel) {
@@ -110,19 +110,21 @@ export function useWatermarkApp() {
         setResultUrl(result.data.image)
         setResultModel(result.data.model)
         setStep('result')
-      } catch (cause) {
+      }
+      catch (cause) {
         if (controller.signal.aborted || id !== request.current.id) return
         setError(
           cause instanceof Error && cause.name !== 'SyntaxError' && cause.name !== 'TypeError'
             ? cause.message
-            : '无法连接图片服务，请确认服务已启动后重试。'
+            : '无法连接图片服务，请确认服务已启动后重试。',
         )
         setStep('editor')
-      } finally {
+      }
+      finally {
         if (id === request.current.id) request.current.controller = null
       }
     },
-    [imageDataUrl, selectedModel, mode, invalidateRequest, clearResult]
+    [imageDataUrl, selectedModel, mode, invalidateRequest, clearResult],
   )
 
   const handleEdit = useCallback(() => {
@@ -156,6 +158,6 @@ export function useWatermarkApp() {
     selectMode,
     handleProcess,
     handleEdit,
-    handleReset
+    handleReset,
   }
 }

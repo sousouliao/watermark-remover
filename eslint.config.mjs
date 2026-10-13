@@ -14,6 +14,7 @@ export default antfu(
       '**/dist/**',
       '**/node_modules/**',
       '**/*.md',
+      '**/routeTree.gen.ts',
       'lint_output.txt',
       'server_errors.txt',
       'web_errors.txt',

@@ -2,7 +2,7 @@
 
 ## 当前实现
 
-- `apps/web`：原地迁移为 React 19 + Vite SPA（非 TanStack Start），使用 TanStack Router 文件路由、TanStack Query、Zustand 5、Tailwind 4 与 Radix React primitives。应用壳、GitHub PKCE 登录、水印业务页、功能组件与 hooks 均已迁移完成，入口与组件使用 TS/TSX；迁移和文档清理见 [PASS 3 记录](../logs/2026-10-13-react-pass-3.md)。
+- `apps/web`：原地迁移为 React 19 + Vite SPA（非 TanStack Start），使用 TanStack Router 文件路由、TanStack Query、Zustand 5、Tailwind 4、beUI (beui.dev) 动画/交互规范（基于 `motion`）与 Radix React primitives。UI 全面采用黑白极简单色调（纯黑与纯白，无彩色高饱和侵染），应用壳、GitHub PKCE 登录、水印业务页、模型/模式切换（Spring Tabs）、动作栏（StatefulButton）、对比预览与 hooks 均已迁移并完成重构；记录见 [beUI 重构记录](../logs/2026-10-13-beui-monochrome-redesign.md)。
 - `apps/server`：Go 1.27.2 + `net/http`，保留 `/api/watermark/remove` 的方舟 Lite / Flash 请求与成功响应，图片放大改为 Gradio HTTP 调用；新增 GitHub OAuth/PKCE 和小红书解析、单图、ZIP 接口。Go 迁移已通过本地测试；云端 Go/HTTPS 与真实业务验收尚未完成。
 - React 功能实现已接入原有请求格式：直接模式传原图，指定区域模式将原图尺寸下的笔画转换为 0–999 的区域框；结果页显示实际模型并提供对比、返回编辑、重试与下载。
 

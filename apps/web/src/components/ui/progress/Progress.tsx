@@ -18,7 +18,7 @@ export function Progress({
       <ProgressPrimitive.Indicator
         className={cn(
           'h-full w-full flex-1 bg-primary transition-all',
-          value === null && 'w-2/5 animate-indeterminate'
+          value === null && 'w-2/5 animate-indeterminate',
         )}
         style={
           value === null ? undefined : { transform: `translateX(-${100 - (value / max) * 100}%)` }

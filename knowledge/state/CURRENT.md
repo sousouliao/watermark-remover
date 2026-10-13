@@ -12,7 +12,11 @@
 
 ## React 前端迁移
 
-`apps/web` 已完成 PASS 1、PASS 2 与 PASS 3：React 19/Vite SPA、TanStack Router 的 `/` 与 `/auth/callback`、TanStack Query provider、Zustand 5 PKCE 认证、Tailwind 4、React UI primitives 和 PWA 配置，以及上传、双模型/模式选择、画布区域编辑、处理取消、结果对比、重试、下载和高清增强。Vue 文件与临时类型检查排除项已删除。前端类型检查、构建及浏览器模拟 API 功能验证通过；真实 OAuth、模型和放大服务仍需联调验收。PASS 3 已同步当前栈文档并清理根工具中的 Vue 配置，详见[PASS 3 记录](../logs/2026-10-13-react-pass-3.md)。
+`apps/web` 已完成 PASS 1、PASS 2 与 PASS 3，并完成向 beUI (beui.dev) 交互动效规范与黑白极简工作室设计（Monochrome Studio）的全面重构：
+1. 彻底淘汰原有的紫色调（`hsl(243, 75%, 59%)` 及各类 purple/violet 散落类），全站贯彻**纯黑白极简单色调**与**严格零阴影 (Zero-Shadow)**；
+2. 基础组件全面替换为 beUI 原生组件：`RangeSlider`（物理弹簧与手势捕获）、`Card`（组合式 parts 与 interactive 缩放）、`Loader`（17 种高拟真动画变体）、`Input`（错误抖动与状态反馈）、`MotionButton` / `StatefulButton`（字符流动动画）、`Alert`（Animated Alert 弹性进退场）；
+3. 顶栏右侧重构：主题切换置于左侧并接入 beUI `ActionSwapIcon` 原地流转，头像与登录名组成整体胶囊，点击弹出 Spring 动效下拉菜单；
+4. 前端类型检查、生产构建及 ESLint 校验全部 0 错误通过，详见[beUI 重构记录](../logs/2026-10-13-beui-monochrome-redesign.md)。真实 OAuth、模型和放大服务仍需与 Go 后端联调验收。
 
 ## 下一步
 

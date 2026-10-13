@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PointerEvent } from 'react'
 import type { Region, Stroke } from '@/types/mask'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getCanvasPoint } from '@/utils/canvas'
 
 export function useMaskEditor(imageDataUrl: string) {
@@ -42,7 +42,8 @@ export function useMaskEditor(imageDataUrl: string) {
       if (stroke.points.length === 1) {
         ctx.arc(first.x * scaleX, first.y * scaleY, ctx.lineWidth / 2, 0, Math.PI * 2)
         ctx.fill()
-      } else {
+      }
+      else {
         ctx.moveTo(first.x * scaleX, first.y * scaleY)
         for (const point of stroke.points.slice(1)) ctx.lineTo(point.x * scaleX, point.y * scaleY)
         ctx.stroke()
@@ -65,7 +66,7 @@ export function useMaskEditor(imageDataUrl: string) {
       const scale = Math.min(
         width / img.width,
         Math.min(window.innerHeight * 0.55, 500) / img.height,
-        1
+        1,
       )
       const w = Math.max(1, Math.round(img.width * scale))
       const h = Math.max(1, Math.round(img.height * scale))
@@ -109,7 +110,7 @@ export function useMaskEditor(imageDataUrl: string) {
     setCursor(point)
     return {
       x: Math.max(0, Math.min(img.width, (point.x * img.width) / canvas.width)),
-      y: Math.max(0, Math.min(img.height, (point.y * img.height) / canvas.height))
+      y: Math.max(0, Math.min(img.height, (point.y * img.height) / canvas.height)),
     }
   }
   function handlePointerDown(e: PointerEvent<HTMLCanvasElement>) {
@@ -123,7 +124,7 @@ export function useMaskEditor(imageDataUrl: string) {
     pointerId.current = e.pointerId
     currentStroke.current = {
       points: [point],
-      brushSize: (brushSize[0] * img.width) / canvas.width
+      brushSize: (brushSize[0] * img.width) / canvas.width,
     }
     setIsDrawing(true)
     redrawMask()
@@ -160,10 +161,10 @@ export function useMaskEditor(imageDataUrl: string) {
   const getRegion = useCallback((): Region | null => {
     const img = imageRef.current
     if (!img || !strokes.current.length) return null
-    let left = img.width,
-      top = img.height,
-      right = 0,
-      bottom = 0
+    let left = img.width
+    let top = img.height
+    let right = 0
+    let bottom = 0
     for (const stroke of strokes.current) {
       const radius = stroke.brushSize / 2
       for (const point of stroke.points) {
@@ -179,7 +180,7 @@ export function useMaskEditor(imageDataUrl: string) {
       x1,
       y1,
       x2: Math.max(x1 + 1, Math.min(999, Math.ceil((right / img.width) * 999))),
-      y2: Math.max(y1 + 1, Math.min(999, Math.ceil((bottom / img.height) * 999)))
+      y2: Math.max(y1 + 1, Math.min(999, Math.ceil((bottom / img.height) * 999))),
     }
   }, [])
   return {
@@ -201,6 +202,6 @@ export function useMaskEditor(imageDataUrl: string) {
     handlePointerUp,
     handleUndo,
     handleClear,
-    getRegion
+    getRegion,
   }
 }

@@ -1,12 +1,32 @@
-import type { ComponentProps } from 'react'
+import { type ComponentProps, forwardRef } from 'react'
+import { Input as MotionInput, type InputProps as MotionInputProps } from '@/components/motion/input'
 import { cn } from '@/lib/utils'
 
-export function Input({ className, type, ...props }: ComponentProps<'input'>) {
+export type InputProps = ComponentProps<'input'> & Partial<Omit<MotionInputProps, keyof ComponentProps<'input'>>>
+
+export const Input = forwardRef<HTMLInputElement, InputProps>((
+  { className, type, ...props },
+  ref,
+) => {
+  // If it's a hidden or file input, keep clean DOM without decoration
+  if (type === 'file' || className?.includes('sr-only')) {
+    return (
+      <input
+        ref={ref}
+        type={type}
+        className={cn('flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm', className)}
+        {...props}
+      />
+    )
+  }
+
+  // Otherwise, use beUI Motion Input
   return (
-    <input
+    <MotionInput
+      ref={ref}
       type={type}
-      className={cn('flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50', className)}
-      {...props}
+      className={className}
+      {...(props as any)}
     />
   )
-}
+})

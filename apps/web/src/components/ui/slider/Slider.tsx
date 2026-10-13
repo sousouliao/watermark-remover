@@ -1,19 +1,51 @@
-import type { ComponentProps } from 'react'
-import * as SliderPrimitive from '@radix-ui/react-slider'
+import { RangeSlider } from '@/components/motion/range-slider'
 import { cn } from '@/lib/utils'
 
-export function Slider({ className, value, defaultValue = [0], ...props }: ComponentProps<typeof SliderPrimitive.Root>) {
+export interface SliderProps {
+  'className'?: string
+  'value'?: number[] | number
+  'defaultValue'?: number[] | number
+  'onValueChange'?: (value: number[]) => void
+  'min'?: number
+  'max'?: number
+  'step'?: number
+  'disabled'?: boolean
+  'aria-label'?: string
+  'showTicks'?: boolean
+}
+
+export function Slider({
+  className,
+  value,
+  defaultValue,
+  onValueChange,
+  min = 0,
+  max = 100,
+  step = 1,
+  disabled = false,
+  'aria-label': ariaLabel,
+  showTicks = false,
+}: SliderProps) {
+  const numValue = Array.isArray(value) ? value[0] : value
+  const numDefault = Array.isArray(defaultValue) ? defaultValue[0] : defaultValue
+
+  const handleChange = (val: number) => {
+    onValueChange?.([val])
+  }
+
   return (
-    <SliderPrimitive.Root className={cn('relative flex w-full touch-none select-none items-center', className)} value={value} defaultValue={defaultValue} {...props}>
-      <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-        <SliderPrimitive.Range className="absolute h-full bg-primary" />
-      </SliderPrimitive.Track>
-      {(value ?? defaultValue).map((_, index) => (
-        <SliderPrimitive.Thumb
-          key={index}
-          className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-        />
-      ))}
-    </SliderPrimitive.Root>
+    <div className={cn('flex items-center', className)}>
+      <RangeSlider
+        value={numValue}
+        defaultValue={numDefault}
+        onValueChange={handleChange}
+        min={min}
+        max={max}
+        step={step}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        showTicks={showTicks}
+      />
+    </div>
   )
 }

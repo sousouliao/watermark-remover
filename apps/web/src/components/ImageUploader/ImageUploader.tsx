@@ -1,31 +1,35 @@
+import { Image as ImageIcon, UploadCloud, X } from 'lucide-react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
-import { Image as ImageIcon, Upload, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
 import { ACCEPTED_TYPES, MAX_SIZE_BYTES, MAX_SIZE_MB } from '@/constants/upload'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { SPRING_PRESS } from '@/lib/ease'
 import { cn } from '@/lib/utils'
 
 export default function ImageUploader({
-  onImageSelect
+  onImageSelect,
 }: {
   onImageSelect: (file: File, dataUrl: string) => void
 }) {
   const { isMobile } = useIsMobile()
+  const reduce = useReducedMotion()
   const [isDragOver, setIsDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const readerRef = useRef<FileReader | null>(null)
+
   useEffect(
     () => () => {
       readerRef.current?.abort()
     },
-    []
+    [],
   )
+
   function handleFile(file: File) {
     readerRef.current?.abort()
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError('不支持此格式，请使用 PNG、JPG 或 WEBP。')
+      setError('不支持此文件格式，请使用 PNG、JPG 或 WEBP。')
       return
     }
     if (file.size > MAX_SIZE_BYTES) {
@@ -41,18 +45,23 @@ export default function ImageUploader({
     reader.onerror = () => setError('无法读取图片，请重新选择。')
     reader.readAsDataURL(file)
   }
+
   return (
-    <div className="animate-fade-in mx-auto w-full max-w-xl">
-      <Card
+    <div className="mx-auto w-full max-w-xl">
+      <motion.div
         role="button"
         tabIndex={0}
         aria-label={isMobile ? '点击选择图片' : '拖入图片或点击选择'}
+        whileHover={reduce ? undefined : { scale: 1.008 }}
+        whileTap={reduce ? undefined : { scale: 0.992 }}
+        transition={SPRING_PRESS}
         className={cn(
-          'glass-card group flex min-h-72 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-8 transition-all md:min-h-80',
+          'relative flex min-h-72 cursor-pointer flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl border border-dashed p-8 md:min-h-80',
+          'bg-card text-card-foreground transition-colors duration-150',
           isDragOver
-            ? 'scale-[1.02] border-primary bg-primary/5'
-            : 'border-border hover:border-primary/50',
-          error && 'border-destructive/50'
+            ? 'border-foreground bg-secondary/80 ring-1 ring-foreground/20'
+            : 'border-border hover:border-foreground/40 hover:bg-secondary/30',
+          error && 'border-destructive/60 bg-destructive/5',
         )}
         onClick={() => inputRef.current?.click()}
         onKeyDown={(event) => {
@@ -83,34 +92,46 @@ export default function ImageUploader({
           className="sr-only"
           aria-hidden="true"
           tabIndex={-1}
-          onClick={(event) => event.stopPropagation()}
+          onClick={event => event.stopPropagation()}
           onChange={(event) => {
             const file = event.target.files?.[0]
             if (file) handleFile(file)
             event.target.value = ''
           }}
         />
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-secondary text-muted-foreground group-hover:text-primary">
-          {isDragOver ? <ImageIcon className="size-8" /> : <Upload className="size-8" />}
+
+        <div className="relative z-10 flex size-12 items-center justify-center rounded-xl border border-border bg-secondary text-foreground transition-transform duration-150">
+          {isDragOver
+            ? (
+                <ImageIcon className="size-5 text-foreground" />
+              )
+            : (
+                <UploadCloud className="size-5 text-foreground" />
+              )}
         </div>
-        <div className="text-center">
-          <p className="text-sm font-medium md:text-base">
-            {isDragOver ? '松开即可上传图片' : isMobile ? '点击选择图片' : '拖入图片或点击选择'}
+
+        <div className="relative z-10 text-center">
+          <p className="text-sm font-medium text-foreground md:text-base">
+            {isDragOver ? '松开即可置入图片' : isMobile ? '轻触选择图片' : '拖入图片，或点击浏览'}
           </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            PNG、JPG、WEBP · 最大 {MAX_SIZE_MB}MB
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            PNG · JPG · WEBP · 单张最大
+            {' '}
+            {MAX_SIZE_MB}
+            MB
           </p>
         </div>
+
         {error && (
-          <p
+          <div
             role="alert"
-            className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive"
+            className="relative z-10 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs text-destructive"
           >
-            <X className="size-4 shrink-0" />
-            {error}
-          </p>
+            <X className="size-3.5 shrink-0" />
+            <span>{error}</span>
+          </div>
         )}
-      </Card>
+      </motion.div>
     </div>
   )
 }

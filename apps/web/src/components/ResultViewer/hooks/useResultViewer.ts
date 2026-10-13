@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, PointerEvent } from 'react'
 import type { ViewMode } from '@/types/app'
+import { useEffect, useRef, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 
 export function useResultViewer({
   originalUrl,
   resultUrl,
-  onResultChange
+  onResultChange,
 }: {
   originalUrl: string
   resultUrl: string
@@ -43,7 +43,7 @@ export function useResultViewer({
       controllerRef.current?.abort()
       cancelAnimationFrame(drag.current.raf)
     },
-    []
+    [],
   )
   useEffect(() => {
     containerRef.current?.style.setProperty('--slider-pct', String(sliderPosition))
@@ -70,12 +70,13 @@ export function useResultViewer({
   function handlePointerMove(e: PointerEvent<HTMLDivElement>) {
     if (drag.current.pointerId !== e.pointerId) return
     drag.current.pendingX = e.clientX
-    if (!drag.current.raf)
+    if (!drag.current.raf) {
       drag.current.raf = requestAnimationFrame(() => {
         drag.current.raf = 0
         if (drag.current.pendingX !== null) updatePosition(drag.current.pendingX)
         drag.current.pendingX = null
       })
+    }
   }
   function handlePointerUp(e: PointerEvent<HTMLDivElement>) {
     if (drag.current.pointerId !== e.pointerId) return
@@ -97,7 +98,7 @@ export function useResultViewer({
         ? 0
         : e.key === 'End'
           ? 100
-          : drag.current.pct + (e.key === 'ArrowLeft' ? -2 : 2)
+          : drag.current.pct + (e.key === 'ArrowLeft' ? -2 : 2),
     )
     setSliderPosition(drag.current.pct)
   }
@@ -126,7 +127,7 @@ export function useResultViewer({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: resultUrl, scale: 2 }),
-        signal: controller.signal
+        signal: controller.signal,
       })
       const result = await response.json()
       if (controller.signal.aborted) return
@@ -135,11 +136,13 @@ export function useResultViewer({
       upscaledUrl.current = result.data.image
       onResultChange(result.data.image)
       setIsUpscaled(true)
-    } catch {
+    }
+    catch {
       if (controller.signal.aborted) return
       setUpscaleError('增强失败，请重试。')
       preUpscaleUrl.current = null
-    } finally {
+    }
+    finally {
       if (controllerRef.current === controller) controllerRef.current = null
       if (!controller.signal.aborted) setIsUpscaling(false)
     }
@@ -165,6 +168,6 @@ export function useResultViewer({
     handleKeyDown,
     handleDownload,
     handleUpscale,
-    handleRevertUpscale
+    handleRevertUpscale,
   }
 }
