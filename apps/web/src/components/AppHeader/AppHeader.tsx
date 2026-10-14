@@ -1,7 +1,6 @@
 import { ChevronDown, Eraser, LogOut } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
-import ThemeToggle from '@/components/ThemeToggle/ThemeToggle'
 import { EASE_OUT, SPRING_PRESS } from '@/lib/ease'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth'
@@ -29,10 +28,8 @@ export default function AppHeader() {
           </div>
         </div>
 
-        {/* Right: Theme Toggle on the left of User Profile */}
+        {/* Right: User Profile; appearance controls live in AppDock. */}
         <div className="flex items-center gap-2.5">
-          <ThemeToggle />
-
           {authenticated && user && (
             <UserMenu user={user} onLogout={() => void logout()} />
           )}

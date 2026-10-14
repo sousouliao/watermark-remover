@@ -1,14 +1,14 @@
 import type { MaskEditorHandle } from '@/components/MaskEditor/MaskEditor'
 import type { WatermarkModel } from '@/types/app'
-import { BookOpen, Check, Eraser } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useRef, useState } from 'react'
 import ActionBar from '@/components/ActionBar/ActionBar'
+import AppDock from '@/components/AppDock/AppDock'
 import AppFooter from '@/components/AppFooter/AppFooter'
 import AppHeader from '@/components/AppHeader/AppHeader'
 import ImageUploader from '@/components/ImageUploader/ImageUploader'
 import MaskEditor from '@/components/MaskEditor/MaskEditor'
 import { Alert, AlertClose, AlertContent, AlertDescription, AlertIcon } from '@/components/motion/alert'
-import { Dock, DockItem } from '@/components/motion/dock'
 import { Tabs, TabsList, TabsTrigger } from '@/components/motion/tabs'
 import ProcessingOverlay from '@/components/ProcessingOverlay/ProcessingOverlay'
 import ResultViewer from '@/components/ResultViewer/ResultViewer'
@@ -38,7 +38,7 @@ export default function WatermarkApp() {
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <AppHeader />
 
-      <main className="flex flex-1 flex-col items-center px-4 pb-28 pt-4 md:px-6 md:pb-28 md:pt-6">
+      <main className="flex flex-1 flex-col items-center px-4 pb-[239px] pt-4 md:px-6 md:pt-6">
         {/* View 1: Watermark Remover */}
         <div hidden={activeTab !== 'watermark'} className="w-full flex justify-center">
           <div className="flex w-full max-w-[960px] flex-col gap-4">
@@ -210,30 +210,7 @@ export default function WatermarkApp() {
 
       <AppFooter />
 
-      {/* Floating Bottom Dock Navigation: 100% aligned with beui.dev/components/motion/dock */}
-      <aside
-        aria-label="应用功能导航"
-        className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 select-none"
-        style={{ bottom: 'calc(1.5rem + var(--safe-bottom, 0px))' }}
-      >
-        <Dock>
-          <DockItem
-            aria-label="图片去水印"
-            active={activeTab === 'watermark'}
-            onClick={() => setActiveTab('watermark')}
-          >
-            <Eraser className="size-5" />
-          </DockItem>
-
-          <DockItem
-            aria-label="小红书解析"
-            active={activeTab === 'xhs'}
-            onClick={() => setActiveTab('xhs')}
-          >
-            <BookOpen className="size-5" />
-          </DockItem>
-        </Dock>
-      </aside>
+      <AppDock activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   )
 }

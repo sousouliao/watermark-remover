@@ -1,6 +1,6 @@
 # Watermark Remover 前端设计规范 (DESIGN.md)
 
-本规范确立项目前端的视觉风格、交互动效准则、组件使用约束及防劣退机制。全站设计以 **Monochrome Studio（黑白极简工作室）** 为核心基调，以 **[beUI (beui.dev)](https://beui.dev)** 原生动效体系为唯一标准。
+本规范确立项目前端的视觉风格、交互动效准则、组件使用约束及防劣退机制。全站设计以 **Monochrome Studio（黑白极简工作室）** 为核心基调，默认采用 **[beUI (beui.dev)](https://beui.dev)** 原生动效体系。底部应用导航按用户选定的 Paul Wong 参考站定制，见 §3.8。
 
 ---
 
@@ -85,12 +85,14 @@
   - 官方标准交互：悬停时仅过渡边框高亮（`hover:border-foreground/40`）与浏览胶囊底色（`group-hover:bg-muted`），拖入时图标小幅微浮（`translateY(-2px)`），点击时带微按压反馈（`active:scale-[0.99]`）。
 
 
-### 3.8 悬浮应用导航：`Dock`
-- **来源**：`beui.dev/r/dock.json`
-- **规范**：
-  - 固定悬浮在页面底部居中位置（`fixed bottom-6 left-1/2 -translate-x-1/2 z-40`），采用 `backdrop-blur-xl`、纯净线条 `border-border/80` 与零扩散阴影；
-  - 选项内部依托 beUI 原生 `SPRING_LAYOUT` 物理弹性弹簧驱动活跃药丸底座（`motion.span layoutId`）流畅滑移；
-  - 承载“图片去水印”与“小红书解析”主应用间平滑切换，页面主体底部预留充足留白（`pb-28`），防止滚动遮挡。
+### 3.8 悬浮应用导航：`AppDock`
+- **视觉参考**：[Paul Wong](https://www.paulwong.work/)，用户确认保留本项目功能、还原参考站底部栏外观与动效。
+- **实现**：`apps/web/src/components/AppDock/`；这是 beUI 原生一致性与零阴影原则的局部例外，不改变其他组件规范。
+- **桌面尺寸**：黑色实底胶囊，默认宽 301px、展开宽 420px、高 61px、圆角 39px，底部间距 39px 加 safe-area；内边距 13px 20px 13px 24px，分组间距 16px。
+- **交互**：左侧保留图片去水印与小红书解析；悬停/键盘聚焦展开应用名称与图标，使用现有 Motion 布局弹簧及 3px 模糊淡入淡出。中文名称采用系统字体 14px、500 中等字重；小屏展开时省略应用图标以保留完整名称。
+- **主题**：右侧提供跟随系统、浅色、深色三个 35px 按钮，取代顶栏主题按钮；沿用 `theme` 存储键，跟随系统时响应系统主题变化。
+- **层次**：局部复刻参考站三层细阴影与深色细描边；独立的 239px 渐进模糊区由 8 层 masked backdrop blur 组成，强度从 0.1875px 递增至 24px，不接收指针事件。
+- **空间**：正文底部预留 239px，保证滚动到底时主要操作处于模糊区上方；版权信息置于模糊层之上；窄屏胶囊宽度限制为视口减 32px。
 
 ---
 
@@ -98,8 +100,9 @@
 
 每次进行前端 UI 修改或增加新组件时，必须逐项核对：
 1. [ ] **官网原型核对**：是否已在 [beui.dev](https://beui.dev) 找到官方原生组件，并确认交互细节一致？
+   - 底部 `AppDock` 按 §3.8 的用户选定参考实现核对，豁免 beUI 原装要求。
 2. [ ] **零样式侵入**：是否有在业务层通过 `className` 强行覆盖组件内部 padding、height 或 font-size？（如有，必须坚决移除）
-3. [ ] **零杂色与零阴影**：是否全站保持纯黑白极简单色调？是否有非必要的彩色类名或 box-shadow？
+3. [ ] **零杂色与零阴影**：是否全站保持纯黑白极简单色调？是否有非必要的彩色类名或 box-shadow？`AppDock` 的参考站细阴影为明确例外。
 4. [ ] **零布局偏移（Zero CLS）**：在模式切换、状态变更、错误提示时，下方主画布与操作按钮是否保持 100% 物理坐标恒定？（严禁在画布上方硬插文档流块导致图片下坠）
 5. [ ] **质量校验**：`pnpm -F @watermark-remover/web type-check`、`pnpm -F @watermark-remover/web build` 与 `pnpm eslint apps/web/src` 是否全部 0 错误 0 警告通过？
 

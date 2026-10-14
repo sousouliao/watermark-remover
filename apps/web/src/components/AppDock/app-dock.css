@@ -1,0 +1,207 @@
+.app-dock-position {
+  position: fixed;
+  bottom: calc(39px + var(--safe-bottom, 0px));
+  left: 50%;
+  z-index: 50;
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+.app-dock {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 61px;
+  max-width: calc(100vw - 32px);
+  padding: 13px 20px 13px 24px;
+  border-radius: 39px;
+  background: #000;
+  color: #fff;
+  box-shadow:
+    0 0.602187px 0.602187px -1.25px #00000048,
+    0 2.28853px 2.28853px -2.5px #0000003f,
+    0 10px 10px -3.75px #00000019;
+}
+
+.dark .app-dock {
+  outline: 1.5px solid #292929;
+  outline-offset: -1.5px;
+}
+
+.app-dock-apps {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  height: 35px;
+  gap: 14px;
+}
+
+.app-dock button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgb(255 255 255 / 39%);
+  cursor: pointer;
+  transition:
+    color 200ms ease,
+    background-color 200ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-dock button[aria-pressed='true'],
+.app-dock button:hover {
+  color: #fff;
+}
+
+.app-dock button:focus-visible {
+  outline: 1px solid #fff;
+  outline-offset: 3px;
+}
+
+.app-dock-app {
+  position: relative;
+  height: 35px;
+  min-width: 0;
+  overflow: hidden;
+  gap: 0;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.app-dock-app svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  stroke-width: 1.7;
+}
+
+.app-dock-app:first-child {
+  width: 72px;
+}
+
+.app-dock-app:last-child {
+  width: 20px;
+}
+
+.app-dock-reveal-icon,
+.app-dock-reveal-label {
+  position: absolute;
+  opacity: 0;
+  filter: blur(3px);
+  pointer-events: none;
+  transition:
+    opacity 220ms ease,
+    filter 220ms ease;
+}
+
+.app-dock[data-expanded='true'] .app-dock-app {
+  flex: 1;
+  width: auto;
+  gap: 8px;
+}
+
+.app-dock[data-expanded='true'] .app-dock-reveal-icon,
+.app-dock[data-expanded='true'] .app-dock-reveal-label {
+  position: static;
+  opacity: 1;
+  filter: blur(0);
+}
+
+.app-dock-separator {
+  display: block;
+  flex-shrink: 0;
+  width: 4px;
+  height: 28px;
+  background: linear-gradient(#ffffff40, #ffffff40) center / 1px 24px no-repeat;
+}
+
+.app-dock-themes {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  width: 115px;
+  height: 35px;
+}
+
+.app-dock-theme {
+  width: 35px;
+  height: 35px;
+  border-radius: 7px;
+}
+
+.app-dock-theme:hover {
+  background: rgb(255 255 255 / 8%);
+}
+
+.app-dock-theme svg {
+  width: 19px;
+  height: 19px;
+  stroke-width: 1.7;
+}
+
+.app-dock-theme[aria-pressed='true'] svg {
+  stroke-width: 2;
+}
+
+.app-dock-blur {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 45;
+  height: calc(239px + var(--safe-bottom, 0px));
+  pointer-events: none;
+}
+
+.app-dock-blur > div {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@media (width < 480px) {
+  .app-dock[data-expanded='true'] .app-dock-app svg {
+    display: none;
+  }
+
+  .app-dock[data-expanded='true'] .app-dock-apps {
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-dock *,
+  .app-dock *::before,
+  .app-dock *::after {
+    transition: none !important;
+  }
+}
+
+@media (width <= 360px) {
+  .app-dock {
+    gap: 12px;
+    padding-inline: 16px;
+  }
+
+  .app-dock-app {
+    font-size: 12px;
+  }
+
+  .app-dock-themes {
+    gap: 6px;
+    width: 99px;
+  }
+
+  .app-dock-theme {
+    width: 29px;
+  }
+}
