@@ -1,4 +1,4 @@
-package mcpprobe
+package mcpserver
 
 import (
 	"archive/zip"
@@ -33,7 +33,7 @@ func TestAuthentication(t *testing.T) {
 		if token != "" {
 			req.Header.Set("Authorization", "Bearer "+token)
 		}
-		New(tokenDigest("probe-token"), logger).ServeHTTP(w, req)
+		probeHandler(t, tokenDigest("probe-token"), logger).ServeHTTP(w, req)
 		want := http.StatusUnauthorized
 		if token == "probe-token" {
 			want = http.StatusMethodNotAllowed
@@ -44,7 +44,7 @@ func TestAuthentication(t *testing.T) {
 	}
 	for _, digest := range []string{"", "bad-digest"} {
 		w := httptest.NewRecorder()
-		New(digest, logger).ServeHTTP(w, httptest.NewRequest("POST", "/api/mcp", nil))
+		probeHandler(t, digest, logger).ServeHTTP(w, httptest.NewRequest("POST", "/api/mcp", nil))
 		if w.Code != http.StatusNotFound {
 			t.Fatal("invalid configuration must disable probe")
 		}
@@ -62,13 +62,13 @@ func (tr bearerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 func TestHTTPToolsAndResources(t *testing.T) {
 	const token = "test-secret-that-must-not-be-logged"
 	var logs bytes.Buffer
-	server := httptest.NewServer(New(tokenDigest(token), slog.New(slog.NewTextHandler(&logs, nil))))
+	server := httptest.NewServer(probeHandler(t, tokenDigest(token), slog.New(slog.NewTextHandler(&logs, nil))))
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client := mcp.NewClient(&mcp.Implementation{Name: "probe-test", Version: "1"}, nil)
 	session, err := client.Connect(ctx, &mcp.StreamableClientTransport{
-		Endpoint: server.URL, HTTPClient: &http.Client{Transport: bearerTransport{token}},
+		Endpoint: server.URL + "/api/mcp", HTTPClient: &http.Client{Transport: bearerTransport{token}},
 	}, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -161,4 +161,14 @@ func TestWaitCancellation(t *testing.T) {
 	if err := wait(ctx, nil, 300); err != context.Canceled {
 		t.Fatalf("canceled wait: %v", err)
 	}
+}
+
+func probeHandler(t *testing.T, digest string, logger *slog.Logger) http.Handler {
+	t.Helper()
+	service, err := New(digest, logger, nil)
+	if err != nil {
+		return http.NotFoundHandler()
+	}
+	t.Cleanup(service.Close)
+	return service
 }

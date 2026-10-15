@@ -1,6 +1,6 @@
 # Go API
 
-单独 Go module，入口 `cmd/server`。HTTP/日志/JSON/ZIP 使用标准库，生产直接依赖仅 OAuth2 和 CORS。
+单独 Go module，入口 `cmd/server`。HTTP/日志/JSON/ZIP 使用标准库，生产直接依赖为 OAuth2、CORS 和官方 MCP Go SDK。
 
 ## 本地开发
 
@@ -17,7 +17,7 @@ go build -o dist/server ./cmd/server
 
 ## 身份与兼容接口
 
-所有业务接口需要 `Authorization: Bearer <本应用会话>`，不使用 GitHub token 调用业务 API。会话八小时过期、进程重启失效，退出立即撤销。只允许配置的 GitHub 固定 ID，默认 `37927306`。
+下表网页业务接口需要 `Authorization: Bearer <本应用会话>`，不使用 GitHub token 调用业务 API。会话八小时过期、进程重启失效，退出立即撤销。只允许配置的 GitHub 固定 ID，默认 `37927306`。
 
 | 路径 | 请求 | 行为 |
 | --- | --- | --- |
@@ -46,6 +46,6 @@ POST `/api/xhs/parse` 接收 `{text}`（最多 8192 字节的分享文本或 URL
 
 生产部署见根目录 `deploy/README.md`。
 
-## Grok Bot MCP 兼容探针
+## Grok Bot MCP
 
-可选 `/api/mcp` 使用独立 Bearer 凭据，当前仅提供免费测试工具，不开放业务能力。启用配置、凭据交接及客户端验收顺序见 [MCP 探针说明](MCP.md)。
+可选 `/api/mcp` 使用独立 Bearer 凭据，提供去水印、放大、小红书解析和文件下载的异步任务工具，与网页共用业务服务及图像处理槽位。客户端分段查询并领取图片或 ZIP，大文件使用短期单文件下载链接。诊断工具默认关闭。配置、工具及客户端验收状态见 [MCP 说明](MCP.md)。

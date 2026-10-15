@@ -8,14 +8,15 @@ import (
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/auth"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/config"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/httpapi"
-	"github.com/Mournerliao/watermark-remover/apps/server/internal/mcpprobe"
+	"github.com/Mournerliao/watermark-remover/apps/server/internal/mcpserver"
+	"github.com/Mournerliao/watermark-remover/apps/server/internal/processing"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/upscale"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/watermark"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/xhs"
 	"github.com/rs/cors"
 )
 
-func New(cfg config.Config, logger *slog.Logger) *http.Server {
+func New(cfg config.Config, logger *slog.Logger) (*http.Server, error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = http.ProxyFromEnvironment
 	client := &http.Client{Transport: transport, Timeout: 185 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
@@ -25,8 +26,18 @@ func New(cfg config.Config, logger *slog.Logger) *http.Server {
 	notes := xhs.New(xhs.NewClient(client, cfg.XHSURL))
 	mux := http.NewServeMux()
 	authentication.Register(mux)
+	gate := processing.New()
+	var mcpService *mcpserver.Server
 	if cfg.MCPTokenSHA256 != "" {
-		mux.Handle("/api/mcp", mcpprobe.New(cfg.MCPTokenSHA256, logger))
+		var err error
+		mcpService, err = mcpserver.New(cfg.MCPTokenSHA256, logger, &mcpserver.Backend{
+			Watermarks: watermarks, Upscale: enhancement, Notes: notes, Processing: gate, PublicURL: cfg.MCPPublicURL, EnableProbes: cfg.MCPEnableProbes,
+		})
+		if err != nil {
+			return nil, err
+		}
+		mux.Handle("/api/mcp", mcpService)
+		mux.Handle("/api/mcp/", mcpService)
 	}
 	for _, path := range []string{"GET /api/health", "GET /api/health/ready"} {
 		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
@@ -37,17 +48,15 @@ func New(cfg config.Config, logger *slog.Logger) *http.Server {
 			httpapi.WriteJSON(w, 200, map[string]any{"status": status, "timestamp": time.Now().UTC().Format(time.RFC3339)})
 		})
 	}
-	processing := make(chan struct{}, 1)
 	protect := func(handler http.HandlerFunc) http.Handler { return authentication.Require(handler) }
 	bounded := func(handler http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			select {
-			case processing <- struct{}{}:
-				defer func() { <-processing }()
-				handler(w, r)
-			default:
-				httpapi.WriteError(w, httpapi.Fail(503, "图像服务当前繁忙，请稍后重试"))
+			if err := gate.TryAcquire(); err != nil {
+				httpapi.WriteError(w, err)
+				return
 			}
+			defer gate.Release()
+			handler(w, r)
 		}
 	}
 	mux.Handle("POST /api/watermark/remove", protect(bounded(watermarks.Handler)))
@@ -56,7 +65,11 @@ func New(cfg config.Config, logger *slog.Logger) *http.Server {
 	mux.Handle("GET /api/xhs/results/{id}/images/{index}", protect(notes.ImageHandler))
 	mux.Handle("GET /api/xhs/results/{id}/archive", protect(notes.ArchiveHandler))
 	crossOrigin := cors.New(cors.Options{AllowedOrigins: []string{cfg.FrontendURL}, AllowedMethods: []string{"GET", "POST"}, AllowedHeaders: []string{"Authorization", "Content-Type"}, ExposedHeaders: []string{"Content-Disposition"}, MaxAge: 600})
-	return &http.Server{Addr: cfg.Address, Handler: logging(logger, crossOrigin.Handler(mux)), ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	app := &http.Server{Addr: cfg.Address, Handler: logging(logger, crossOrigin.Handler(mux)), ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	if mcpService != nil {
+		app.RegisterOnShutdown(mcpService.Close)
+	}
+	return app, nil
 }
 
 type responseWriter struct {

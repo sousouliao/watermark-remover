@@ -1,66 +1,75 @@
-# Grok Bot 兼容探针
+# Grok Bot 图片工作台
 
-当前仅提供免费兼容探针，尚未开放去水印、放大或小红书业务工具。使用官方 `go-sdk v1.7.0`，入口为 `/api/mcp`，支持 Streamable HTTP，使用无状态模式和 SSE 响应。Grok Bot 首轮认证与图片附件回传已通过；原生长调用超时和资源读取入口存在限制，结果与实际连接方式见[实测记录](../../knowledge/logs/2026-10-15-mcp-probe.md#grok-bot-桌面首轮实测)。
+远程入口为 `/api/mcp`，使用官方 Go SDK 的 Streamable HTTP 与独立 Bearer 认证。业务复用网页的去水印、放大和小红书服务；Grok Bot 通过短调用提交、查询、领取结果，避开客户端约 60 秒的单次调用限制。
 
-## 启用与连接
+## 配置与部署
 
-1. 在仓库根生成专用随机 Token，原文保存到被 Git 忽略的文件，仅输出其 SHA-256 摘要：
+保留原 GitHub、模型与解析器配置，新增：
 
-   ```sh
-   python3 - <<'PY'
-   import hashlib, os, secrets
-   from pathlib import Path
-   folder = Path('.local/mcp-probe')
-   folder.mkdir(parents=True, exist_ok=True, mode=0o700)
-   token = secrets.token_urlsafe(32)
-   target = folder / 'token'
-   fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-   with os.fdopen(fd, 'w') as f:
-       f.write(token)
-   print('MCP_TOKEN_SHA256=' + hashlib.sha256(token.encode()).hexdigest())
-   print('Token saved to ' + str(target.resolve()))
-   PY
-   ```
+```text
+MCP_TOKEN_SHA256=<专用 Token 的 SHA-256 十六进制摘要>
+MCP_PUBLIC_URL=https://43.138.214.93
+MCP_ENABLE_PROBES=false
+```
 
-   已有 token 文件时命令会停止，避免误覆盖现有凭据。原文通过 Grok Bot 支持的安全凭据配置入口交接，不粘贴到普通聊天、Skill 或 URL。
+Token 摘要为空时关闭 MCP；非法摘要或配置导致启动失败。`MCP_PUBLIC_URL` 必须为外部实际可访问的 HTTP(S) origin，用于生成文件下载链接；生产使用 HTTPS。沿用现有 Nginx `/api/` 代理和 systemd 发布方式，无需新增端口。
 
-2. 将输出的 `MCP_TOKEN_SHA256` 加到服务器 `/etc/watermark-api.env`，保持原有环境配置；部署本版二进制并重启 `watermark-api`。本地开发则添加到 `apps/server/.env`。空值关闭入口，非法摘要阻止服务启动。摘要不是客户端凭据。
-3. 生产沿用现有 Nginx `/api/` 代理，不新增端口；已有 `proxy_buffering off` 和 330 秒读取超时。先验证既有 `/api/health`、网页业务接口仍受 GitHub 会话保护、无 Token 请求 MCP 得到 401；未启用时 MCP 返回 404。
-4. 在 Grok Bot 中通过 `AddMcpServer` 配置连接，远程端点为 `https://43.138.214.93/api/mcp`，服务端要求 `Authorization: Bearer <原始 Token>`。本次客户端实际以云端 stdio 桥接 mcp-remote 引用安全卡保存的凭据；直接远程 headers 的安全注入未验收。若客户端需要本地认证文件，写入时使用 0600，聊天只报告权限与占位符，不报告内容。
+已有专用 Token 时继续使用。首次配置可在仓库根生成原文文件，仅输出摘要：
 
-服务端只保存摘要并恒定时间比较；认证复用 `auth.RequireBearerToken`，不发布 OAuth metadata，也不在 401 中声明 `resource_metadata`。GitHub 登录路径不变。撤销或轮换时替换摘要并重启，再更新连接器。清空摘要并重启可关闭探针。
+```sh
+python3 - <<'PY'
+import hashlib, os, secrets
+from pathlib import Path
+folder = Path('.local/mcp-probe')
+folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+token = secrets.token_urlsafe(32)
+fd = os.open(folder / 'token', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+with os.fdopen(fd, 'w') as f:
+    f.write(token)
+print('MCP_TOKEN_SHA256=' + hashlib.sha256(token.encode()).hexdigest())
+PY
+```
 
-## 验收顺序
+已有文件时命令停止，避免覆盖。原文经 Grok Bot 安全凭据卡交接，不写进普通聊天、Skill、URL 或诊断输出。服务端只保存摘要，使用 SDK Bearer 中间件和恒定时间比较；不发布 OAuth discovery，网页 GitHub 登录保持独立。轮换摘要并重启后旧 Token 失效。
 
-每一步取得规定结果后再进入下一步；失败时保留失败步骤和服务端认证结果。测试均不调用外部服务。
+## Grok Bot 连接与 Skill
 
-| 步骤 | 调用 | 完成条件 |
-| --- | --- | --- |
-| 连接 | 发现工具，调用 `probe_ping` | 返回 `status: ok`；服务端记录握手、工具发现与调用 |
-| 固定输出 | 调用 `probe_test_files` | 返回渐变 PNG 的 ImageContent，以及 PNG/ZIP ResourceLink；记录是否自动展示/读取 |
-| 资源读取 | `resources/read` 读取返回的两个 URI | PNG 可打开；ZIP 可完整解压，内含 `image.png`、`README.txt`；Bot 能作为聊天附件交付 |
-| 图片输入 | 上传自己的测试图片，将完整 base64 data URL 作为 `probe_echo_image.image` 传入 | 返回原始图片，`sha256`、`bytes` 与输入一致；Bot 能保存原始结果文件 |
-| 参数体积 | 同样方式传较大测试图片 | 无截断；记录实际字节数。遇到客户端体积限制才增加上传适配 |
-| 耗时 | 依次调用 `probe_wait`，`seconds` 为 120、180、300 | 记录完成/超时时长；调用携带 progress token 时每 10 秒发进度；记录客户端是否显示 |
-| 取消 | 运行等待后在客户端取消，再调用一次短等待 | 记录取消传播和槽位释放；新协议绑定 HTTP 取消，旧协议行为需实测 |
-| 认证 | 用缺失、错误 Token 连接，再轮换 Token | 无效凭据均被拒，轮换后旧 Token 失效 |
+已验证的客户端方式为其云端电脑 stdio → `mcp-remote 0.15.1` → `https://43.138.214.93/api/mcp`，使用安全卡保存的凭据。认证文件权限为 0600。当前客户端安全卡到远程 headers 的直接注入尚未验证，现有桥接可复用。
 
-资源 URI 为 `watermark-probe://test/image.png`、`watermark-probe://test/archive.zip`，必须通过 MCP 资源读取，不能作为普通 HTTP 地址打开。Grok Bot 若不支持主动资源读取，记录具体缺口，之后再补交付适配。
+正式连接器为 `image-workbench`（命名空间 `user-image-workbench`），只包含七个业务工具。此前 `personal-mcp` 的宿主目录停留在旧探针，重启及同名重新添加无效；按同一 stdio 命令迁移正式名称后目录恢复，旧注册已移除，脚本和凭据沿用。升级后核对实际工具目录及 Schema，不能仅以“connected”判定发现成功。将仓库内的 [image-workbench Skill](../../integrations/grok-bot/image-workbench/SKILL.md) 保存到 Grok Bot 私有技能库，依照其步骤处理自然语言请求。Skill 不包含凭据和重复的参数 Schema。
 
-`probe_echo_image` 复用现有 PNG/JPEG/WebP data URL 校验，图片最大 30 MiB；HTTP 请求体上限 50 MiB。Grok Bot 自身附件与工具参数大小限制另行实测。文件参数接收文件内容，服务端不能读取 Bot 云端电脑的本地路径；客户端 `$file:` 注入需先在云端生成 data URL 文件，再注入其内容，避免模型展开整段 Base64。
+## 工具与流程
 
-等待仅允许 0–300 秒、同时一个请求；超限和繁忙立即返回工具错误。所有等待均受上下文和 310 秒上限约束。失败后按实际错误决定下一步，不自动循环重试。协议协商、SSE 与进度封装交给 SDK。
+| 工具 | 作用 |
+| --- | --- |
+| `remove_watermark` | 提交 Lite/Flash 全图或区域去水印，默认 Lite/direct |
+| `upscale_image` | 按用户要求提交图片放大 |
+| `parse_xhs_note` | 提交一条公开图文笔记解析 |
+| `get_xhs_image` | 提交解析结果中的单图下载 |
+| `get_xhs_archive` | 提交图集 ZIP 下载 |
+| `get_task` | 查询任务；可等待最多 20 秒，及时返回当前状态 |
+| `get_task_result` | 领取成功任务的文件与校验信息 |
 
-## 诊断与验证范围
+五个提交工具立即返回 jobId。状态为 pending、running、succeeded 或 failed；失败包含可读 message。每个新操作提供一次 requestId，相同 ID 与相同参数在结果保留期内返回同一任务；不同参数复用 ID 会被拒绝。请求断开不会取消已接受的处理，不自动切换模型或重复付费调用。
 
-现有 HTTP 日志记录方法、路径、状态和耗时；MCP 方法日志记录方法名、认证通过与耗时，用于核对 `initialize`（新协议为 `server/discover`）、`tools/list`、`tools/call`、`resources/read`。日志不记录 Token、Authorization、图片或完整工具参数。尚未通过认证的 HTTP 请求由 401 状态识别。
+图片来自聊天附件的完整 data URL 文件，用 `$file:` 注入字符串参数；服务端不能读取 Bot 的本地路径。后续操作可通过 sourceJobId 直接引用已成功的图片任务，无需下载后再上传。小红书解析成功的 output.note 中包含 resultId、笔记信息和 imageCount；图像序号从 1 开始，原始媒体 URL 不返回客户端。
 
-本地针对性验证：
+最终文件通过 `get_task_result` 交付：不超过 8 MiB 的图片为 ImageContent，ZIP 为内嵌二进制 resource；所有文件同时提供短期原文件下载 URL。超过 8 MiB 时仅返回文件元数据及下载链接，避免大段 Base64 扩大 MCP 内存开销。链接只授权一个结果文件、5 分钟过期，不需要附加 MCP Token；可在任务有效期内重新领取链接。Grok Bot 曾将 JPEG ImageContent 落盘重编码，图片交付因此使用下载链接取得原字节，ImageContent 用于预览。校验文件字节数和 SHA-256 后再作为聊天附件交付。
+
+## 生命周期与限额
+
+任务、请求去重信息与结果保留到完成后 30 分钟；服务重启后失效。临时文件使用私有目录，过期定时清理，关闭时取消在途任务并清理目录。任务数、在途数和总结果大小均有界，具体常量集中在 [tasks.go](internal/mcpserver/tasks.go)。当前个人单实例不提供持久队列或数据库。
+
+网页与 MCP 共用一个图像处理槽位；网页繁忙时仍返回 503，MCP 在有界任务中等待。小红书共用原有解析和下载限额。现有原图 30 MiB、图集 150 MiB 等业务限制继续由原服务执行。
+
+## 验证与诊断
+
+针对性测试覆盖异步生命周期、重复提交只执行一次、任务串联、过期清理、共享并发、七个工具以及内嵌/短期下载授权：
 
 ```sh
 cd apps/server
-go test -race ./internal/mcpprobe ./internal/config ./internal/server
-go vet ./internal/mcpprobe ./internal/config ./internal/server
+go test -race ./internal/mcpserver ./internal/server ./internal/processing ./internal/xhs ./internal/watermark ./internal/config
+go vet ./internal/mcpserver ./internal/server ./internal/processing ./internal/xhs ./internal/watermark ./internal/config
 ```
 
-上述测试覆盖官方 SDK HTTP 客户端的工具发现与调用、图片字节与摘要、PNG/ZIP 资源完整性、认证及配置关闭、等待取消、旧协议初始化和网页认证隔离；不替代 Grok Bot 实测，也不代表 120/180/300 秒已在真实客户端通过。
+`MCP_ENABLE_PROBES=true` 临时加入免费诊断工具；`probe_job` 可创建有延迟的 ZIP 任务，通过正式查询与领取工具验证长耗时兼容性。验收后关闭诊断工具。历史探针和客户端限制见[首轮实测](../../knowledge/logs/2026-10-15-mcp-probe.md)，正式接入与验收结果见[业务记录](../../knowledge/logs/2026-10-15-mcp-business.md)。日志仅记录方法、状态和耗时，不包含认证头、图片正文或完整参数。

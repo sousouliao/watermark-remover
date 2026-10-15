@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
@@ -13,7 +14,11 @@ import (
 )
 
 func TestRouteProtectionAndCORS(t *testing.T) {
-	s := New(config.Config{FrontendURL: "https://frontend.vercel.app", GithubUserID: 37927306, XHSURL: "http://127.0.0.1:5556"}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	s, err := New(config.Config{FrontendURL: "https://frontend.vercel.app", GithubUserID: 37927306, XHSURL: "http://127.0.0.1:5556"}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Shutdown(context.Background()) })
 	for _, test := range []struct {
 		method, path string
 		status       int
@@ -45,7 +50,11 @@ func TestMCPRouteIsolation(t *testing.T) {
 		if enabled {
 			cfg.MCPTokenSHA256 = hex.EncodeToString(digest[:])
 		}
-		s := New(cfg, logger)
+		s, err := New(cfg, logger)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = s.Shutdown(context.Background()) })
 		for _, path := range []string{"/api/mcp", "/api/upscale", "/.well-known/oauth-protected-resource", "/.well-known/oauth-authorization-server"} {
 			r := httptest.NewRequest("POST", "http://43.138.214.93"+path, strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}`))
 			r.Header.Set("Authorization", "Bearer probe-token")
@@ -59,7 +68,7 @@ func TestMCPRouteIsolation(t *testing.T) {
 			}
 			if path == "/api/mcp" && enabled {
 				want = 200
-				if !strings.Contains(w.Body.String(), "watermark-compatibility-probe") {
+				if !strings.Contains(w.Body.String(), "watermark-remover") {
 					t.Fatalf("initialization through application middleware: %s", w.Body)
 				}
 			}

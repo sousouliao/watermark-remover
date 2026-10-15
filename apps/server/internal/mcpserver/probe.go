@@ -1,5 +1,5 @@
-// Package mcpprobe provides an authenticated, free MCP compatibility probe.
-package mcpprobe
+// Package mcpserver exposes the image services through authenticated MCP tools.
+package mcpserver
 
 import (
 	"archive/zip"
@@ -14,6 +14,8 @@ import (
 	"image/png"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/media"
@@ -38,13 +40,24 @@ type waitInput struct {
 	Seconds int `json:"seconds" jsonschema:"Whole seconds to wait, from 0 to 300; no paid services are called"`
 }
 
-// New returns a stateless Streamable HTTP handler. Invalid configuration fails closed.
-func New(tokenSHA256 string, logger *slog.Logger) http.Handler {
+type Server struct {
+	http.Handler
+	tasks *taskStore
+}
+
+func (s *Server) Close() {
+	if s.tasks != nil {
+		s.tasks.Close()
+	}
+}
+
+// New mounts the SDK transport and the product tools in one authenticated service.
+func New(tokenSHA256 string, logger *slog.Logger, backend *Backend) (*Server, error) {
 	expected, err := hex.DecodeString(tokenSHA256)
 	if err != nil || len(expected) != sha256.Size {
-		return http.NotFoundHandler()
+		return nil, fmt.Errorf("invalid MCP token digest")
 	}
-	server := mcp.NewServer(&mcp.Implementation{Name: "watermark-compatibility-probe", Version: "0.1.0"}, nil)
+	server := mcp.NewServer(&mcp.Implementation{Name: "watermark-remover", Version: "1.0.0"}, nil)
 	server.AddReceivingMiddleware(func(next mcp.MethodHandler) mcp.MethodHandler {
 		return func(ctx context.Context, method string, req mcp.Request) (mcp.Result, error) {
 			start := time.Now()
@@ -53,6 +66,42 @@ func New(tokenSHA256 string, logger *slog.Logger) http.Handler {
 			return result, err
 		}
 	})
+	service := &Server{}
+	if backend != nil {
+		store, err := newTaskStore()
+		if err != nil {
+			return nil, err
+		}
+		service.tasks = store
+		registerBusiness(server, store, backend)
+	}
+	if backend == nil || backend.EnableProbes {
+		registerProbes(server, service.tasks)
+	}
+	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{
+		Stateless: true, MaxRequestBodyBytes: 50 << 20, PropagateRequestCancellation: true,
+		// Nginx preserves the public Host while proxying to the loopback listener.
+		// Bearer auth and browser origin protection remain enforced below.
+		DisableLocalhostProtection: true,
+	})
+	protected := http.NewCrossOriginProtection().Handler(handler)
+	protectedMCP := auth.RequireBearerToken(func(_ context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {
+		actual := sha256.Sum256([]byte(token))
+		if subtle.ConstantTimeCompare(actual[:], expected) != 1 {
+			return nil, auth.ErrInvalidToken
+		}
+		return &auth.TokenInfo{UserID: "personal-grok-bot"}, nil
+	}, &auth.RequireBearerTokenOptions{AllowMissingExpiration: true})(protected)
+	mux := http.NewServeMux()
+	mux.Handle("/api/mcp", protectedMCP)
+	if service.tasks != nil {
+		mux.HandleFunc("GET /api/mcp/files/{id}", service.download)
+	}
+	service.Handler = mux
+	return service, nil
+}
+
+func registerProbes(server *mcp.Server, store *taskStore) {
 	mcp.AddTool(server, &mcp.Tool{Name: "probe_ping", Description: "Check MCP connectivity without calling any external service"},
 		func(context.Context, *mcp.CallToolRequest, empty) (*mcp.CallToolResult, map[string]string, error) {
 			return nil, map[string]string{"status": "ok", "service": "watermark-compatibility-probe"}, nil
@@ -90,20 +139,35 @@ func New(tokenSHA256 string, logger *slog.Logger) http.Handler {
 			}
 			return nil, map[string]int{"waitedSeconds": in.Seconds}, nil
 		})
-	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return server }, &mcp.StreamableHTTPOptions{
-		Stateless: true, MaxRequestBodyBytes: 50 << 20, PropagateRequestCancellation: true,
-		// Nginx preserves the public Host while proxying to the loopback listener.
-		// Bearer auth and browser origin protection remain enforced below.
-		DisableLocalhostProtection: true,
-	})
-	protected := http.NewCrossOriginProtection().Handler(handler)
-	return auth.RequireBearerToken(func(_ context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {
-		actual := sha256.Sum256([]byte(token))
-		if subtle.ConstantTimeCompare(actual[:], expected) != 1 {
-			return nil, auth.ErrInvalidToken
-		}
-		return &auth.TokenInfo{UserID: "personal-grok-bot"}, nil
-	}, &auth.RequireBearerTokenOptions{AllowMissingExpiration: true})(protected)
+
+	if store != nil {
+		mcp.AddTool(server, &mcp.Tool{Name: "probe_job", Description: "Free async ZIP compatibility test; seconds 0–300. Query with get_task and receive get_task_result"},
+			func(_ context.Context, _ *mcp.CallToolRequest, in struct {
+				RequestID string `json:"requestId"`
+				Seconds   int    `json:"seconds"`
+			}) (*mcp.CallToolResult, taskView, error) {
+				if in.Seconds < 0 || in.Seconds > 300 {
+					return nil, taskView{}, fmt.Errorf("seconds must be 0–300")
+				}
+				job, err := store.Submit(in.RequestID, fingerprint("probe_job", in), func(ctx context.Context, dir string) (taskOutput, error) {
+					timer := time.NewTimer(time.Duration(in.Seconds) * time.Second)
+					defer timer.Stop()
+					select {
+					case <-timer.C:
+					case <-ctx.Done():
+						return taskOutput{}, ctx.Err()
+					}
+					_, data := testFiles()
+					path := filepath.Join(dir, "archive.zip")
+					if err := os.WriteFile(path, data, 0600); err != nil {
+						return taskOutput{}, err
+					}
+					digest := sha256.Sum256(data)
+					return taskOutput{File: &FileInfo{Name: "probe-archive.zip", MIME: "application/zip", Bytes: int64(len(data)), SHA256: hex.EncodeToString(digest[:]), path: path}}, nil
+				})
+				return nil, job, err
+			})
+	}
 }
 
 func echoImage(_ context.Context, _ *mcp.CallToolRequest, in echoInput) (*mcp.CallToolResult, imageInfo, error) {

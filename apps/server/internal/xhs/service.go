@@ -49,28 +49,25 @@ func acquire(slots chan struct{}) error {
 	}
 }
 
-func (s *Service) ParseHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Text string `json:"text"`
-	}
-	if err := httpapi.Decode(w, r, &input, 16<<10); err != nil {
-		httpapi.WriteError(w, err)
-		return
-	}
+type Parsed struct {
+	ResultID   string    `json:"resultId"`
+	Note       Note      `json:"note"`
+	ImageCount int       `json:"imageCount"`
+	ExpiresAt  time.Time `json:"expiresAt"`
+}
+
+func (s *Service) Parse(ctx context.Context, text string) (Parsed, error) {
 	if err := acquire(s.parseSlots); err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return Parsed{}, err
 	}
 	defer func() { <-s.parseSlots }()
-	note, err := s.client.Parse(r.Context(), input.Text)
+	note, err := s.client.Parse(ctx, text)
 	if err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return Parsed{}, err
 	}
 	var random [16]byte
 	if _, err := rand.Read(random[:]); err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return Parsed{}, err
 	}
 	id := hex.EncodeToString(random[:])
 	now := s.now()
@@ -93,6 +90,23 @@ func (s *Service) ParseHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	s.results[id] = saved{note, expires, now}
 	s.mu.Unlock()
+	return Parsed{ResultID: id, Note: note, ImageCount: len(note.Sources), ExpiresAt: expires}, nil
+}
+
+func (s *Service) ParseHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Text string `json:"text"`
+	}
+	if err := httpapi.Decode(w, r, &input, 16<<10); err != nil {
+		httpapi.WriteError(w, err)
+		return
+	}
+	parsed, err := s.Parse(r.Context(), input.Text)
+	if err != nil {
+		httpapi.WriteError(w, err)
+		return
+	}
+	id, note, expires := parsed.ResultID, parsed.Note, parsed.ExpiresAt
 	images := make([]map[string]any, len(note.Sources))
 	for i := range images {
 		path := fmt.Sprintf("/api/xhs/results/%s/images/%d", id, i+1)
@@ -146,65 +160,77 @@ func (s *Service) copyImage(ctx context.Context, address string, destination fun
 	return n, kind, nil
 }
 
-func (s *Service) ImageHandler(w http.ResponseWriter, r *http.Request) {
-	note, err := s.result(r.PathValue("id"))
+// Image downloads a complete image. The caller closes and removes the returned file.
+func (s *Service) Image(ctx context.Context, id string, index int) (*os.File, string, string, error) {
+	note, err := s.result(id)
 	if err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return nil, "", "", err
 	}
-	index, err := strconv.Atoi(r.PathValue("index"))
-	if err != nil || index < 1 || index > len(note.Sources) {
-		httpapi.WriteError(w, httpapi.Fail(404, "图片不存在"))
-		return
+	if index < 1 || index > len(note.Sources) {
+		return nil, "", "", httpapi.Fail(404, "图片不存在")
 	}
 	if err := acquire(s.downloadSlots); err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return nil, "", "", err
 	}
 	defer func() { <-s.downloadSlots }()
 	file, err := os.CreateTemp("", "watermark-image-*")
+	if err != nil {
+		return nil, "", "", err
+	}
+	_, kind, err := s.copyImage(ctx, note.Sources[index-1], func(string) (io.Writer, error) { return file, nil })
+	if err != nil {
+		file.Close()
+		os.Remove(file.Name())
+		return nil, "", "", err
+	}
+	return file, kind, fmt.Sprintf("%s-%02d.%s", note.ID, index, extension(kind)), nil
+}
+
+func (s *Service) ImageHandler(w http.ResponseWriter, r *http.Request) {
+	index, err := strconv.Atoi(r.PathValue("index"))
+	if err != nil {
+		httpapi.WriteError(w, httpapi.Fail(404, "图片不存在"))
+		return
+	}
+	file, kind, name, err := s.Image(r.Context(), r.PathValue("id"), index)
 	if err != nil {
 		httpapi.WriteError(w, err)
 		return
 	}
 	defer os.Remove(file.Name())
 	defer file.Close()
-	_, kind, err := s.copyImage(r.Context(), note.Sources[index-1], func(string) (io.Writer, error) { return file, nil })
-	if err != nil {
-		httpapi.WriteError(w, err)
-		return
-	}
 	disposition := "inline"
 	if r.URL.Query().Get("download") == "1" {
 		disposition = "attachment"
 	}
-	name := fmt.Sprintf("%s-%02d.%s", note.ID, index, extension(kind))
 	w.Header().Set("Content-Type", kind)
 	w.Header().Set("Content-Disposition", mime.FormatMediaType(disposition, map[string]string{"filename": name}))
 	w.Header().Set("Cache-Control", "no-store")
 	http.ServeContent(w, r, name, time.Time{}, file)
 }
 
-func (s *Service) ArchiveHandler(w http.ResponseWriter, r *http.Request) {
-	note, err := s.result(r.PathValue("id"))
+func (s *Service) Archive(ctx context.Context, id string) (*os.File, string, error) {
+	note, err := s.result(id)
 	if err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return nil, "", err
 	}
 	if err := acquire(s.downloadSlots); err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return nil, "", err
 	}
 	defer func() { <-s.downloadSlots }()
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	file, err := os.CreateTemp("", "watermark-archive-*.zip")
 	if err != nil {
-		httpapi.WriteError(w, err)
-		return
+		return nil, "", err
 	}
-	defer os.Remove(file.Name())
-	defer file.Close()
+	complete := false
+	defer func() {
+		if !complete {
+			file.Close()
+			os.Remove(file.Name())
+		}
+	}()
 	archive := zip.NewWriter(file)
 	var total int64
 	for i, address := range note.Sources {
@@ -213,21 +239,29 @@ func (s *Service) ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		if err != nil {
 			_ = archive.Close()
-			httpapi.WriteError(w, err)
-			return
+			return nil, "", err
 		}
 		total += n
 		if total > 150<<20 {
 			_ = archive.Close()
-			httpapi.WriteError(w, httpapi.Fail(502, "图集超过 150 MB 下载限制"))
-			return
+			return nil, "", httpapi.Fail(502, "图集超过 150 MB 下载限制")
 		}
 	}
 	if err := archive.Close(); err != nil {
+		return nil, "", err
+	}
+	complete = true
+	return file, note.ID + ".zip", nil
+}
+
+func (s *Service) ArchiveHandler(w http.ResponseWriter, r *http.Request) {
+	file, name, err := s.Archive(r.Context(), r.PathValue("id"))
+	if err != nil {
 		httpapi.WriteError(w, err)
 		return
 	}
-	name := note.ID + ".zip"
+	defer os.Remove(file.Name())
+	defer file.Close()
 	w.Header().Set("Content-Type", "application/zip")
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": name}))
 	w.Header().Set("Cache-Control", "no-store")

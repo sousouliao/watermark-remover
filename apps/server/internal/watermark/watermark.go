@@ -62,33 +62,42 @@ func New(client *http.Client, key, lite, flash string) *Service {
 
 const prompt = "请仅移除图片中后加的水印文字或标识，恢复其下的原照片纹理。保留原照片中的人物、物体和原有文字，不要添加新元素或新文字。尽量保持非水印区域不变。"
 
+// ValidateOptions is shared by the web adapter and asynchronous MCP submission.
+func (in Input) ValidateOptions() error {
+	if in.Model != "lite" && in.Model != "flash" {
+		return httpapi.Fail(400, "请选择 Lite 或 Flash 模型")
+	}
+	switch in.Mode {
+	case "direct":
+		if in.Region != nil {
+			return httpapi.Fail(400, "直接移除模式不需要区域坐标")
+		}
+	case "region":
+		r := in.Region
+		if r == nil || r.X1 < 0 || r.Y1 < 0 || r.X2 > 999 || r.Y2 > 999 || r.X1 >= r.X2 || r.Y1 >= r.Y2 {
+			return httpapi.Fail(400, "请提供有效的水印区域坐标")
+		}
+	default:
+		return httpapi.Fail(400, "请选择有效的处理模式")
+	}
+	return nil
+}
+
 func (s *Service) Remove(ctx context.Context, input Input) (Result, error) {
 	if _, _, err := media.DecodeDataURL(input.Image); err != nil {
 		return Result{}, err
 	}
-	endpoint := ""
-	switch input.Model {
-	case "lite":
-		endpoint = s.lite
-	case "flash":
+	if err := input.ValidateOptions(); err != nil {
+		return Result{}, err
+	}
+	endpoint := s.lite
+	if input.Model == "flash" {
 		endpoint = s.flash
-	default:
-		return Result{}, httpapi.Fail(400, "请选择 Lite 或 Flash 模型")
 	}
 	text := prompt
-	switch input.Mode {
-	case "direct":
-		if input.Region != nil {
-			return Result{}, httpapi.Fail(400, "直接移除模式不需要区域坐标")
-		}
-	case "region":
+	if input.Mode == "region" {
 		r := input.Region
-		if r == nil || r.X1 < 0 || r.Y1 < 0 || r.X2 > 999 || r.Y2 > 999 || r.X1 >= r.X2 || r.Y1 >= r.Y2 {
-			return Result{}, httpapi.Fail(400, "请提供有效的水印区域坐标")
-		}
 		text = fmt.Sprintf("请仅移除 <bbox>%d %d %d %d</bbox> 区域内后加的水印文字或标识，恢复其下的原照片纹理。区域外保持不变；保留原照片中的人物、物体和原有文字，不要添加新元素或新文字。", r.X1, r.Y1, r.X2, r.Y2)
-	default:
-		return Result{}, httpapi.Fail(400, "请选择有效的处理模式")
 	}
 	if s.key == "" || endpoint == "" {
 		return Result{}, httpapi.Fail(503, "图像服务尚未配置，请联系管理员")

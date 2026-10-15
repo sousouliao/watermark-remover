@@ -21,7 +21,11 @@ func main() {
 		logger.Error("invalid configuration", "error", err)
 		os.Exit(1)
 	}
-	app := server.New(cfg, logger)
+	app, err := server.New(cfg, logger)
+	if err != nil {
+		logger.Error("server initialization failed", "error", err)
+		os.Exit(1)
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	shutdown := make(chan struct{})
