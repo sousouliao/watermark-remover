@@ -1,9 +1,12 @@
 package server
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"log/slog"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/config"
@@ -30,6 +33,39 @@ func TestRouteProtectionAndCORS(t *testing.T) {
 		s.Handler.ServeHTTP(w, r)
 		if (w.Header().Get("Access-Control-Allow-Origin") != "") != (origin == "https://frontend.vercel.app") {
 			t.Fatal("CORS origin mismatch")
+		}
+	}
+}
+
+func TestMCPRouteIsolation(t *testing.T) {
+	digest := sha256.Sum256([]byte("probe-token"))
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	for _, enabled := range []bool{false, true} {
+		cfg := config.Config{FrontendURL: "https://frontend.vercel.app", GithubUserID: 37927306, XHSURL: "http://127.0.0.1:5556"}
+		if enabled {
+			cfg.MCPTokenSHA256 = hex.EncodeToString(digest[:])
+		}
+		s := New(cfg, logger)
+		for _, path := range []string{"/api/mcp", "/api/upscale", "/.well-known/oauth-protected-resource", "/.well-known/oauth-authorization-server"} {
+			r := httptest.NewRequest("POST", "http://43.138.214.93"+path, strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}`))
+			r.Header.Set("Authorization", "Bearer probe-token")
+			r.Header.Set("Content-Type", "application/json")
+			r.Header.Set("Accept", "application/json, text/event-stream")
+			w := httptest.NewRecorder()
+			s.Handler.ServeHTTP(w, r)
+			want := 404
+			if path == "/api/upscale" {
+				want = 401 // MCP credential never authenticates the web API.
+			}
+			if path == "/api/mcp" && enabled {
+				want = 200
+				if !strings.Contains(w.Body.String(), "watermark-compatibility-probe") {
+					t.Fatalf("initialization through application middleware: %s", w.Body)
+				}
+			}
+			if w.Code != want {
+				t.Fatalf("enabled=%v path=%s status=%d want=%d", enabled, path, w.Code, want)
+			}
 		}
 	}
 }

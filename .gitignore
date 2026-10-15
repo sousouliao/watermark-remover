@@ -60,6 +60,7 @@ web_errors.txt
 # Private XHS verification inputs, reports and downloaded media
 .local/xhs-verification/
 .local/toolchains/
+.local/mcp-probe/
 .vercel
 .env*
 !.env.example

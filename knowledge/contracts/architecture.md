@@ -21,6 +21,7 @@ React SPA（选择模型、直接处理或指定区域、查看结果）
 - 保留 Monorepo，React SPA 原地替换 Vue 3，Go 替换 NestJS。前端在 Vercel，Go 以 systemd 在腾讯云运行，Nginx/Certbot 提供公网 IP HTTPS；解析器保留既有独立容器，仅供 Go 本机调用。
 - GitHub 登录仅接受固定用户 ID，生产默认 `37927306`。业务接口全部验证本应用 Bearer 会话；GitHub Client Secret、方舟密钥与 GitHub 上游 token 不交给浏览器。CORS 精确匹配正式前端 origin。
 - 小红书由 Go 适配 XHS-Downloader 2.8 API，固定匿名解析参数，不开放账号 Cookie/proxy。结果元数据缓存 30 分钟、最多 50 条，媒体经受限 HTTPS 下载；单图和 ZIP 完成后交付，临时文件清理。接口规范见 `apps/server/README.md`。
-- 当前生产直接依赖为 `golang.org/x/oauth2` 与 `github.com/rs/cors`，其余采用标准库；按功能组织 internal 包，显式装配依赖。
+- 当前生产直接依赖为 `golang.org/x/oauth2`、`github.com/rs/cors` 与 `github.com/modelcontextprotocol/go-sdk`；按功能组织 internal 包，显式装配依赖。
+- 可选 `/api/mcp` 使用独立 Bearer 服务凭据，仅提供 Grok Bot 免费兼容探针；无配置时关闭，与网页 GitHub 会话隔离。协议、认证中间件及资源类型复用官方 SDK，图片回传不落盘，固定测试图片/ZIP 不调用外部服务。首轮客户端认证及图片附件回传已通过；长调用与资源读取的客户端限制尚需业务适配，正式业务工具未开放。配置与验收见 [MCP 探针说明](../../apps/server/MCP.md)。
 
 这里记录目标边界；实际调用字段和阶段顺序见[路线图](../roadmap.md)，以代码实现和实测结果更新。

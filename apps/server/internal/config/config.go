@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net/url"
 	"os"
@@ -13,6 +14,7 @@ type Config struct {
 	ArkKey, LiteEndpoint, FlashEndpoint string
 	GithubClientID, GithubClientSecret  string
 	GithubUserID                        int64
+	MCPTokenSHA256                      string
 }
 
 func Load() (Config, error) {
@@ -22,8 +24,15 @@ func Load() (Config, error) {
 		XHSURL:      env("XHS_API_URL", "http://127.0.0.1:5556"),
 		ArkKey:      os.Getenv("ARK_API_KEY"), LiteEndpoint: os.Getenv("ARK_SEEDREAM_LITE_ENDPOINT"), FlashEndpoint: os.Getenv("ARK_SEEDREAM_FLASH_ENDPOINT"),
 		GithubClientID: os.Getenv("GITHUB_CLIENT_ID"), GithubClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+		MCPTokenSHA256: os.Getenv("MCP_TOKEN_SHA256"),
 	}
 	var err error
+	if c.MCPTokenSHA256 != "" {
+		digest, err := hex.DecodeString(c.MCPTokenSHA256)
+		if err != nil || len(digest) != 32 {
+			return c, fmt.Errorf("MCP_TOKEN_SHA256 must be a 64-character SHA-256 hex digest")
+		}
+	}
 	c.GithubUserID, err = strconv.ParseInt(env("GITHUB_ALLOWED_USER_ID", "37927306"), 10, 64)
 	if err != nil || c.GithubUserID <= 0 {
 		return c, fmt.Errorf("GITHUB_ALLOWED_USER_ID must be a positive integer")

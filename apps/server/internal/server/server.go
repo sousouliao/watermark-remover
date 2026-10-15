@@ -8,6 +8,7 @@ import (
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/auth"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/config"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/httpapi"
+	"github.com/Mournerliao/watermark-remover/apps/server/internal/mcpprobe"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/upscale"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/watermark"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/xhs"
@@ -24,6 +25,9 @@ func New(cfg config.Config, logger *slog.Logger) *http.Server {
 	notes := xhs.New(xhs.NewClient(client, cfg.XHSURL))
 	mux := http.NewServeMux()
 	authentication.Register(mux)
+	if cfg.MCPTokenSHA256 != "" {
+		mux.Handle("/api/mcp", mcpprobe.New(cfg.MCPTokenSHA256, logger))
+	}
 	for _, path := range []string{"GET /api/health", "GET /api/health/ready"} {
 		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			status := "ok"
