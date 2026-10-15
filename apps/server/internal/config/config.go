@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/hex"
 	"fmt"
+	"net/netip"
 	"net/url"
 	"os"
 	"strconv"
@@ -10,19 +11,20 @@ import (
 )
 
 type Config struct {
-	Address, FrontendURL, XHSURL        string
-	ArkKey, LiteEndpoint, FlashEndpoint string
-	GithubClientID, GithubClientSecret  string
-	GithubUserID                        int64
-	MCPTokenSHA256                      string
-	MCPPublicURL                        string
-	MCPEnableProbes                     bool
+	Address, FrontendURL, XHSURL, DouyinURL string
+	ArkKey, LiteEndpoint, FlashEndpoint     string
+	GithubClientID, GithubClientSecret      string
+	GithubUserID                            int64
+	MCPTokenSHA256                          string
+	MCPPublicURL                            string
+	MCPEnableProbes                         bool
 }
 
 func Load() (Config, error) {
 	c := Config{
 		Address:     env("LISTEN_ADDR", "127.0.0.1:"+env("PORT", "3000")),
 		FrontendURL: env("FRONTEND_URL", "http://localhost:5173"),
+		DouyinURL:   env("DOUYIN_API_URL", "http://127.0.0.1:5555"),
 		XHSURL:      env("XHS_API_URL", "http://127.0.0.1:5556"),
 		ArkKey:      os.Getenv("ARK_API_KEY"), LiteEndpoint: os.Getenv("ARK_SEEDREAM_LITE_ENDPOINT"), FlashEndpoint: os.Getenv("ARK_SEEDREAM_FLASH_ENDPOINT"),
 		GithubClientID: os.Getenv("GITHUB_CLIENT_ID"), GithubClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
@@ -44,12 +46,18 @@ func Load() (Config, error) {
 	if err != nil || c.GithubUserID <= 0 {
 		return c, fmt.Errorf("GITHUB_ALLOWED_USER_ID must be a positive integer")
 	}
-	for name, value := range map[string]string{"FRONTEND_URL": c.FrontendURL, "XHS_API_URL": c.XHSURL, "MCP_PUBLIC_URL": c.MCPPublicURL} {
+	for name, value := range map[string]string{"FRONTEND_URL": c.FrontendURL, "XHS_API_URL": c.XHSURL, "DOUYIN_API_URL": c.DouyinURL, "MCP_PUBLIC_URL": c.MCPPublicURL} {
 		u, err := url.Parse(value)
 		if err != nil || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" || (u.Scheme != "http" && u.Scheme != "https") || (u.Path != "" && u.Path != "/") {
 			return c, fmt.Errorf("%s must be an HTTP(S) origin", name)
 		}
 	}
+	u, _ := url.Parse(c.DouyinURL)
+	ip, err := netip.ParseAddr(u.Hostname())
+	if err != nil || !ip.IsLoopback() {
+		return c, fmt.Errorf("DOUYIN_API_URL must use a loopback IP address")
+	}
+	c.DouyinURL = strings.TrimRight(c.DouyinURL, "/")
 	c.FrontendURL = strings.TrimRight(c.FrontendURL, "/")
 	c.XHSURL = strings.TrimRight(c.XHSURL, "/")
 	c.MCPPublicURL = strings.TrimRight(c.MCPPublicURL, "/")

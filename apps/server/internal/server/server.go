@@ -7,6 +7,7 @@ import (
 
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/auth"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/config"
+	"github.com/Mournerliao/watermark-remover/apps/server/internal/douyin"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/httpapi"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/mcpserver"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/processing"
@@ -24,6 +25,10 @@ func New(cfg config.Config, logger *slog.Logger) (*http.Server, error) {
 	watermarks := watermark.New(client, cfg.ArkKey, cfg.LiteEndpoint, cfg.FlashEndpoint)
 	enhancement := upscale.New(client)
 	notes := xhs.New(xhs.NewClient(client, cfg.XHSURL))
+	douyinTransport := transport.Clone()
+	douyinTransport.Proxy = nil
+	douyinClient := &http.Client{Transport: douyinTransport, Timeout: 95 * time.Second}
+	works := douyin.New(douyin.NewClient(douyinClient, cfg.DouyinURL))
 	mux := http.NewServeMux()
 	authentication.Register(mux)
 	gate := processing.New()
@@ -31,7 +36,7 @@ func New(cfg config.Config, logger *slog.Logger) (*http.Server, error) {
 	if cfg.MCPTokenSHA256 != "" {
 		var err error
 		mcpService, err = mcpserver.New(cfg.MCPTokenSHA256, logger, &mcpserver.Backend{
-			Watermarks: watermarks, Upscale: enhancement, Notes: notes, Processing: gate, PublicURL: cfg.MCPPublicURL, EnableProbes: cfg.MCPEnableProbes,
+			Watermarks: watermarks, Upscale: enhancement, Notes: notes, Douyin: works, Processing: gate, PublicURL: cfg.MCPPublicURL, EnableProbes: cfg.MCPEnableProbes,
 		})
 		if err != nil {
 			return nil, err
@@ -64,6 +69,9 @@ func New(cfg config.Config, logger *slog.Logger) (*http.Server, error) {
 	mux.Handle("POST /api/xhs/parse", protect(notes.ParseHandler))
 	mux.Handle("GET /api/xhs/results/{id}/images/{index}", protect(notes.ImageHandler))
 	mux.Handle("GET /api/xhs/results/{id}/archive", protect(notes.ArchiveHandler))
+	mux.Handle("POST /api/douyin/parse", protect(works.ParseHandler))
+	mux.Handle("GET /api/douyin/results/{id}/images/{index}", protect(works.ImageHandler))
+	mux.Handle("GET /api/douyin/results/{id}/archive", protect(works.ArchiveHandler))
 	crossOrigin := cors.New(cors.Options{AllowedOrigins: []string{cfg.FrontendURL}, AllowedMethods: []string{"GET", "POST"}, AllowedHeaders: []string{"Authorization", "Content-Type"}, ExposedHeaders: []string{"Content-Disposition"}, MaxAge: 600})
 	app := &http.Server{Addr: cfg.Address, Handler: logging(logger, crossOrigin.Handler(mux)), ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	if mcpService != nil {
