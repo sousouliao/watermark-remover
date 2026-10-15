@@ -150,11 +150,12 @@ func readResult(reader io.Reader) (string, error) {
 			if json.Unmarshal([]byte(strings.TrimSpace(strings.TrimPrefix(line, "data:"))), &files) != nil || len(files) == 0 {
 				return "", httpapi.Fail(502, "图片放大服务返回了无效结果")
 			}
+			if files[0].Path != "" {
+				// This Space returns a stale /c URL prefix; its FileData path uses the standard file route.
+				return (&url.URL{Path: "/file=" + files[0].Path}).String(), nil
+			}
 			if files[0].URL != "" {
 				return files[0].URL, nil
-			}
-			if files[0].Path != "" {
-				return "/file=" + files[0].Path, nil
 			}
 		}
 	}

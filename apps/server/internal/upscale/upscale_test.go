@@ -45,7 +45,7 @@ func TestGradioUploadCallAndEvent(t *testing.T) {
 			}
 			fmt.Fprint(w, `{"event_id":"job"}`)
 		case "/call/predict/job":
-			fmt.Fprint(w, "event: heartbeat\ndata: null\n\nevent: complete\ndata: [{\"url\":\"/file=/tmp/gradio/result.png\"}]\n\n")
+			fmt.Fprint(w, "event: heartbeat\ndata: null\n\nevent: complete\ndata: [{\"path\":\"/tmp/gradio/result.png\",\"url\":\"/c/file=/tmp/gradio/result.png\"}]\n\n")
 		default:
 			t.Errorf("unexpected path: %s", r.URL.Path)
 		}
@@ -58,6 +58,9 @@ func TestGradioUploadCallAndEvent(t *testing.T) {
 	result, err := s.Enhance(context.Background(), Input{Image: "data:image/png;base64," + base64.StdEncoding.EncodeToString([]byte("\x89PNG\r\n\x1a\ninput"))})
 	if err != nil || !strings.HasPrefix(result, "data:image/png;base64,") || image.address != upstream.URL+"/file=/tmp/gradio/result.png" {
 		t.Fatalf("wrong result %q %v", result, err)
+	}
+	if address, err := readResult(strings.NewReader("event: complete\ndata: [{\"url\":\"/file=/tmp/gradio/url-only.png\"}]\n\n")); err != nil || address != "/file=/tmp/gradio/url-only.png" {
+		t.Fatalf("URL-only result: %q %v", address, err)
 	}
 	for _, events := range []string{"event: error\ndata: secret\n\n", "event: complete\ndata: []\n\n", "event: heartbeat\ndata: null\n\n"} {
 		if _, err := readResult(strings.NewReader(events)); err == nil {
