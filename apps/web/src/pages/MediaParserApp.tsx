@@ -1,4 +1,4 @@
-import type { XHSImage, XHSParseResult } from '@/types/xhs'
+import type { MediaParseResult, ParsedImage } from '@/types/media-parser'
 import {
   ClipboardPaste,
   Download,
@@ -15,17 +15,16 @@ import { Loader } from '@/components/motion/loader'
 import { ImageViewer, ImageViewerContent, ImageViewerThumbnail, type LightboxImage } from '@/components/motion/morphing-lightbox'
 import PageHeading from '@/components/PageHeading/PageHeading'
 import {
-  downloadXHSArchive,
-  downloadXHSImage,
+  downloadMedia,
   fetchAuthenticatedBlob,
-  parseXHSNote,
-} from '@/lib/xhs'
+  parseMedia,
+} from '@/lib/media-parser'
 
-export default function XHSApp() {
+export default function MediaParserApp() {
   const [inputText, setInputText] = useState('')
   const [isParsing, setIsParsing] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
-  const [result, setResult] = useState<XHSParseResult | null>(null)
+  const [result, setResult] = useState<MediaParseResult | null>(null)
   const [isZipping, setIsZipping] = useState(false)
   const [previewImages, setPreviewImages] = useState<LightboxImage[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
@@ -53,7 +52,7 @@ export default function XHSApp() {
     const trimmed = inputText.trim()
     if (isParsing) return
     if (!trimmed) {
-      setParseError('请输入小红书链接或分享文本')
+      setParseError('请输入小红书或抖音链接或分享文本')
       return
     }
 
@@ -61,7 +60,7 @@ export default function XHSApp() {
     setIsParsing(true)
     setParseError(null)
     try {
-      const res = await parseXHSNote(trimmed)
+      const res = await parseMedia(trimmed)
       setPreviewImages([])
       setResult(res)
     }
@@ -79,11 +78,10 @@ export default function XHSApp() {
   }, [])
 
   const handleDownloadZip = useCallback(async () => {
-    if (!result || isZipping) return
+    if (!result?.zipUrl || isZipping) return
     setIsZipping(true)
     try {
-      const filename = `${result.note.title.trim() || result.note.id || 'xhs'}.zip`
-      await downloadXHSArchive(result.zipUrl, filename)
+      await downloadMedia(result.zipUrl, result.item.title.trim() || result.item.id)
     }
     catch (err) {
       setParseError(err instanceof Error ? err.message : '打包下载失败')
@@ -96,7 +94,7 @@ export default function XHSApp() {
   return (
     <div className={`flex w-full flex-1 flex-col items-center pb-[239px] ${result ? 'pt-6 md:pt-10' : 'justify-center'}`}>
       <div className="flex w-full max-w-[840px] flex-col items-center gap-8">
-        <PageHeading title="小红书解析" description="粘贴笔记链接或分享文本，下载其中的全部图片" />
+        <PageHeading title="链接解析" description="粘贴小红书或抖音分享内容，下载图片或视频" />
 
         <form
           className="w-full max-w-xl"
@@ -109,8 +107,8 @@ export default function XHSApp() {
             ref={inputRef}
             value={inputText}
             onChange={setInputText}
-            placeholder="粘贴小红书链接或分享文本…"
-            aria-label="小红书链接或分享文本"
+            placeholder="粘贴小红书或抖音链接或分享文本…"
+            aria-label="小红书或抖音链接或分享文本"
             readOnly={isParsing}
             rightIcon={(
               <>
@@ -158,40 +156,40 @@ export default function XHSApp() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex min-w-0 flex-col gap-0.5">
                 <h3 className="truncate text-base font-semibold text-foreground">
-                  {result.note.title || '未命名笔记'}
+                  {result.item.title || '未命名笔记'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {result.note.authorName ? `@${result.note.authorName}，` : ''}
-                  共
-                  {' '}
-                  {result.images.length}
-                  {' '}
-                  张图片
+                  {result.item.authorName ? `@${result.item.authorName}，` : ''}
+                  {result.mediaType === 'video' ? '视频' : `共 ${result.images.length} 张图片`}
                 </p>
               </div>
 
-              <StatefulButton
-                variant="primary"
-                size="md"
-                state={isZipping ? 'loading' : 'idle'}
-                loadingText="打包中"
-                icon={<FolderArchive className="size-4" />}
-                onClick={() => void handleDownloadZip()}
-                disabled={result.images.length === 0}
-              >
-                下载全部
-              </StatefulButton>
+              {result.zipUrl && (
+                <StatefulButton
+                  variant="primary"
+                  size="md"
+                  state={isZipping ? 'loading' : 'idle'}
+                  loadingText="打包中"
+                  icon={<FolderArchive className="size-4" />}
+                  onClick={() => void handleDownloadZip()}
+                  disabled={result.images.length === 0}
+                >
+                  下载全部
+                </StatefulButton>
+              )}
             </div>
 
+            {result.video && <VideoResult key={result.resultId} video={result.video} id={result.item.id} onError={setParseError} />}
             <ImageViewer images={previewImages} label="图片预览">
               <div className="grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-3">
                 {result.images.map(image => (
-                  <XHSImageCard
+                  <ParsedImageCard
                     key={`${result.resultId}-${image.index}`}
                     image={image}
-                    note={result.note}
+                    note={result.item}
                     previewReady={previewImages.some(item => item.id === String(image.index))}
                     onPreviewReady={handlePreviewReady}
+                    onError={setParseError}
                   />
                 ))}
               </div>
@@ -204,16 +202,18 @@ export default function XHSApp() {
   )
 }
 
-function XHSImageCard({
+function ParsedImageCard({
   image,
   note,
   previewReady,
   onPreviewReady,
+  onError,
 }: {
-  image: XHSImage
-  note: XHSParseResult['note']
+  image: ParsedImage
+  note: MediaParseResult['item']
   previewReady: boolean
   onPreviewReady: (image: LightboxImage) => void
+  onError: (message: string) => void
 }) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -249,8 +249,10 @@ function XHSImageCard({
     if (isDownloading) return
     setIsDownloading(true)
     try {
-      const filename = `${note.id}-${String(image.index).padStart(2, '0')}.jpg`
-      await downloadXHSImage(image.downloadUrl, filename)
+      await downloadMedia(image.downloadUrl, `${note.id}-${String(image.index).padStart(2, '0')}`)
+    }
+    catch (error) {
+      onError(error instanceof Error ? error.message : '下载失败')
     }
     finally {
       setIsDownloading(false)
@@ -315,6 +317,61 @@ function XHSImageCard({
         >
           下载
         </StatefulButton>
+      </div>
+    </div>
+  )
+}
+
+function VideoResult({ video, id, onError }: {
+  video: NonNullable<MediaParseResult['video']>
+  id: string
+  onError: (message: string) => void
+}) {
+  const [objectUrl, setObjectUrl] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const previewUrl = useRef<string | null>(null)
+  const previewRequest = useRef<AbortController | null>(null)
+
+  useEffect(() => () => {
+    previewRequest.current?.abort()
+    if (previewUrl.current) URL.revokeObjectURL(previewUrl.current)
+  }, [])
+
+  async function preview() {
+    if (busy || objectUrl) return
+    setBusy(true)
+    const controller = new AbortController()
+    previewRequest.current = controller
+    try {
+      const blob = await fetchAuthenticatedBlob(video.previewUrl, controller.signal)
+      if (controller.signal.aborted) return
+      const url = URL.createObjectURL(blob)
+      previewUrl.current = url
+      setObjectUrl(url)
+    }
+    catch (error) {
+      if (!controller.signal.aborted) onError(error instanceof Error ? error.message : '预览失败')
+    }
+    finally { setBusy(false) }
+  }
+
+  async function download() {
+    if (downloading) return
+    setDownloading(true)
+    try {
+      await downloadMedia(video.downloadUrl, id)
+    }
+    catch (error) { onError(error instanceof Error ? error.message : '下载失败') }
+    finally { setDownloading(false) }
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {objectUrl && <video src={objectUrl} controls preload="metadata" className="max-h-[60vh] w-full rounded-2xl" aria-label="视频预览" />}
+      <div className="flex gap-3">
+        {!objectUrl && <StatefulButton variant="outline" state={busy ? 'loading' : 'idle'} loadingText="加载中" onClick={() => void preview()}>预览视频</StatefulButton>}
+        <StatefulButton variant="primary" state={downloading ? 'loading' : 'idle'} loadingText="下载中" icon={<Download className="size-4" />} onClick={() => void download()}>下载视频</StatefulButton>
       </div>
     </div>
   )

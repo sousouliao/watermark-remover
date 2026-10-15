@@ -14,9 +14,9 @@ import ProcessingOverlay from '@/components/ProcessingOverlay/ProcessingOverlay'
 import ResultViewer from '@/components/ResultViewer/ResultViewer'
 import { useWatermarkApp } from '@/hooks/useWatermarkApp'
 import { cn } from '@/lib/utils'
-import XHSApp from '@/pages/XHSApp'
+import MediaParserApp from '@/pages/MediaParserApp'
 
-type AppTab = 'watermark' | 'xhs'
+type AppTab = 'watermark' | 'parser'
 
 export default function WatermarkApp() {
   const [activeTab, setActiveTab] = useState<AppTab>('watermark')
@@ -34,12 +34,12 @@ export default function WatermarkApp() {
       <main
         className={cn(
           'flex flex-1 flex-col items-center px-4 md:px-6',
-          activeTab === 'xhs' ? 'pt-0' : cn('pb-[239px]', app.step !== 'upload' && 'pt-6 md:pt-10'),
+          activeTab === 'parser' ? 'pt-0' : cn('pb-[239px]', app.step !== 'upload' && 'pt-6 md:pt-10'),
         )}
       >
         {/* View 1: Watermark Remover */}
         <div hidden={activeTab !== 'watermark'} className="flex w-full flex-1 justify-center">
-          {/* 初始上传态与小红书解析一致：在 Dock 模糊区以上的空间内垂直居中 */}
+          {/* 初始上传态与链接解析一致：在 Dock 模糊区以上的空间内垂直居中 */}
           <div className={cn('flex w-full max-w-[960px] flex-col gap-6', app.step === 'upload' && 'justify-center')}>
             <FloatingAlert message={app.error} onDismiss={() => app.setError(null)} />
 
@@ -125,9 +125,9 @@ export default function WatermarkApp() {
           </div>
         </div>
 
-        {/* View 2: Xiaohongshu Parser */}
-        <div hidden={activeTab !== 'xhs'} className="flex w-full flex-1 justify-center">
-          <XHSApp />
+        {/* View 2: Media Parser */}
+        <div hidden={activeTab !== 'parser'} className="flex w-full flex-1 justify-center">
+          <MediaParserApp />
         </div>
       </main>
 

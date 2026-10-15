@@ -57,6 +57,10 @@ func (f *fakeBackend) Image(context.Context, string, int) (*os.File, string, str
 	file, err := tempResult(f.picture)
 	return file, "image/png", "01.png", err
 }
+func (f *fakeBackend) Video(context.Context, string) (*os.File, string, string, error) {
+	file, err := tempResult([]byte("\x00\x00\x00\x18ftypisom original video"))
+	return file, "video/mp4", "video.mp4", err
+}
 func (f *fakeBackend) Archive(context.Context, string) (*os.File, string, error) {
 	file, err := tempResult(f.archive)
 	return file, "note.zip", err
@@ -121,7 +125,7 @@ func TestBusinessToolsOverHTTP(t *testing.T) {
 		return done
 	}
 	tools, err := session.ListTools(ctx, nil)
-	if err != nil || len(tools.Tools) != 10 {
+	if err != nil || len(tools.Tools) != 12 {
 		t.Fatalf("production tool set: %v %v", tools, err)
 	}
 	image := "data:image/png;base64," + base64.StdEncoding.EncodeToString(picture)
@@ -181,6 +185,19 @@ func TestBusinessToolsOverHTTP(t *testing.T) {
 	dyZip := submit("get_douyin_archive", map[string]any{"requestId": "douyin-archive-1", "resultId": "douyin-parsed"})
 	if !bytes.Equal(call("get_task_result", map[string]any{"jobId": dyZip.ID}).Content[0].(*mcp.EmbeddedResource).Resource.Blob, archive) {
 		t.Fatal("Douyin ZIP delivery mismatch")
+	}
+
+	for _, platform := range []string{"xhs", "douyin"} {
+		video := submit("get_"+platform+"_video", map[string]any{"requestId": platform + "-video-download", "resultId": "video-result"})
+		result := call("get_task_result", map[string]any{"jobId": video.ID})
+		resource, ok := result.Content[0].(*mcp.EmbeddedResource)
+		if !ok || resource.Resource.MIMEType != "video/mp4" || !bytes.Equal(resource.Resource.Blob, []byte("\x00\x00\x00\x18ftypisom original video")) {
+			t.Fatal("video must be delivered as original binary resource")
+		}
+		invalid, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "upscale_image", Arguments: map[string]any{"requestId": platform + "-video-upscale", "sourceJobId": video.ID}})
+		if err != nil || !invalid.IsError {
+			t.Fatal("video was accepted for image processing")
+		}
 	}
 	invalid, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "parse_douyin_item", Arguments: map[string]any{"requestId": "douyin-invalid", "text": "https://evil.test"}})
 	if err != nil || !invalid.IsError {

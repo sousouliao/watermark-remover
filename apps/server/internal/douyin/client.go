@@ -20,6 +20,7 @@ type Item struct {
 	Description string   `json:"description"`
 	AuthorName  string   `json:"authorName"`
 	Sources     []string `json:"-"`
+	VideoSource string   `json:"-"`
 }
 
 type Client struct {
@@ -112,9 +113,21 @@ func (c *Client) Parse(ctx context.Context, text string) (Item, error) {
 	if d.ID != id {
 		return Item{}, httpapi.Fail(502, "作品解析结果与链接不匹配")
 	}
-	// Phase one is images-only: videos and live-photo mixed downloads never enter Seedream.
+	item := Item{ID: d.ID, Title: d.Description, Description: d.Description, AuthorName: d.Author}
+	if d.Type == "视频" {
+		var address string
+		if json.Unmarshal(d.Downloads, &address) != nil {
+			return Item{}, httpapi.Fail(502, "作品返回了无效视频")
+		}
+		u, err := url.Parse(address)
+		if err != nil || u.Scheme != "https" || u.User != nil || (u.Port() != "" && u.Port() != "443") || !videoHost(strings.ToLower(u.Hostname())) {
+			return Item{}, httpapi.Fail(502, "作品返回了无效视频地址")
+		}
+		item.VideoSource = address
+		return item, nil
+	}
 	if d.Type != "图集" {
-		return Item{}, httpapi.Fail(422, "目前仅支持抖音普通图集，暂不支持视频或实况作品")
+		return Item{}, httpapi.Fail(422, "暂不支持实况或其他作品类型")
 	}
 	var images []string
 	if json.Unmarshal(d.Downloads, &images) != nil || len(images) == 0 || len(images) > 80 {
@@ -126,5 +139,6 @@ func (c *Client) Parse(ctx context.Context, text string) (Item, error) {
 			return Item{}, httpapi.Fail(502, "作品返回了无效图片地址")
 		}
 	}
-	return Item{ID: d.ID, Title: d.Description, Description: d.Description, AuthorName: d.Author, Sources: images}, nil
+	item.Sources = images
+	return item, nil
 }

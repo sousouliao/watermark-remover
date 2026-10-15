@@ -68,9 +68,11 @@ func New(cfg config.Config, logger *slog.Logger) (*http.Server, error) {
 	mux.Handle("POST /api/upscale", protect(bounded(enhancement.Handler)))
 	mux.Handle("POST /api/xhs/parse", protect(notes.ParseHandler))
 	mux.Handle("GET /api/xhs/results/{id}/images/{index}", protect(notes.ImageHandler))
+	mux.Handle("GET /api/xhs/results/{id}/video", protect(notes.VideoHandler))
 	mux.Handle("GET /api/xhs/results/{id}/archive", protect(notes.ArchiveHandler))
 	mux.Handle("POST /api/douyin/parse", protect(works.ParseHandler))
 	mux.Handle("GET /api/douyin/results/{id}/images/{index}", protect(works.ImageHandler))
+	mux.Handle("GET /api/douyin/results/{id}/video", protect(works.VideoHandler))
 	mux.Handle("GET /api/douyin/results/{id}/archive", protect(works.ArchiveHandler))
 	crossOrigin := cors.New(cors.Options{AllowedOrigins: []string{cfg.FrontendURL}, AllowedMethods: []string{"GET", "POST"}, AllowedHeaders: []string{"Authorization", "Content-Type"}, ExposedHeaders: []string{"Content-Disposition"}, MaxAge: 600})
 	app := &http.Server{Addr: cfg.Address, Handler: logging(logger, crossOrigin.Handler(mux)), ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}

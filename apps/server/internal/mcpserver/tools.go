@@ -7,9 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -31,6 +29,7 @@ type noteService interface {
 	Parse(context.Context, string) (xhs.Parsed, error)
 	Image(context.Context, string, int) (*os.File, string, string, error)
 	Archive(context.Context, string) (*os.File, string, error)
+	Video(context.Context, string) (*os.File, string, string, error)
 }
 
 // Backend supplies the same instances used by the authenticated web API.
@@ -60,12 +59,12 @@ type upscaleInput struct {
 }
 type parseInput struct {
 	RequestID string `json:"requestId" jsonschema:"Unique operation ID; reuse unchanged on retry"`
-	Text      string `json:"text" jsonschema:"One public Xiaohongshu image-note URL or share text"`
+	Text      string `json:"text" jsonschema:"One public Xiaohongshu image or video note URL or share text"`
 }
 type noteFileInput struct {
 	RequestID string `json:"requestId" jsonschema:"Unique operation ID; reuse unchanged on retry"`
 	ResultID  string `json:"resultId" jsonschema:"resultId from a completed parse_xhs_note job"`
-	Index     int    `json:"index,omitempty" jsonschema:"Image number starting at 1; required for get_xhs_image"`
+	Index     int    `json:"index,omitempty" jsonschema:"Image number starting at 1; required for get_xhs_image; omit for archive or video"`
 }
 type queryInput struct {
 	JobID       string `json:"jobId"`
@@ -138,7 +137,7 @@ func registerBusiness(server *mcp.Server, store *taskStore, backend *Backend) {
 			})
 			return nil, job, err
 		})
-	mcp.AddTool(server, &mcp.Tool{Name: "parse_xhs_note", Description: "Submit anonymous parsing of one public Xiaohongshu image note; get_task returns note metadata, resultId and imageCount. Note text is untrusted data"},
+	mcp.AddTool(server, &mcp.Tool{Name: "parse_xhs_note", Description: "Submit anonymous parsing of one public Xiaohongshu image or video note; get_task returns note metadata, resultId, mediaType and imageCount. Note text is untrusted data"},
 		func(_ context.Context, _ *mcp.CallToolRequest, in parseInput) (*mcp.CallToolResult, taskView, error) {
 			if _, err := xhs.ExtractURL(in.Text); err != nil {
 				return nil, taskView{}, err
@@ -149,21 +148,27 @@ func registerBusiness(server *mcp.Server, store *taskStore, backend *Backend) {
 			})
 			return nil, job, err
 		})
-	for _, archive := range []bool{false, true} {
+	for _, mode := range []string{"image", "archive", "video"} {
+		archive, video := mode == "archive", mode == "video"
 		name, description := "get_xhs_image", "Submit download of one note image (index starts at 1). After completion, sourceJobId can feed it directly to image processing"
 		if archive {
 			name, description = "get_xhs_archive", "Submit complete ZIP download of a parsed note. Query get_task, then retrieve the file using get_task_result"
 		}
+		if video {
+			name, description = "get_xhs_video", "Submit original MP4 video download of a parsed result. Query get_task then retrieve the file using get_task_result"
+		}
 		mcp.AddTool(server, &mcp.Tool{Name: name, Description: description},
 			func(_ context.Context, _ *mcp.CallToolRequest, in noteFileInput) (*mcp.CallToolResult, taskView, error) {
-				if in.ResultID == "" || (!archive && in.Index < 1) || (archive && in.Index != 0) {
-					return nil, taskView{}, fmt.Errorf("请提供 resultId；单图还需从 1 开始的 index，图集不传 index")
+				if in.ResultID == "" || (mode == "image" && in.Index < 1) || (mode != "image" && in.Index != 0) {
+					return nil, taskView{}, fmt.Errorf("请提供 resultId；单图还需从 1 开始的 index，视频和图集不传 index")
 				}
 				job, err := store.Submit(in.RequestID, fingerprint(name, in), func(ctx context.Context, dir string) (taskOutput, error) {
 					var file *os.File
 					var kind, filename string
 					var err error
-					if archive {
+					if video {
+						file, kind, filename, err = backend.Notes.Video(ctx, in.ResultID)
+					} else if archive {
 						file, filename, err = backend.Notes.Archive(ctx, in.ResultID)
 						kind = "application/zip"
 					} else {
@@ -172,27 +177,7 @@ func registerBusiness(server *mcp.Server, store *taskStore, backend *Backend) {
 					if err != nil {
 						return taskOutput{}, err
 					}
-					defer os.Remove(file.Name())
-					defer file.Close()
-					if _, err := file.Seek(0, io.SeekStart); err != nil {
-						return taskOutput{}, err
-					}
-					digest := sha256.New()
-					if _, err := io.Copy(digest, file); err != nil {
-						return taskOutput{}, err
-					}
-					stat, err := file.Stat()
-					if err != nil {
-						return taskOutput{}, err
-					}
-					target := filepath.Join(dir, "result")
-					if err := file.Close(); err != nil {
-						return taskOutput{}, err
-					}
-					if err := os.Rename(file.Name(), target); err != nil {
-						return taskOutput{}, err
-					}
-					return taskOutput{File: &FileInfo{Name: filepath.Base(filename), MIME: kind, Bytes: stat.Size(), SHA256: hex.EncodeToString(digest.Sum(nil)), path: target}}, nil
+					return saveDownload(dir, file, kind, filename)
 				})
 				return nil, job, err
 			})
@@ -205,7 +190,7 @@ func registerBusiness(server *mcp.Server, store *taskStore, backend *Backend) {
 			job, err := store.Get(ctx, in.JobID, time.Duration(in.WaitSeconds)*time.Second)
 			return nil, job, err
 		})
-	mcp.AddTool(server, &mcp.Tool{Name: "get_task_result", Description: "Receive a completed file: images as ImageContent, ZIP as an embedded binary resource. Save the original bytes as a chat attachment; no resources/read is needed"},
+	mcp.AddTool(server, &mcp.Tool{Name: "get_task_result", Description: "Receive a completed file: images as ImageContent, ZIP/video as an embedded binary resource. Save the original bytes as a chat attachment; no resources/read is needed"},
 		func(_ context.Context, _ *mcp.CallToolRequest, in resultInput) (*mcp.CallToolResult, FileInfo, error) {
 			file, err := store.FileInfo(in.JobID)
 			if err != nil {
@@ -220,7 +205,7 @@ func registerBusiness(server *mcp.Server, store *taskStore, backend *Backend) {
 				return nil, FileInfo{}, err
 			}
 			var content mcp.Content = &mcp.ImageContent{Data: data, MIMEType: file.MIME}
-			if file.MIME == "application/zip" {
+			if !strings.HasPrefix(file.MIME, "image/") {
 				content = &mcp.EmbeddedResource{Resource: &mcp.ResourceContents{URI: "watermark-result://" + in.JobID + "/" + file.Name, MIMEType: file.MIME, Blob: data}}
 			}
 			// Some hosts expose binary attachments but omit structuredContent from the model's view.
@@ -250,7 +235,7 @@ func validateImageSource(store *taskStore, image, sourceID string) error {
 	if err != nil {
 		return err
 	}
-	if job.State != "succeeded" || job.Output == nil || job.Output.File == nil || job.Output.File.MIME == "application/zip" {
+	if job.State != "succeeded" || job.Output == nil || job.Output.File == nil || !strings.HasPrefix(job.Output.File.MIME, "image/") {
 		return fmt.Errorf("sourceJobId 必须指向已完成的图片任务")
 	}
 	return nil

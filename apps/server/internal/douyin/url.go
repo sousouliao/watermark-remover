@@ -25,6 +25,9 @@ func imageHost(host string) bool {
 	return strings.HasSuffix(host, ".douyinpic.com")
 }
 
+// Video CDN family, validated again on every redirect and public-IP dial.
+func videoHost(host string) bool { return strings.HasSuffix(host, ".douyinvod.com") }
+
 func itemID(u *url.URL) string {
 	pattern := workPath
 	if u.Hostname() == "www.iesdouyin.com" {

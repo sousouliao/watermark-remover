@@ -74,7 +74,7 @@ func TestClientContract(t *testing.T) {
 		code       int
 	}{
 		{"images", fmt.Sprintf(`{"id":%q,"type":"图集","desc":"title","nickname":"author","downloads":["https://p3-sign.douyinpic.com/a"]}`, sampleID), 0},
-		{"video", fmt.Sprintf(`{"id":%q,"type":"视频","downloads":"https://video.test/a"}`, sampleID), 422},
+		{"video", fmt.Sprintf(`{"id":%q,"type":"视频","downloads":"https://video.test/a"}`, sampleID), 502},
 		{"live photo", fmt.Sprintf(`{"id":%q,"type":"实况","downloads":[["image","video"]]}`, sampleID), 422},
 		{"unknown type", fmt.Sprintf(`{"id":%q,"type":"other"}`, sampleID), 422},
 		{"missing", "null", 422},
@@ -167,5 +167,18 @@ func TestImageAddresses(t *testing.T) {
 				t.Fatalf("unsafe image address accepted: %v", err)
 			}
 		})
+	}
+}
+
+func TestVideoAllowlist(t *testing.T) {
+	for host, valid := range map[string]bool{
+		"v3.douyinvod.com": true, "v26-web.douyinvod.com": true,
+		"douyinvod.com": false, "evildouyinvod.com": false,
+		"v3.douyinvod.com.evil.test": false, "127.0.0.1": false,
+		"p3.douyinpic.com": false,
+	} {
+		if videoHost(host) != valid {
+			t.Errorf("video host %s", host)
+		}
 	}
 }

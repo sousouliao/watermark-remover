@@ -4,10 +4,12 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	"mime"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -57,4 +59,29 @@ func (s *Server) download(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	http.ServeContent(w, r, info.Name, time.Time{}, file)
+}
+
+// saveDownload takes ownership of a completed download and preserves its original bytes.
+func saveDownload(dir string, file *os.File, kind, filename string) (taskOutput, error) {
+	defer os.Remove(file.Name())
+	defer file.Close()
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		return taskOutput{}, err
+	}
+	digest := sha256.New()
+	if _, err := io.Copy(digest, file); err != nil {
+		return taskOutput{}, err
+	}
+	stat, err := file.Stat()
+	if err != nil {
+		return taskOutput{}, err
+	}
+	target := filepath.Join(dir, "result")
+	if err := file.Close(); err != nil {
+		return taskOutput{}, err
+	}
+	if err := os.Rename(file.Name(), target); err != nil {
+		return taskOutput{}, err
+	}
+	return taskOutput{File: &FileInfo{Name: filepath.Base(filename), MIME: kind, Bytes: stat.Size(), SHA256: hex.EncodeToString(digest.Sum(nil)), path: target}}, nil
 }

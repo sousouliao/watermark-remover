@@ -24,12 +24,10 @@ type saved struct {
 	Expires time.Time
 	Created time.Time
 }
-type mediaSource interface {
-	Get(context.Context, string) (*http.Response, error)
-}
 type Service struct {
 	client                    *Client
-	media                     mediaSource
+	media                     media.Source
+	videoMedia                media.Source
 	mu                        sync.Mutex
 	results                   map[string]saved
 	parseSlots, downloadSlots chan struct{}
@@ -37,7 +35,7 @@ type Service struct {
 }
 
 func New(client *Client) *Service {
-	return &Service{client: client, media: media.NewClient(imageHost), results: make(map[string]saved), parseSlots: make(chan struct{}, 1), downloadSlots: make(chan struct{}, 2), now: time.Now}
+	return &Service{client: client, media: media.NewClient(imageHost), videoMedia: media.NewVideoClient(videoHost), results: make(map[string]saved), parseSlots: make(chan struct{}, 1), downloadSlots: make(chan struct{}, 2), now: time.Now}
 }
 
 func acquire(slots chan struct{}) error {
@@ -91,7 +89,11 @@ func (s *Service) Parse(ctx context.Context, text string) (Parsed, error) {
 	}
 	s.results[id] = saved{item, expires, now}
 	s.mu.Unlock()
-	return Parsed{ResultID: id, Item: item, MediaType: "images", ImageCount: len(item.Sources), ExpiresAt: expires}, nil
+	mediaType := "images"
+	if item.VideoSource != "" {
+		mediaType = "video"
+	}
+	return Parsed{ResultID: id, Item: item, MediaType: mediaType, ImageCount: len(item.Sources), ExpiresAt: expires}, nil
 }
 
 func (s *Service) ParseHandler(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +115,14 @@ func (s *Service) ParseHandler(w http.ResponseWriter, r *http.Request) {
 		path := fmt.Sprintf("/api/douyin/results/%s/images/%d", id, i+1)
 		images[i] = map[string]any{"index": i + 1, "previewUrl": path, "downloadUrl": path + "?download=1"}
 	}
-	httpapi.Success(w, map[string]any{"resultId": id, "item": item, "mediaType": "images", "images": images, "zipUrl": "/api/douyin/results/" + id + "/archive", "expiresAt": expires.UTC().Format(time.RFC3339)})
+	payload := map[string]any{"resultId": id, "item": item, "mediaType": parsed.MediaType, "images": images, "expiresAt": expires.UTC().Format(time.RFC3339)}
+	if parsed.MediaType == "video" {
+		path := "/api/douyin/results/" + id + "/video"
+		payload["video"] = map[string]string{"previewUrl": path, "downloadUrl": path + "?download=1"}
+	} else {
+		payload["zipUrl"] = "/api/douyin/results/" + id + "/archive"
+	}
+	httpapi.Success(w, payload)
 }
 
 func (s *Service) result(id string) (Item, error) {
@@ -167,6 +176,9 @@ func (s *Service) Image(ctx context.Context, id string, index int) (*os.File, st
 	if err != nil {
 		return nil, "", "", err
 	}
+	if item.VideoSource != "" {
+		return nil, "", "", httpapi.Fail(422, "该解析结果为视频，请使用视频下载")
+	}
 	if index < 1 || index > len(item.Sources) {
 		return nil, "", "", httpapi.Fail(404, "图片不存在")
 	}
@@ -214,6 +226,9 @@ func (s *Service) Archive(ctx context.Context, id string) (*os.File, string, err
 	item, err := s.result(id)
 	if err != nil {
 		return nil, "", err
+	}
+	if item.VideoSource != "" {
+		return nil, "", httpapi.Fail(422, "该解析结果为视频，请使用视频下载")
 	}
 	if err := acquire(s.downloadSlots); err != nil {
 		return nil, "", err
@@ -267,4 +282,32 @@ func (s *Service) ArchiveHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": name}))
 	w.Header().Set("Cache-Control", "no-store")
 	http.ServeContent(w, r, name, time.Time{}, file)
+}
+
+func (s *Service) Video(ctx context.Context, id string) (*os.File, string, string, error) {
+	item, err := s.result(id)
+	if err != nil {
+		return nil, "", "", err
+	}
+	if item.VideoSource == "" {
+		return nil, "", "", httpapi.Fail(422, "该解析结果不包含视频")
+	}
+	if err := acquire(s.downloadSlots); err != nil {
+		return nil, "", "", err
+	}
+	defer func() { <-s.downloadSlots }()
+	file, err := media.DownloadVideo(ctx, s.videoMedia, item.VideoSource)
+	if err != nil {
+		return nil, "", "", err
+	}
+	return file, "video/mp4", item.ID + ".mp4", nil
+}
+
+func (s *Service) VideoHandler(w http.ResponseWriter, r *http.Request) {
+	file, _, name, err := s.Video(r.Context(), r.PathValue("id"))
+	if err != nil {
+		httpapi.WriteError(w, err)
+		return
+	}
+	media.ServeVideo(w, r, file, name)
 }

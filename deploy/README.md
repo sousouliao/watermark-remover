@@ -77,6 +77,6 @@ docker run --name watermark-douk --restart unless-stopped \
   -it "${DOUK_IMAGE:?set a verified DouK image digest first}"
 ```
 
-官方入口为交互菜单，选择「Web API 模式」，确认容器重启后仍进入该模式再接入 systemd 后端；不要把仅容器启动视作 API 就绪。仅从主机访问 `http://127.0.0.1:5555/docs` / `/openapi.json`，核对 `/douyin/share`、`/douyin/detail` 与响应字段，再以一条真实普通图集验收 Go 的解析、单图、ZIP 及视频 422。上游限流、访问限制或未来接口变化仍可能阻止真实解析；Cookie 不通过本应用收集或传入。
+官方入口为交互菜单，选择「Web API 模式」，确认容器重启后仍进入该模式再接入 systemd 后端；不要把仅容器启动视作 API 就绪。仅从主机访问 `http://127.0.0.1:5555/docs` / `/openapi.json`，核对 `/douyin/share`、`/douyin/detail` 与响应字段，再以真实普通图集和视频验收 Go 的解析、单图、ZIP 及 MP4 原文件下载。上游限流、访问限制或未来接口变化仍可能阻止真实解析；Cookie 不通过本应用收集或传入。
 
-**不开放公网 5555**，不增加 Nginx 的 DouK 代理，也不为 5555 开安全组；XHS 原有 `127.0.0.1:5556` 不变。Go 配置 `DOUYIN_API_URL=http://127.0.0.1:5555`。CDN 白名单的初始策略与真实样本 TODO 见 [Go API 说明](../apps/server/README.md#抖音图集下载后端)。本任务未操作生产主机。
+**不开放公网 5555**，不增加 Nginx 的 DouK 代理，也不为 5555 开安全组；XHS 原有 `127.0.0.1:5556` 不变。Go 配置 `DOUYIN_API_URL=http://127.0.0.1:5555`。CDN 白名单的初始策略与真实样本 TODO 见 [Go API 说明](../apps/server/README.md#抖音解析与下载)。本任务未操作生产主机。

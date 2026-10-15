@@ -21,6 +21,7 @@ type Note struct {
 	Description string   `json:"description"`
 	AuthorName  string   `json:"authorName"`
 	Sources     []string `json:"-"`
+	VideoSource string   `json:"-"`
 }
 type Client struct {
 	http  *http.Client
@@ -118,8 +119,11 @@ func (c *Client) Parse(ctx context.Context, text string) (Note, error) {
 	if d == nil || d.ID == "" || len(d.Images) == 0 {
 		return Note{}, httpapi.Fail(422, "无法解析这条笔记，请重新复制分享链接或检查访问限制")
 	}
-	if d.Type != "图文" && d.Type != "图集" {
-		return Note{}, httpapi.Fail(422, "目前仅支持图文笔记")
+	if d.Type != "图文" && d.Type != "图集" && d.Type != "视频" {
+		return Note{}, httpapi.Fail(422, "暂不支持这种笔记类型")
+	}
+	if d.Type == "视频" && len(d.Images) != 1 {
+		return Note{}, httpapi.Fail(502, "笔记返回了无效视频")
 	}
 	match := noteID.FindStringSubmatch(u.Path)
 	if len(match) != 2 || match[1] != d.ID || len(d.Images) > 80 {
@@ -128,8 +132,12 @@ func (c *Client) Parse(ctx context.Context, text string) (Note, error) {
 	for _, value := range d.Images {
 		u, err := url.Parse(value)
 		if err != nil || u.Scheme != "https" || u.User != nil || (u.Port() != "" && u.Port() != "443") || !media.XHSHost(strings.ToLower(u.Hostname())) {
-			return Note{}, httpapi.Fail(502, "笔记返回了无效图片地址")
+			return Note{}, httpapi.Fail(502, "笔记返回了无效媒体地址")
 		}
 	}
-	return Note{d.ID, d.Title, d.Description, d.Author, d.Images}, nil
+	note := Note{ID: d.ID, Title: d.Title, Description: d.Description, AuthorName: d.Author, Sources: d.Images}
+	if d.Type == "视频" {
+		note.VideoSource, note.Sources = d.Images[0], nil
+	}
+	return note, nil
 }

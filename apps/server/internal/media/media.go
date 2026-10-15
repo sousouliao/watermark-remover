@@ -43,8 +43,9 @@ func DecodeDataURL(value string) ([]byte, string, error) {
 }
 
 type Client struct {
-	client  *http.Client
-	allowed func(string) bool
+	client   *http.Client
+	allowed  func(string) bool
+	maxBytes int64
 }
 
 func XHSHost(host string) bool {
@@ -55,7 +56,7 @@ func PageHost(host string) bool {
 }
 
 func NewClient(allowed func(string) bool) *Client {
-	c := &Client{allowed: allowed}
+	c := &Client{allowed: allowed, maxBytes: MaxImageBytes}
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.Proxy = nil
 	transport.DialContext = publicDial
@@ -90,15 +91,15 @@ func (c *Client) Get(ctx context.Context, value string) (*http.Response, error) 
 	req.Header.Set("Accept-Encoding", "identity")
 	response, err := c.client.Do(req)
 	if err != nil {
-		return nil, httpapi.Fail(502, "暂时无法取得图片资源")
+		return nil, httpapi.Fail(502, "暂时无法取得媒体资源")
 	}
 	if response.StatusCode != 200 {
 		response.Body.Close()
-		return nil, httpapi.Fail(502, "图片资源不可用，请重新解析")
+		return nil, httpapi.Fail(502, "媒体资源不可用，请重新解析")
 	}
-	if response.ContentLength > MaxImageBytes {
+	if response.ContentLength > c.maxBytes {
 		response.Body.Close()
-		return nil, httpapi.Fail(502, "图片超过 30 MB 限制")
+		return nil, httpapi.Fail(502, "媒体超过下载大小限制")
 	}
 	return response, nil
 }

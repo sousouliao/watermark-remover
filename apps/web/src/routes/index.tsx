@@ -33,7 +33,7 @@ function Home() {
         <div className="flex size-12 items-center justify-center rounded-full bg-foreground text-background">
           <Eraser className="size-5" />
         </div>
-        <PageHeading title="Watermark Remover" description="登录后使用图片去水印与小红书解析" />
+        <PageHeading title="Watermark Remover" description="登录后使用图片去水印与链接解析" />
       </div>
 
       <div className="w-full max-w-sm">

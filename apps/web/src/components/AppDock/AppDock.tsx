@@ -5,7 +5,7 @@ import { EASE_OUT, SPRING_LAYOUT } from '@/lib/ease'
 import { useAuthStore } from '@/stores/auth'
 import './app-dock.css'
 
-type AppTab = 'watermark' | 'xhs'
+type AppTab = 'watermark' | 'parser'
 type ThemeMode = 'system' | 'light' | 'dark'
 
 const themes = [
@@ -99,12 +99,12 @@ export default function AppDock({ activeTab, onTabChange }: {
             <button
               type="button"
               className="app-dock-app"
-              aria-label="小红书解析"
-              aria-pressed={activeTab === 'xhs'}
-              onClick={() => onTabChange('xhs')}
+              aria-label="链接解析"
+              aria-pressed={activeTab === 'parser'}
+              onClick={() => onTabChange('parser')}
             >
               <BookOpen aria-hidden="true" />
-              <span className="app-dock-reveal-label">小红书解析</span>
+              <span className="app-dock-reveal-label">链接解析</span>
             </button>
           </nav>
           <span className="app-dock-separator" aria-hidden="true" />
