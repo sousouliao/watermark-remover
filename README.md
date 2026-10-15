@@ -72,7 +72,7 @@ pnpm install
 pnpm start:web      # 前端 (http://localhost:5173)，API 使用正式后端
 ```
 
-先在[正式站](https://watermark-remover-rose-chi.vercel.app)登录，再从开发者工具 → Application → Session Storage 复制 `watermark-session`，通过本地登录页「导入线上会话」进入。正式 OAuth 回调固定在线上；本地导入的是真实会话，处理和下载请求也使用正式服务。
+先在[正式站](https://watermark-remover-ui.vercel.app)登录，再从开发者工具 → Application → Session Storage 复制 `watermark-session`，通过本地登录页「导入线上会话」进入。正式 OAuth 回调固定在线上；本地导入的是真实会话，处理和下载请求也使用正式服务。
 
 调试 Go 时，在 `apps/web/.env.local` 中设置 `DEV_API_TARGET=http://127.0.0.1:3000`，重启 Web，再执行 `pnpm start:server`（或 `pnpm dev` 同时启动两者）。按[后端配置与接口](./apps/server/README.md)配置 `apps/server/.env`；密钥只供后端读取，不要放入前端环境变量。详情见 [Web 开发说明](./apps/web/README.md)。
 

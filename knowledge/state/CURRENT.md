@@ -8,7 +8,7 @@
 
 ## Go 迁移与分离部署
 
-用户已确认 Go 统一后端、Vercel 前端、公网 IP HTTPS 和仅允许 GitHub ID 37927306 的登录。Go 迁移及下载后端、前端登录、部署配置已实现，本地 Go race 测试/vet、前端构建/类型检查与改动文件 lint 已通过。前端已发布 https://watermark-remover-rose-chi.vercel.app。2026-10-15 用户确认 Go 后端云端部署与真实联调已完成，无问题；本阶段已收尾，原源码交付与 pending 配置阻塞不再列为当前待办。验收依据为用户确认，详见[实施记录](../logs/2026-10-13-go-api-migration.md)。
+用户已确认 Go 统一后端、Vercel 前端、公网 IP HTTPS 和仅允许 GitHub ID 37927306 的登录。Go 迁移及下载后端、前端登录、部署配置已实现，本地 Go race 测试/vet、前端构建/类型检查与改动文件 lint 已通过。前端已发布 https://watermark-remover-ui.vercel.app（2026-10-15 由 watermark-remover-rose-chi.vercel.app 更换）。2026-10-15 用户确认 Go 后端云端部署与真实联调已完成，无问题；本阶段已收尾，原源码交付与 pending 配置阻塞不再列为当前待办。验收依据为用户确认，详见[实施记录](../logs/2026-10-13-go-api-migration.md)。
 
 ## React 前端迁移
 
