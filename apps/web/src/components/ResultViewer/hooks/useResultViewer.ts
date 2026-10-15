@@ -162,6 +162,7 @@ export function useResultViewer({
     isUpscaling,
     isUpscaled,
     upscaleError,
+    setUpscaleError,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,

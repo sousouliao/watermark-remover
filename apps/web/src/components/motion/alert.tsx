@@ -157,7 +157,7 @@ export function Alert({
                 }}
                 style={{ ...style, ...gate.style, originY: 0, transitionTimingFunction: EASE_OUT_CSS }}
                 className={cn(
-                  'relative w-full rounded-xl p-3 text-xs transition-colors duration-200',
+                  'relative w-full rounded-2xl p-3 text-xs transition-colors duration-200',
                   VARIANT_CLASS[variant],
                   className,
                 )}

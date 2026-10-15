@@ -15,10 +15,12 @@
 `apps/web` 已完成 PASS 1、PASS 2 与 PASS 3，并完成向 beUI (beui.dev) 交互动效规范与黑白极简工作室设计（Monochrome Studio）的全面重构：
 1. 彻底淘汰原有的紫色调（`hsl(243, 75%, 59%)` 及各类 purple/violet 散落类），全站贯彻**纯黑白极简单色调**与**严格零阴影 (Zero-Shadow)**；
 2. 基础组件全面替换为 beUI 原生组件：`RangeSlider` / `InlineSlider`（一体化内嵌 Label 与读数、物理弹簧与过字裂开避让手柄、点状刻度）、`FileUpload`（beUI 原装居中上传组件，消除 hover 浮点缩放导致的亚像素边框模糊/裁切）、`Card`（组合式 parts 与 interactive 缩放）、`Loader`（17 种高拟真动画变体）、`Input`（错误抖动与状态反馈）、`MotionButton` / `StatefulButton`（字符流动动画）、`Alert`（Animated Alert 弹性进退场）、`AnimatedBadge`（状态图标轮转、文字翻滚与微呼吸）、`ReasoningText`（AI 执行状态分步 Shimmer 与字符过渡）；
-3. 顶栏右侧保留头像与登录名整体胶囊及 Spring 动效下拉菜单；主题控制已移至底部 `AppDock`，支持系统、浅色、深色；
+3. 2026-10-15 起全站移除顶栏（含 logo 与站名）；头像与退出登录菜单、主题控制（系统、浅色、深色）均在底部 `AppDock` 内；
 4. 前端类型检查、生产构建及 ESLint 校验全部 0 错误通过，详见[beUI 重构记录](../logs/2026-10-13-beui-monochrome-redesign.md)及[UI 细节调优与处理状态重构记录](../logs/2026-10-14-ui-polish-and-processing-overlay-redesign.md)；
 5. 彻底解决“全图消除”与“涂抹消除”两模式同图不同尺寸的渲染撕裂：废除双 DOM 容器，改为由统一的 `MaskEditor` 单 Canvas 底座承载两种模式，确保 100% 像素级同一尺寸；同时将原本局促的画笔滑块从 `w-36` 拓展至大方舒展的 `w-72`（288px）；
-6. 新增小红书无水印解析与图集下载前端页面（`XHSApp`），并通过底部应用导航实现小红书解析与图片去水印工作台无缝切换；导航现已按用户选定的 Paul Wong 参考站替换为 `AppDock`，复刻 301→420px 胶囊展开、61px 高度、主题按钮与八层渐进模糊，保留原有应用状态与导入联动，支持单图受控流式下载、ZIP 打包下载与一键送入去水印画布。历史实现见[小红书前端与 Dock 实施记录](../logs/2026-10-14-xhs-frontend-dock-implementation.md)，当前外观与验证见[参考站 Dock 还原记录](../logs/2026-10-14-paul-wong-dock.md)。Go 后端真实联调已完成，验收状态见上文「Go 迁移与分离部署」。
+6. 新增小红书无水印解析与图集下载前端页面（`XHSApp`），并通过底部应用导航实现小红书解析与图片去水印工作台无缝切换；导航现已按用户选定的 Paul Wong 参考站替换为 `AppDock`，复刻 301→420px 胶囊展开、61px 高度、主题按钮与八层渐进模糊，保留原有应用状态，支持单图受控流式下载与 ZIP 打包下载。2026-10-15 按用户要求移除结果卡片“去水印”导入入口，未出结果时解析区居中，解析输入、粘贴/清空、解析及下载操作统一采用官方 beUI `Input`、`Button` 和 `StatefulButton`，移除业务层手写 loading 及控件尺寸覆盖；图片预览已替换为 beUI 官方 `ImageViewer`，支持缩放拖动、图集切换、Esc 关闭和焦点恢复，类型检查、构建、改动文件 lint 及本地模拟图集交互验证通过。历史实现见[小红书前端与 Dock 实施记录](../logs/2026-10-14-xhs-frontend-dock-implementation.md)，Dock 外观与验证见[参考站 Dock 还原记录](../logs/2026-10-14-paul-wong-dock.md)。Go 后端真实联调已完成，验收状态见上文「Go 迁移与分离部署」。
+
+2026-10-15 按用户要求对全站 UI 整体重排，解决“组件叠加”：圆角收敛为控件 `rounded-full`、表面 `rounded-2xl` 两档；业务页统一使用 `motion/button/base`；小红书输入、粘贴/清空和解析合并为一条胶囊；去水印工作台移除步骤条、工具栏外层胶囊与处理态 HUD 卡片，结果页对比切换与下载并入同一行；错误统一用顶部悬浮提示。`AppDock` 外观与交互保持原样，仅追加头像。涂抹画笔工具移到画布下方（四档预设、图标撤销/清空），画布上不再覆盖控件。规范见 [DESIGN.md](../../DESIGN.md) §1.3、§5，类型检查、构建与改动文件 lint 通过；上传、编辑页与 Dock 已在浏览器模拟登录下目视验收，处理中与结果页待真实后端验收，详见[重排记录](../logs/2026-10-15-ui-restructure.md)。
 
 ## 下一步
 

@@ -28,6 +28,11 @@
   outline-offset: -1.5px;
 }
 
+/* 头像与胶囊右端同心：35px 头像中心距右缘 30.5px，等于胶囊半高。 */
+.app-dock[data-account='true'] {
+  padding-right: 13px;
+}
+
 .app-dock-apps {
   display: flex;
   flex: 1;
@@ -154,6 +159,117 @@
   stroke-width: 2;
 }
 
+.app-dock-account {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.app-dock-avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+}
+
+.app-dock-avatar img,
+.app-dock-avatar span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  outline: 1.5px solid transparent;
+  outline-offset: 2px;
+  object-fit: cover;
+  transition: outline-color 200ms ease;
+}
+
+.app-dock-avatar span {
+  background: #fff;
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.app-dock-avatar:hover img,
+.app-dock-avatar:hover span {
+  outline-color: rgb(255 255 255 / 39%);
+}
+
+.app-dock-avatar[aria-expanded='true'] img,
+.app-dock-avatar[aria-expanded='true'] span {
+  outline-color: #fff;
+}
+
+/* 菜单右缘对齐胶囊右缘，底部留出 13px 内边距和 8px 间隙。 */
+.app-dock-menu {
+  position: absolute;
+  right: -13px;
+  bottom: calc(100% + 21px);
+  width: 220px;
+  padding: 6px;
+  border-radius: 24px;
+  background: #000;
+  color: #fff;
+  box-shadow:
+    0 0.602187px 0.602187px -1.25px #00000048,
+    0 2.28853px 2.28853px -2.5px #0000003f,
+    0 10px 10px -3.75px #00000019;
+}
+
+.dark .app-dock-menu {
+  outline: 1.5px solid #292929;
+  outline-offset: -1.5px;
+}
+
+.app-dock-menu-user {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px 8px;
+}
+
+.app-dock-menu-user strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-dock-menu-user span {
+  color: rgb(255 255 255 / 39%);
+  font-size: 12px;
+}
+
+.app-dock .app-dock-menu-item {
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 18px;
+  color: rgb(255 255 255 / 60%);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.app-dock .app-dock-menu-item:hover,
+.app-dock .app-dock-menu-item:focus-visible {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.app-dock .app-dock-menu-item:focus-visible {
+  outline-offset: -1px;
+}
+
+.app-dock-menu-item svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.7;
+}
+
 .app-dock-blur {
   position: fixed;
   inset: auto 0 0;
@@ -169,6 +285,14 @@
 }
 
 @media (width < 480px) {
+  .app-dock[data-account='true'] {
+    gap: 12px;
+  }
+
+  .app-dock-account-separator {
+    display: none;
+  }
+
   .app-dock[data-expanded='true'] .app-dock-app svg {
     display: none;
   }
@@ -203,5 +327,17 @@
 
   .app-dock-theme {
     width: 29px;
+  }
+
+  .app-dock-avatar {
+    width: 29px;
+    height: 29px;
+  }
+
+  .app-dock-avatar img,
+  .app-dock-avatar span {
+    width: 24px;
+    height: 24px;
+    outline-offset: 1px;
   }
 }

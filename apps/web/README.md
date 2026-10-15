@@ -11,6 +11,12 @@ pnpm --filter @watermark-remover/web type-check
 pnpm --filter @watermark-remover/web build
 ```
 
-Vite 启动或构建时由 `@tanstack/router-plugin` 生成 `src/routeTree.gen.ts`，请勿手动编辑。API 基址由 `VITE_API_BASE_URL` 配置；开发环境 `/api` 代理至 `http://127.0.0.1:3000`。部署使用根目录 `vercel.json` 的 SPA 回退配置。
+Vite 启动或构建时由 `@tanstack/router-plugin` 生成 `src/routeTree.gen.ts`，请勿手动编辑。API 基址由 `VITE_API_BASE_URL` 配置；本地开发保持留空，`/api` 默认由 Vite 代理至正式后端 `https://43.138.214.93`，只需启动 Web，无需启动 Go。
+
+正式后端的 GitHub OAuth 回调固定在线上。本地开发可在登录页输入有效会话 Token 登录，会话通过 `/api/auth/me` 验证后保存在当前标签页的 Session Storage。
+
+需要调试本地 Go 时，在 `apps/web/.env.local` 设置 `DEV_API_TARGET=http://127.0.0.1:3000`，再重启 Web 并启动 Go。`DEV_API_TARGET` 仅配置开发代理，不影响生产构建；`VITE_API_BASE_URL` 非空时会绕过开发代理。
+
+部署使用根目录 `vercel.json` 的 SPA 回退配置。
 
 Vercel 构建命令为 `pnpm --filter @watermark-remover/web build`，输出目录为 `apps/web/dist`。迁移与文档清理记录见 [PASS 3](../../knowledge/logs/2026-10-13-react-pass-3.md)。

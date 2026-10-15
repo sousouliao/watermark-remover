@@ -3,7 +3,6 @@ import type { Region } from '@/types/mask'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 
-const steps = ['上传图片', '选择与编辑', '查看结果']
 interface RemoveResponse {
   success: boolean
   data?: { image: string, model: WatermarkModel }
@@ -147,9 +146,7 @@ export function useWatermarkApp() {
     setStep('upload')
   }, [invalidateRequest, clearResult])
 
-  const currentStepIndex = step === 'upload' ? 0 : step === 'result' ? 2 : 1
   return {
-    steps,
     step,
     imageDataUrl,
     selectedModel,
@@ -159,7 +156,6 @@ export function useWatermarkApp() {
     resultModel,
     error,
     setError,
-    currentStepIndex,
     loadImage,
     handleImageSelect,
     selectModel,

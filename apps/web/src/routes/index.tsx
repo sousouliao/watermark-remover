@@ -1,8 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Eraser } from 'lucide-react'
-import { Alert, AlertContent, AlertDescription, AlertIcon } from '@/components/motion/alert'
-import { MotionButton } from '@/components/motion/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { useState } from 'react'
+import AppFooter from '@/components/AppFooter/AppFooter'
+import FloatingAlert from '@/components/FloatingAlert/FloatingAlert'
+import { Button } from '@/components/motion/button/base'
+import { StatefulButton } from '@/components/motion/button/stateful'
+import { Input } from '@/components/motion/input'
+import PageHeading from '@/components/PageHeading/PageHeading'
 import WatermarkApp from '@/pages/WatermarkApp'
 import { useAuthStore } from '@/stores/auth'
 
@@ -12,6 +16,7 @@ export const Route = createFileRoute('/')({
 })
 
 function Home() {
+  const [sessionToken, setSessionToken] = useState('')
   const authenticated = useAuthStore(state => state.authenticated)
   const busy = useAuthStore(state => state.busy)
   const error = useAuthStore(state => state.error)
@@ -21,55 +26,59 @@ function Home() {
   if (authenticated) return <WatermarkApp />
 
   return (
-    <main className="flex min-h-svh items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-[340px] border-border bg-card p-6 text-center">
-        <CardContent className="flex flex-col items-center gap-6 p-0">
-          {/* Brand Icon: user-preferred subtle micro radius */}
-          <div className="flex flex-col items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-md bg-foreground text-background">
-              <Eraser className="size-4" />
-            </div>
-            <h1 className="text-base font-semibold tracking-tight text-foreground">
-              Watermark Remover
-            </h1>
-          </div>
+    <main className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background px-4 pt-(--safe-top) pb-[calc(2rem+var(--safe-bottom))]">
+      <FloatingAlert message={error} onDismiss={() => useAuthStore.setState({ error: null })} />
 
-          {error && (
-            <Alert variant="destructive" className="w-full text-left">
-              <AlertIcon />
-              <AlertContent>
-                <AlertDescription>{error}</AlertDescription>
-              </AlertContent>
-            </Alert>
-          )}
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex size-12 items-center justify-center rounded-full bg-foreground text-background">
+          <Eraser className="size-5" />
+        </div>
+        <PageHeading title="Watermark Remover" description="登录后使用图片去水印与小红书解析" />
+      </div>
 
-          {/* Action */}
-          <div className="flex w-full flex-col items-center gap-3">
-            <MotionButton
-              variant="primary"
-              size="lg"
-              className="w-full gap-2.5 font-medium"
-              disabled={busy}
-              onClick={() => void login()}
-            >
-              <svg className="size-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-              </svg>
-              <span>{busy ? '连接中…' : 'GitHub 登录'}</span>
-            </MotionButton>
-
-            {import.meta.env.DEV && (
-              <button
-                type="button"
-                onClick={devLogin}
-                className="pt-1 text-xs text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+      <div className="w-full max-w-sm">
+        {import.meta.env.DEV
+          ? (
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void devLogin(sessionToken).then(() => setSessionToken(''))
+                }}
               >
-                免登录进入
-              </button>
+                <Input
+                  type="password"
+                  aria-label="Token"
+                  placeholder="粘贴开发 Token"
+                  autoComplete="off"
+                  value={sessionToken}
+                  onChange={setSessionToken}
+                  readOnly={busy}
+                  rightIcon={(
+                    <StatefulButton
+                      type="submit"
+                      variant="primary"
+                      size="sm"
+                      state={busy ? 'loading' : 'idle'}
+                      loadingText="登录中"
+                      disabled={!sessionToken.trim()}
+                    >
+                      登录
+                    </StatefulButton>
+                  )}
+                />
+              </form>
+            )
+          : (
+              <Button variant="primary" size="lg" className="w-full" disabled={busy} onClick={() => void login()}>
+                <svg className="size-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                </svg>
+                <span>{busy ? '连接中…' : 'GitHub 登录'}</span>
+              </Button>
             )}
-          </div>
-        </CardContent>
-      </Card>
+      </div>
+
+      <AppFooter />
     </main>
   )
 }

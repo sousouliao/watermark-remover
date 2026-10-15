@@ -66,18 +66,15 @@ pnpm install
 
 ### 启动开发
 
-按[后端配置与接口](./apps/server/README.md)注册 GitHub OAuth App，并在 `apps/server/.env` 中配置登录凭据、前端 origin 和 `ARK_API_KEY`、`ARK_SEEDREAM_LITE_ENDPOINT` 和 `ARK_SEEDREAM_FLASH_ENDPOINT`；可参照 [`apps/server/.env.example`](./apps/server/.env.example)。两个接入点分别填写当前账号可用的 Lite / Flash `ep-...` ID。已有 `.env` 时直接补充这三项，不要覆盖原有配置。密钥只供后端读取，不要放入前端环境变量。
+日常前端开发只需启动 Web，默认通过 Vite 代理连接正式后端，无需本地启动 Go：
 
 ```bash
-# 同时启动前端和后端
-pnpm dev
-
-# 或分别启动
-pnpm start:web      # 前端 (http://localhost:5173)
-pnpm start:server   # 后端 (http://localhost:3000)
+pnpm start:web      # 前端 (http://localhost:5173)，API 使用正式后端
 ```
 
-如果页面提示无法连接图像服务，先打开 `http://localhost:3000/api/health`：无法访问表示后端没有启动；返回 `status: ok` 后仍无法处理图片，再检查 `apps/server/.env` 中的三项方舟配置。仅启动前端无法处理图片。
+先在[正式站](https://watermark-remover-rose-chi.vercel.app)登录，再从开发者工具 → Application → Session Storage 复制 `watermark-session`，通过本地登录页「导入线上会话」进入。正式 OAuth 回调固定在线上；本地导入的是真实会话，处理和下载请求也使用正式服务。
+
+调试 Go 时，在 `apps/web/.env.local` 中设置 `DEV_API_TARGET=http://127.0.0.1:3000`，重启 Web，再执行 `pnpm start:server`（或 `pnpm dev` 同时启动两者）。按[后端配置与接口](./apps/server/README.md)配置 `apps/server/.env`；密钥只供后端读取，不要放入前端环境变量。详情见 [Web 开发说明](./apps/web/README.md)。
 
 ### 构建
 

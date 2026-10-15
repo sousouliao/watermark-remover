@@ -1,3 +1,6 @@
+'use client'
+// beui.dev/components/motion/input
+
 import {
   animate,
   AnimatePresence,
@@ -34,7 +37,9 @@ export interface InputProps extends Omit<
   value?: string
   defaultValue?: string
   onChange?: (value: string) => void
+  /** Truthy error triggers a shake, red border and (if a string) a message. */
   error?: string | boolean
+  /** Reserve one message line so validation does not shift nearby content. */
   reserveErrorLine?: boolean
   success?: boolean
   leftIcon?: ReactNode
@@ -74,13 +79,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((
   const value = controlled ? (valueProp ?? '') : internal
 
   const [focused, setFocused] = useState(false)
+
   const fieldRef = useRef<HTMLDivElement>(null)
 
   const hasError = Boolean(error)
   const errorMessage = typeof error === 'string' ? error : null
+
+  // Right edge shows the success check, otherwise the caller's right icon.
   const rightSlot = success ? null : rightIcon
 
-  // Shake the field when an error appears
+  // Shake the field when an error appears.
   useEffect(() => {
     if (!fieldRef.current || reduce || !hasError) return
     animate(
@@ -96,7 +104,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((
   }
 
   return (
-    <div className={cn('flex flex-col gap-1.5', className, classNames?.root)}>
+    <div
+      className={cn('flex flex-col gap-1.5', className, classNames?.root)}
+    >
       {label
         ? (
             <label
@@ -123,10 +133,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((
                 : 'idle'
         }
         className={cn(
-          'relative h-10 overflow-hidden rounded-xl border transition-colors duration-200',
-          'border-border bg-background',
-          focused && !hasError && 'border-foreground ring-1 ring-foreground',
-          hasError && 'border-destructive ring-1 ring-destructive',
+          'relative flex h-11 items-center overflow-hidden rounded-full border transition-colors duration-200',
+          'border-border',
+          focused && !hasError && 'border-foreground/40 ring-2 ring-ring/40',
+          hasError && 'border-destructive ring-2 ring-destructive/25',
           disabled && 'opacity-60',
           classNames?.field,
         )}
@@ -163,10 +173,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((
             onBlur?.(event)
           }}
           className={cn(
-            'peer h-full w-full bg-transparent text-sm leading-6 text-foreground caret-foreground outline-none',
+            'peer h-full min-w-0 flex-1 bg-transparent text-base leading-6 text-foreground caret-foreground outline-none',
             'placeholder:text-muted-foreground/60',
-            leftIcon ? 'pl-9' : 'pl-3',
-            rightSlot || success ? 'pr-9' : 'pr-3',
+            leftIcon ? 'pl-10' : 'pl-4',
+            success ? 'pr-10' : rightSlot ? 'pr-2' : 'pr-4',
             disabled && 'cursor-not-allowed',
             classNames?.input,
           )}
@@ -178,7 +188,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((
                 viewBox="0 0 24 24"
                 fill="none"
                 className={cn(
-                  'absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground',
+                  'absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-(--color-success)',
                   classNames?.successIcon,
                 )}
               >
@@ -198,7 +208,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>((
             ? (
                 <span
                   className={cn(
-                    'absolute right-0 top-0 flex h-full items-center text-muted-foreground [&_button]:grid [&_button]:size-10 [&_button]:place-items-center [&_svg]:h-4 [&_svg]:w-4',
+                    'flex h-full shrink-0 items-center gap-1 pr-1.5 text-muted-foreground [&_svg]:h-4 [&_svg]:w-4',
                     classNames?.rightIcon,
                   )}
                 >

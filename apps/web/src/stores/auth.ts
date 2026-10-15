@@ -12,7 +12,7 @@ interface AuthState {
   initialize: () => Promise<void>
   handleCallback: (search: string) => Promise<void>
   login: () => Promise<void>
-  devLogin: () => void
+  devLogin: (token: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -27,10 +27,10 @@ function base64url(bytes: Uint8Array): string {
 function errorMessage(cause: unknown): string {
   if (cause instanceof Error) {
     if (cause.name === 'SyntaxError') {
-      return '后端未返回有效数据，请确认后端服务（127.0.0.1:3000）已启动'
+      return '后端未返回有效数据，请检查 API 地址及服务状态'
     }
     if (cause.name === 'TypeError') {
-      return '无法连接后端服务，请确认本地后端服务已启动'
+      return '无法连接后端服务，请检查网络及 API 地址'
     }
     return cause.message
   }
@@ -105,14 +105,21 @@ export const useAuthStore = create<AuthState>(set => ({
       set({ error: errorMessage(cause), busy: false })
     }
   },
-  devLogin: () => {
-    setSessionToken('mock-dev-token')
-    set({
-      user: { id: 37927306, login: 'local-developer' },
-      authenticated: true,
-      error: null,
-      busy: false,
-    })
+  devLogin: async (token) => {
+    if (!import.meta.env.DEV || !token.trim()) return
+    set({ busy: true, error: null })
+    try {
+      const user = await apiData<User>('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token.trim()}` },
+      })
+      setSessionToken(token.trim())
+      set({ user, authenticated: true })
+    }
+    catch (cause) {
+      setSessionToken('')
+      set({ user: null, authenticated: false, error: errorMessage(cause) })
+    }
+    finally { set({ busy: false }) }
   },
   logout: async () => {
     try {
