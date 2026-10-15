@@ -20,6 +20,8 @@ import (
 	"golang.org/x/oauth2/github"
 )
 
+const sessionTTL = 7 * 24 * time.Hour
+
 type User struct {
 	ID    int64  `json:"id"`
 	Login string `json:"login"`
@@ -168,7 +170,7 @@ func (s *Service) exchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	credential := randomToken()
-	expires := s.now().Add(8 * time.Hour)
+	expires := s.now().Add(sessionTTL)
 	s.mu.Lock()
 	s.pruneLocked()
 	if len(s.sessions) >= 32 {
