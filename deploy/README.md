@@ -25,6 +25,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags='-s -w' -o dis
 LISTEN_ADDR=127.0.0.1:3000
 FRONTEND_URL=<正式前端 origin>
 XHS_API_URL=http://127.0.0.1:5556
+DOUYIN_API_URL=http://127.0.0.1:5555
 GITHUB_ALLOWED_USER_ID=37927306
 GITHUB_CLIENT_ID=<client ID>
 GITHUB_CLIENT_SECRET=<secret>
@@ -61,4 +62,21 @@ certbot certonly --preferred-profile shortlived --webroot \
 
 启用 `nginx-https.conf` 后 nginx -t 并 reload；仅在这两步成功后对外验收。确保 Certbot 自动续期 timer 生效，执行生产证书 `renew --cert-name 43.138.214.93 --dry-run --run-deploy-hooks`。IP 证书约六天有效，续期是上线验收项。[Let’s Encrypt 官方说明](https://letsencrypt.org/2026/03/11/shorter-certs-certbot.html)
 
-先检查 HTTPS health、未经登录业务请求 401、未配置登录 503 与精确 CORS；补齐 OAuth 后验收真实登录及各业务流程。3000/5556 保持仅本机监听。
+先检查 HTTPS health、未经登录业务请求 401、未配置登录 503 与精确 CORS；补齐 OAuth 后验收真实登录及各业务流程。3000/5555/5556 保持仅本机监听。
+
+
+## DouK 抖音解析 sibling（部署说明，尚未部署）
+
+使用官方 [DouK-Downloader](https://github.com/JoeanAmier/TikTokDownloader) 的 **Web API 模式**。本次适配核对版本为 5.8 stable、源码提交 `473c90ff70c663cfb69310fff2b8d5192f200661`；部署时固定已核对版本的镜像 digest，避免 latest 漂移。官方镜像名为 `ghcr.io/joeanamier/tiktok-downloader`，容器内部监听 5555，持久目录为 `/app/Volume`。可按以下示例初始化（先设置 `DOUK_IMAGE` 为已核对镜像的完整 digest 引用）：
+
+```sh
+docker run --name watermark-douk --restart unless-stopped \
+  --memory=512m --cpus=1 \
+  -p 127.0.0.1:5555:5555 \
+  -v watermark_douk_volume:/app/Volume \
+  -it "${DOUK_IMAGE:?set a verified DouK image digest first}"
+```
+
+官方入口为交互菜单，选择「Web API 模式」，确认容器重启后仍进入该模式再接入 systemd 后端；不要把仅容器启动视作 API 就绪。仅从主机访问 `http://127.0.0.1:5555/docs` / `/openapi.json`，核对 `/douyin/share`、`/douyin/detail` 与响应字段，再以一条真实普通图集验收 Go 的解析、单图、ZIP 及视频 422。上游限流、访问限制或未来接口变化仍可能阻止真实解析；Cookie 不通过本应用收集或传入。
+
+**不开放公网 5555**，不增加 Nginx 的 DouK 代理，也不为 5555 开安全组；XHS 原有 `127.0.0.1:5556` 不变。Go 配置 `DOUYIN_API_URL=http://127.0.0.1:5555`。CDN 白名单的初始策略与真实样本 TODO 见 [Go API 说明](../apps/server/README.md#抖音图集下载后端)。本任务未操作生产主机。

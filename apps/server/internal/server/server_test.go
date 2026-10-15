@@ -22,7 +22,7 @@ func TestRouteProtectionAndCORS(t *testing.T) {
 	for _, test := range []struct {
 		method, path string
 		status       int
-	}{{"GET", "/api/health", 200}, {"POST", "/api/watermark/remove", 401}, {"POST", "/api/upscale", 401}, {"POST", "/api/xhs/parse", 401}, {"GET", "/api/xhs/results/id/images/1", 401}, {"GET", "/api/xhs/results/id/archive", 401}} {
+	}{{"GET", "/api/health", 200}, {"POST", "/api/watermark/remove", 401}, {"POST", "/api/upscale", 401}, {"POST", "/api/douyin/parse", 401}, {"GET", "/api/douyin/results/id/images/1", 401}, {"GET", "/api/douyin/results/id/archive", 401}, {"POST", "/api/xhs/parse", 401}, {"GET", "/api/xhs/results/id/images/1", 401}, {"GET", "/api/xhs/results/id/archive", 401}} {
 		w := httptest.NewRecorder()
 		s.Handler.ServeHTTP(w, httptest.NewRequest(test.method, test.path, nil))
 		if w.Code != test.status {

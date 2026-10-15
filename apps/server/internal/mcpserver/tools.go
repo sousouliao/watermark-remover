@@ -35,6 +35,7 @@ type noteService interface {
 
 // Backend supplies the same instances used by the authenticated web API.
 type Backend struct {
+	Douyin       douyinService
 	Watermarks   watermarkService
 	Upscale      upscaleService
 	Notes        noteService
@@ -75,6 +76,7 @@ type resultInput struct {
 }
 
 func registerBusiness(server *mcp.Server, store *taskStore, backend *Backend) {
+	registerDouyin(server, store, backend)
 	mcp.AddTool(server, &mcp.Tool{Name: "remove_watermark", Description: "Submit watermark removal (paid). Returns jobId immediately; query get_task, then get_task_result. Use the same requestId on transport retries"},
 		func(_ context.Context, _ *mcp.CallToolRequest, in removeInput) (*mcp.CallToolResult, taskView, error) {
 			if in.Model == "" {

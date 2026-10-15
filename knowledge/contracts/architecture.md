@@ -21,6 +21,7 @@ React SPA（选择模型、直接处理或指定区域、查看结果）
 - 保留 Monorepo，React SPA 原地替换 Vue 3，Go 替换 NestJS。前端在 Vercel，Go 以 systemd 在腾讯云运行，Nginx/Certbot 提供公网 IP HTTPS；解析器保留既有独立容器，仅供 Go 本机调用。
 - GitHub 登录仅接受固定用户 ID，生产默认 `37927306`。业务接口全部验证本应用 Bearer 会话；GitHub Client Secret、方舟密钥与 GitHub 上游 token 不交给浏览器。CORS 精确匹配正式前端 origin。
 - 小红书由 Go 适配 XHS-Downloader 2.8 API，固定匿名解析参数，不开放账号 Cookie/proxy。结果元数据缓存 30 分钟、最多 50 条，媒体经受限 HTTPS 下载；单图和 ZIP 完成后交付，临时文件清理。接口规范见 `apps/server/README.md`。
+- 抖音后端通过独立 `douyin` 包适配 loopback DouK-Downloader 5.8，HTTP 与 MCP 共用同一服务；首阶段仅普通图集，视频/实况明确拒绝，不自动进入模型处理。缓存、并发和下载限额对齐 XHS，CDN 初始域族策略与未完成真实样本验收见 [Go API 说明](../../apps/server/README.md#抖音图集下载后端)。无新增前端，未部署生产。
 - 当前生产直接依赖为 `golang.org/x/oauth2`、`github.com/rs/cors` 与 `github.com/modelcontextprotocol/go-sdk`；按功能组织 internal 包，显式装配依赖。
 - 可选 `/api/mcp` 使用独立 Bearer 服务凭据，与网页 GitHub 会话隔离，无配置时关闭；协议与认证复用官方 Go SDK。MCP 与 HTTP 共用业务服务和图像处理槽位，异步任务以 requestId 去重、返回 jobId、分段查询并领取文件，任务及文件有界且随进程重启失效。小图/ZIP 提供协议内容，所有文件提供短期单文件签名下载链接；图片原文件交付通过下载链接避免宿主重编码。诊断工具由独立开关控制，默认关闭。配置见 [MCP 说明](../../apps/server/MCP.md)，边界与取舍见[异步任务决策](../decisions/0004-mcp-async-tasks-and-files.md)，客户端验收状态见[实施记录](../logs/2026-10-15-mcp-business.md)。
 

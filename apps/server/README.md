@@ -13,7 +13,7 @@ go vet ./...
 go build -o dist/server ./cmd/server
 ```
 
-`server` 装配依赖、注册路由；`config` 校验配置；`httpapi` 处理少量 HTTP 共性。`auth`、`watermark`、`upscale`、`xhs` 按功能组织，上游 DTO 不暴露前端；`media` 负责受限下载和图片输入。测试与实现同包，用 httptest 模拟上游。
+`server` 装配依赖、注册路由；`config` 校验配置；`httpapi` 处理少量 HTTP 共性。`auth`、`watermark`、`upscale`、`xhs`、`douyin` 按功能组织，上游 DTO 不暴露前端；`media` 负责受限下载和图片输入。测试与实现同包，用 httptest 模拟上游。
 
 ## 身份与兼容接口
 
@@ -44,8 +44,23 @@ POST `/api/xhs/parse` 接收 `{text}`（最多 8192 字节的分享文本或 URL
 - 图片下载仅允许受限 HTTPS 域名，并校验重定向和实际连接 IP；单图 30MiB、80张/笔记、整包 150MiB。解析并发一个，媒体并发两个，超出返回 503。
 - 请求临时文件完成、失败、取消均清理；ZIP 完成后才发送，失败不发送部分压缩包。当前未提供持久缓存、批量作者抓取或账号 Cookie 能力。
 
+## 抖音图集下载（后端）
+
+`DOUYIN_API_URL` 默认 `http://127.0.0.1:5555`，必须为 loopback IP 的 HTTP(S) origin（允许 `127.0.0.1` / `[::1]`，不接受域名、凭据、路径或查询参数）。独立 DouK-Downloader 使用 5555，XHS 继续使用 5556。Go 调用 DouK 不经过环境代理、不跟随上游重定向，不接收或转发客户端 Cookie/proxy。
+
+- POST `/api/douyin/parse`：`{text}`，最多 8192 字节、一次一条公开作品。支持 `v.douyin.com` 短链、`www.douyin.com` 的 note/video/slides 或 user + modal_id，以及 `www.iesdouyin.com/share/{note|video|slides}/{id}`；作品 ID 为 19 位数字。
+- 成功 `data`：`{resultId,item:{id,title,description,authorName},mediaType:"images",images:[{index,previewUrl,downloadUrl}],zipUrl,expiresAt}`。DouK 只提供描述，`title` 和 `description` 均映射自 `desc`。所有媒体 URL 为本应用相对路径，不暴露 CDN 地址或上游参数。
+- GET `/api/douyin/results/{id}/images/{index}`：从 1 开始；`?download=1` 返回附件。
+- GET `/api/douyin/results/{id}/archive`：完整图集 ZIP。
+- 上述接口与 XHS 使用相同 GitHub 会话认证、错误封装和下载语义；缓存 30 分钟/50 条、最多 80 张，解析并发 1、下载并发 2；单图 30 MiB、整包 150 MiB，解析超时 90 秒、单图请求 25 秒、整包 5 分钟。限额由 HTTP/MCP 共用的同一个抖音服务实例执行。
+- **第一阶段仅普通图集**：上游 `type=图集` 映射为 `mediaType=images`；视频、实况及其他类型返回 422。没有 video 路由，也不会自动调用 Seedream。暂无前端页面。
+
+契约已逐项核对 [DouK 5.8 stable 路由源码](https://github.com/JoeanAmier/TikTokDownloader/blob/473c90ff70c663cfb69310fff2b8d5192f200661/src/application/main_server.py)、[响应模型](https://github.com/JoeanAmier/TikTokDownloader/blob/473c90ff70c663cfb69310fff2b8d5192f200661/src/models/response.py) 和 [数据提取器](https://github.com/JoeanAmier/TikTokDownloader/blob/473c90ff70c663cfb69310fff2b8d5192f200661/src/extract/extractor.py)：短链向 `/douyin/share` 仅提交 `{text:已校验URL}`，读顶层 `url` 并重新校验作品链接；长链直接提取 ID；向 `/douyin/detail` 仅提交 `{detail_id,source:false}`，读 `data.id/desc/nickname/type/downloads`。上游未取到数据返回 422；协议、ID 或媒体地址异常返回 502；本机解析服务不可达返回 502，超时返回 504。模拟上游测试验证了这些字段及下载流程，尚未验证真实样本或生产部署。
+
+**CDN 策略与待验证项**：没有可用现场样本，本阶段保守限定 HTTPS 的 `*.douyinpic.com` 子域（不开放任意字节 CDN、视频域或任意客户端 URL），作为可审查的初始域族策略，不能视作真实 host 已验收。复用 `media.Client`：每跳检查域名、仅 443、无 URL 凭据、关闭代理、DNS 解析全部为公网 IP 后直接拨号，并检查图片签名与实际字节。未知域返回 502；TODO：上线前用真实普通图集确认最终 host、重定向和 PNG/JPEG/WebP 下载，若需扩展域族，先留下脱敏 host 与来源证据并补 allowlist 测试，禁止为兼容而放开任意 CDN。
+
 生产部署见根目录 `deploy/README.md`。
 
 ## Grok Bot MCP
 
-可选 `/api/mcp` 使用独立 Bearer 凭据，提供去水印、放大、小红书解析和文件下载的异步任务工具，与网页共用业务服务及图像处理槽位。客户端分段查询并领取图片或 ZIP，大文件使用短期单文件下载链接。诊断工具默认关闭。配置、工具及客户端验收状态见 [MCP 说明](MCP.md)。
+可选 `/api/mcp` 使用独立 Bearer 凭据，提供去水印、放大、小红书/抖音图集解析和文件下载的异步任务工具，与网页共用业务服务及图像处理槽位。客户端分段查询并领取图片或 ZIP，大文件使用短期单文件下载链接。诊断工具默认关闭。配置、工具及客户端验收状态见 [MCP 说明](MCP.md)。

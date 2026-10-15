@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Mournerliao/watermark-remover/apps/server/internal/douyin"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/processing"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/upscale"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/watermark"
@@ -61,10 +62,16 @@ func (f *fakeBackend) Archive(context.Context, string) (*os.File, string, error)
 	return file, "note.zip", err
 }
 
+type fakeDouyin struct{ *fakeBackend }
+
+func (f fakeDouyin) Parse(context.Context, string) (douyin.Parsed, error) {
+	return douyin.Parsed{ResultID: "douyin-parsed", Item: douyin.Item{ID: "7561234567890123456", Title: "sample"}, MediaType: "images", ImageCount: 1, ExpiresAt: time.Now().Add(time.Minute)}, nil
+}
+
 func TestBusinessToolsOverHTTP(t *testing.T) {
 	picture, archive := testFiles()
 	fake := &fakeBackend{picture: picture, archive: archive}
-	backend := &Backend{Watermarks: fake, Upscale: fake, Notes: fake, Processing: processing.New()}
+	backend := &Backend{Watermarks: fake, Upscale: fake, Notes: fake, Douyin: fakeDouyin{fake}, Processing: processing.New()}
 	service, err := New(tokenDigest("token"), slog.New(slog.NewTextHandler(io.Discard, nil)), backend)
 	if err != nil {
 		t.Fatal(err)
@@ -114,7 +121,7 @@ func TestBusinessToolsOverHTTP(t *testing.T) {
 		return done
 	}
 	tools, err := session.ListTools(ctx, nil)
-	if err != nil || len(tools.Tools) != 7 {
+	if err != nil || len(tools.Tools) != 10 {
 		t.Fatalf("production tool set: %v %v", tools, err)
 	}
 	image := "data:image/png;base64," + base64.StdEncoding.EncodeToString(picture)
@@ -162,6 +169,26 @@ func TestBusinessToolsOverHTTP(t *testing.T) {
 	reader, err := zip.NewReader(bytes.NewReader(zipContent.Resource.Blob), int64(len(zipContent.Resource.Blob)))
 	if err != nil || len(reader.File) != 2 {
 		t.Fatal("embedded ZIP invalid")
+	}
+	parsedDouyin := submit("parse_douyin_item", map[string]any{"requestId": "douyin-parse-1", "text": "https://www.douyin.com/note/7561234567890123456"})
+	if parsedDouyin.Output.Douyin == nil || parsedDouyin.Output.Douyin.MediaType != "images" || parsedDouyin.Output.Douyin.ResultID != "douyin-parsed" {
+		t.Fatal("Douyin metadata mismatch")
+	}
+	dyImage := submit("get_douyin_image", map[string]any{"requestId": "douyin-image-1", "resultId": "douyin-parsed", "index": 1})
+	if !bytes.Equal(call("get_task_result", map[string]any{"jobId": dyImage.ID}).Content[0].(*mcp.ImageContent).Data, picture) {
+		t.Fatal("Douyin image delivery mismatch")
+	}
+	dyZip := submit("get_douyin_archive", map[string]any{"requestId": "douyin-archive-1", "resultId": "douyin-parsed"})
+	if !bytes.Equal(call("get_task_result", map[string]any{"jobId": dyZip.ID}).Content[0].(*mcp.EmbeddedResource).Resource.Blob, archive) {
+		t.Fatal("Douyin ZIP delivery mismatch")
+	}
+	invalid, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "parse_douyin_item", Arguments: map[string]any{"requestId": "douyin-invalid", "text": "https://evil.test"}})
+	if err != nil || !invalid.IsError {
+		t.Fatal("Douyin input validation bypassed")
+	}
+	invalid, err = session.CallTool(ctx, &mcp.CallToolParams{Name: "get_douyin_image", Arguments: map[string]any{"requestId": "douyin-invalid-index", "resultId": "douyin-parsed", "index": 0}})
+	if err != nil || !invalid.IsError {
+		t.Fatal("Douyin index validation bypassed")
 	}
 	// Large results use bounded HTTP delivery rather than expanding the entire file into MCP JSON.
 	large := bytes.Repeat([]byte("x"), 9<<20)

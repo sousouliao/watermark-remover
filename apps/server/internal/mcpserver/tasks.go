@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Mournerliao/watermark-remover/apps/server/internal/douyin"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/httpapi"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/media"
 	"github.com/Mournerliao/watermark-remover/apps/server/internal/xhs"
@@ -36,9 +37,10 @@ type FileInfo struct {
 }
 
 type taskOutput struct {
-	File  *FileInfo   `json:"file,omitempty"`
-	Note  *xhs.Parsed `json:"note,omitempty"`
-	Model string      `json:"model,omitempty"`
+	Douyin *douyin.Parsed `json:"douyin,omitempty"`
+	File   *FileInfo      `json:"file,omitempty"`
+	Note   *xhs.Parsed    `json:"note,omitempty"`
+	Model  string         `json:"model,omitempty"`
 }
 
 type taskView struct {

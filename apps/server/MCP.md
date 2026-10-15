@@ -1,6 +1,6 @@
 # Grok Bot 图片工作台
 
-远程入口为 `/api/mcp`，使用官方 Go SDK 的 Streamable HTTP 与独立 Bearer 认证。业务复用网页的去水印、放大和小红书服务；Grok Bot 通过短调用提交、查询、领取结果，避开客户端约 60 秒的单次调用限制。
+远程入口为 `/api/mcp`，使用官方 Go SDK 的 Streamable HTTP 与独立 Bearer 认证。业务复用 HTTP 的去水印、放大、小红书和抖音服务；Grok Bot 通过短调用提交、查询、领取结果，避开客户端约 60 秒的单次调用限制。
 
 ## 配置与部署
 
@@ -36,7 +36,7 @@ PY
 
 已验证的客户端方式为其云端电脑 stdio → `mcp-remote 0.15.1` → `https://43.138.214.93/api/mcp`，使用安全卡保存的凭据。认证文件权限为 0600。当前客户端安全卡到远程 headers 的直接注入尚未验证，现有桥接可复用。
 
-正式连接器为 `image-workbench`（命名空间 `user-image-workbench`），只包含七个业务工具。此前 `personal-mcp` 的宿主目录停留在旧探针，重启及同名重新添加无效；按同一 stdio 命令迁移正式名称后目录恢复，旧注册已移除，脚本和凭据沿用。升级后核对实际工具目录及 Schema，不能仅以“connected”判定发现成功。将仓库内的 [image-workbench Skill](../../integrations/grok-bot/image-workbench/SKILL.md) 保存到 Grok Bot 私有技能库，依照其步骤处理自然语言请求。Skill 不包含凭据和重复的参数 Schema。
+正式连接器为 `image-workbench`（命名空间 `user-image-workbench`），已部署版本包含七个业务工具；本次抖音后端版本增加下表三个工具，部署后应发现十个工具（新增工具尚未做公网客户端验收）。此前 `personal-mcp` 的宿主目录停留在旧探针，重启及同名重新添加无效；按同一 stdio 命令迁移正式名称后目录恢复，旧注册已移除，脚本和凭据沿用。升级后核对实际工具目录及 Schema，不能仅以“connected”判定发现成功。将仓库内的 [image-workbench Skill](../../integrations/grok-bot/image-workbench/SKILL.md) 保存到 Grok Bot 私有技能库，依照其步骤处理自然语言请求。Skill 不包含凭据和重复的参数 Schema。
 
 ## 工具与流程
 
@@ -47,12 +47,15 @@ PY
 | `parse_xhs_note` | 提交一条公开图文笔记解析 |
 | `get_xhs_image` | 提交解析结果中的单图下载 |
 | `get_xhs_archive` | 提交图集 ZIP 下载 |
+| `parse_douyin_item` | 提交一条公开普通抖音图集；视频/实况任务失败，复用 HTTP 422 的安全消息 |
+| `get_douyin_image` | 下载抖音解析结果单图，index 从 1 开始 |
+| `get_douyin_archive` | 下载抖音图集 ZIP，不传 index |
 | `get_task` | 查询任务；可等待最多 20 秒，及时返回当前状态 |
 | `get_task_result` | 领取成功任务的文件与校验信息 |
 
-五个提交工具立即返回 jobId。状态为 pending、running、succeeded 或 failed；失败包含可读 message。每个新操作提供一次 requestId，相同 ID 与相同参数在结果保留期内返回同一任务；不同参数复用 ID 会被拒绝。请求断开不会取消已接受的处理，不自动切换模型或重复付费调用。
+八个提交工具立即返回 jobId。状态为 pending、running、succeeded 或 failed；失败包含可读 message。每个新操作提供一次 requestId，相同 ID 与相同参数在结果保留期内返回同一任务；不同参数复用 ID 会被拒绝。请求断开不会取消已接受的处理，不自动切换模型或重复付费调用。
 
-图片来自聊天附件的完整 data URL 文件，用 `$file:` 注入字符串参数；服务端不能读取 Bot 的本地路径。后续操作可通过 sourceJobId 直接引用已成功的图片任务，无需下载后再上传。小红书解析成功的 output.note 中包含 resultId、笔记信息和 imageCount；图像序号从 1 开始，原始媒体 URL 不返回客户端。
+图片来自聊天附件的完整 data URL 文件，用 `$file:` 注入字符串参数；服务端不能读取 Bot 的本地路径。后续操作可通过 sourceJobId 直接引用已成功的图片任务，无需下载后再上传。小红书解析成功的 output.note 中包含 resultId、笔记信息和 imageCount；图像序号从 1 开始，原始媒体 URL 不返回客户端。抖音解析位于 `output.douyin`，包含 `resultId/item/mediaType/imageCount/expiresAt`，后续下载仅使用该 resultId。输入 text、类型判断、缓存过期、下载限额和错误消息均由 HTTP/MCP 共享的 douyin 服务处理。
 
 最终文件通过 `get_task_result` 交付：不超过 8 MiB 的图片为 ImageContent，ZIP 为内嵌二进制 resource；所有文件同时提供短期原文件下载 URL。超过 8 MiB 时仅返回文件元数据及下载链接，避免大段 Base64 扩大 MCP 内存开销。链接只授权一个结果文件、5 分钟过期，不需要附加 MCP Token；可在任务有效期内重新领取链接。Grok Bot 曾将 JPEG ImageContent 落盘重编码，图片交付因此使用下载链接取得原字节，ImageContent 用于预览。校验文件字节数和 SHA-256 后再作为聊天附件交付。
 
@@ -60,11 +63,11 @@ PY
 
 任务、请求去重信息与结果保留到完成后 30 分钟；服务重启后失效。临时文件使用私有目录，过期定时清理，关闭时取消在途任务并清理目录。任务数、在途数和总结果大小均有界，具体常量集中在 [tasks.go](internal/mcpserver/tasks.go)。当前个人单实例不提供持久队列或数据库。
 
-网页与 MCP 共用一个图像处理槽位；网页繁忙时仍返回 503，MCP 在有界任务中等待。小红书共用原有解析和下载限额。现有原图 30 MiB、图集 150 MiB 等业务限制继续由原服务执行。
+网页与 MCP 共用一个图像处理槽位；网页繁忙时仍返回 503，MCP 在有界任务中等待。小红书和抖音分别共用各自 HTTP 服务的解析和下载限额。现有原图 30 MiB、图集 150 MiB 等业务限制继续由原服务执行。
 
 ## 验证与诊断
 
-针对性测试覆盖异步生命周期、重复提交只执行一次、任务串联、过期清理、共享并发、七个工具以及内嵌/短期下载授权：
+针对性测试覆盖异步生命周期、重复提交只执行一次、任务串联、过期清理、共享并发、十个工具以及内嵌/短期下载授权：
 
 ```sh
 cd apps/server
