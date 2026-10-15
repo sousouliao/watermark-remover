@@ -2,7 +2,7 @@
 
 ## 结果
 
-检查发现两平台适配层都明确拒绝视频，抖音只有后端入口。本轮补齐普通视频解析、原文件下载，保留单图和图集 ZIP；实况不在本轮范围。用户指定真实平台验收由其后续执行，本轮未部署、未操作云端或 Bot 私有技能库。
+检查发现两平台适配层都明确拒绝视频，抖音只有后端入口。本轮补齐普通视频解析、原文件下载，保留单图和图集 ZIP；实况不在本轮范围。用户指定真实平台验收由其后续执行，实现阶段未部署；后续部署见下文。Bot 私有技能库未操作。
 
 ## 实现边界
 
@@ -22,3 +22,11 @@
 
 - [DouK 5.8 提取器](https://github.com/JoeanAmier/TikTokDownloader/blob/473c90ff70c663cfb69310fff2b8d5192f200661/src/extract/extractor.py)：视频 downloads 单个地址，图集数组。
 - [XHS 视频适配](https://github.com/JoeanAmier/XHS-Downloader/blob/master/source/application/video.py) 与 [应用流程](https://github.com/JoeanAmier/XHS-Downloader/blob/master/source/application/app.py)：视频返回地址数组，originVideoKey 生成 sns-video-bd.xhscdn.com 地址。
+
+## 部署（2026-10-15）
+
+- 功能提交 `fbfc4e6` 已推送 `origin/main`。
+- Vercel 生产前端已发布至 https://watermark-remover-ui.vercel.app，部署 `dpl_kWA3op9E54zqgRa6Vy2Wk1RxAyQg`。
+- Go 已切换至 `/opt/watermark-api/releases/media-parity-20261015-fbfc4e6`，systemd 服务 active，激活任务 `inv-s9wprb0wgt`。
+- 新增 `watermark-douk` 容器，官方 amd64 镜像固定 `ghcr.io/joeanamier/tiktok-downloader@sha256:8adc30f9da71d76de50b7fa16ba4757c0a84b3f7787a953074e24e63b2a8e449`，仅发布 `127.0.0.1:5555`，持久卷 `watermark_douk_volume`，`run_command=7` 自动进入 Web API 模式，限制 512 MiB/1 CPU。部署任务 `inv-k9wpr604c3` 成功。
+- 用户明确要求只部署、不追加测试，后续未执行业务调用验证；真实平台验收由用户完成。

@@ -65,7 +65,7 @@ certbot certonly --preferred-profile shortlived --webroot \
 先检查 HTTPS health、未经登录业务请求 401、未配置登录 503 与精确 CORS；补齐 OAuth 后验收真实登录及各业务流程。3000/5555/5556 保持仅本机监听。
 
 
-## DouK 抖音解析 sibling（部署说明，尚未部署）
+## DouK 抖音解析 sibling（2026-10-15 已部署）
 
 使用官方 [DouK-Downloader](https://github.com/JoeanAmier/TikTokDownloader) 的 **Web API 模式**。本次适配核对版本为 5.8 stable、源码提交 `473c90ff70c663cfb69310fff2b8d5192f200661`；部署时固定已核对版本的镜像 digest，避免 latest 漂移。官方镜像名为 `ghcr.io/joeanamier/tiktok-downloader`，容器内部监听 5555，持久目录为 `/app/Volume`。可按以下示例初始化（先设置 `DOUK_IMAGE` 为已核对镜像的完整 digest 引用）：
 
@@ -79,4 +79,4 @@ docker run --name watermark-douk --restart unless-stopped \
 
 官方入口为交互菜单，选择「Web API 模式」，确认容器重启后仍进入该模式再接入 systemd 后端；不要把仅容器启动视作 API 就绪。仅从主机访问 `http://127.0.0.1:5555/docs` / `/openapi.json`，核对 `/douyin/share`、`/douyin/detail` 与响应字段，再以真实普通图集和视频验收 Go 的解析、单图、ZIP 及 MP4 原文件下载。上游限流、访问限制或未来接口变化仍可能阻止真实解析；Cookie 不通过本应用收集或传入。
 
-**不开放公网 5555**，不增加 Nginx 的 DouK 代理，也不为 5555 开安全组；XHS 原有 `127.0.0.1:5556` 不变。Go 配置 `DOUYIN_API_URL=http://127.0.0.1:5555`。CDN 白名单的初始策略与真实样本 TODO 见 [Go API 说明](../apps/server/README.md#抖音解析与下载)。本任务未操作生产主机。
+**不开放公网 5555**，不增加 Nginx 的 DouK 代理，也不为 5555 开安全组；XHS 原有 `127.0.0.1:5556` 不变。Go 配置 `DOUYIN_API_URL=http://127.0.0.1:5555`。CDN 白名单的初始策略与真实样本 TODO 见 [Go API 说明](../apps/server/README.md#抖音解析与下载)。当前运行容器为 `watermark-douk`，持久配置 `run_command=7` 自动进入 Web API 模式，实际镜像 digest 与发布记录见 [实施记录](../knowledge/logs/2026-10-15-media-parity.md)。
